@@ -14,14 +14,13 @@ PyYAML == 6.0
 datasets == 2.1.0
 
 # visual-spatial-reasoning/feature_extraction/visualbert/utils.py: 12,13,14,15,16,18,19,20,21
-detectron2 == 0.5+cu111
 
 # visual-spatial-reasoning/feature_extraction/lxmert/utils.py: 44
 filelock == 3.6.0
 
 # visual-spatial-reasoning/feature_extraction/lxmert/demo.ipynb: 2
 # visual-spatial-reasoning/feature_extraction/lxmert/extract_img_features.py: 2
-ipython == 8.3.0
+ipython 
 
 # visual-spatial-reasoning/feature_extraction/lxmert/visualizing_image.py: 21,22,23,26
 # visual-spatial-reasoning/feature_extraction/visualbert/utils.py: 5
@@ -41,7 +40,6 @@ matplotlib == 3.5.1
 # visual-spatial-reasoning/feature_extraction/visualbert/utils.py: 8
 # visual-spatial-reasoning/src/test.py: 8
 # visual-spatial-reasoning/src/train.py: 6
-numpy == 1.22.3
 
 # visual-spatial-reasoning/feature_extraction/lxmert/utils.py: 41
 # visual-spatial-reasoning/feature_extraction/lxmert/visualizing_image.py: 28
@@ -52,7 +50,6 @@ numpy == 1.22.3
 opencv_python == 4.5.5.62
 
 # visual-spatial-reasoning/data/splits/create_zeroshot_splits.py: 5
-pandas == 1.4.2
 
 # visual-spatial-reasoning/feature_extraction/lxmert/utils.py: 42
 requests == 2.27.1
@@ -70,12 +67,11 @@ requests == 2.27.1
 # visual-spatial-reasoning/src/lxmert_for_classification.py: 3
 # visual-spatial-reasoning/src/test.py: 4
 # visual-spatial-reasoning/src/train.py: 13
-torch == 1.11.0+cu113
+
 
 # visual-spatial-reasoning/feature_extraction/lxmert/modeling_frcnn.py: 30
 # visual-spatial-reasoning/feature_extraction/visualbert/utils.py: 4
 # visual-spatial-reasoning/src/test.py: 4
-torchvision == 0.12.0+cu113
 
 # visual-spatial-reasoning/feature_extraction/lxmert/extract_img_features.py: 10
 # visual-spatial-reasoning/feature_extraction/lxmert/utils.py: 39
