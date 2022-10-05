@@ -1,5 +1,6 @@
 data/images/*
 data/features/*
+data/*
 !data/features/README.md
 tmp/
 logs/
