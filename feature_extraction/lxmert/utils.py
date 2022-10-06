@@ -43,7 +43,7 @@ import requests
 import wget
 from filelock import FileLock
 from yaml import Loader, dump, load
-
+import matplotlib.pyplot as plt
 
 try:
     import torch
@@ -546,6 +546,8 @@ def img_tensorize(im, input_format="RGB"):
     assert isinstance(im, str)
     if os.path.isfile(im):
         img = cv2.imread(im)
+        if img is None:
+            img = plt.imread(im)
     else:
         img = get_image_from_url(im)
         assert img is not None, f"could not connect to: {im}"

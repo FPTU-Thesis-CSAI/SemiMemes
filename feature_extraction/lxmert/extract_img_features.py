@@ -72,6 +72,9 @@ if __name__ == "__main__":
     assert len(all_img_paths) == visual_features_all.shape[0]
     
     # write out
+    output_model_folder_path = "/".join(args.output_folder_path.split("/")[:-1])
+    if not os.path.isdir(output_model_folder_path):
+        os.mkdir(output_model_folder_path)
     if not os.path.isdir(args.output_folder_path):
         os.mkdir(args.output_folder_path)
     output_path_txt = os.path.join(args.output_folder_path, "names.txt")

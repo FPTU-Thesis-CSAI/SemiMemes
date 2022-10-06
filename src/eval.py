@@ -8,7 +8,7 @@ from transformers import BertTokenizer, VisualBertModel, \
 from lxmert_for_classification import LxmertForBinaryClassification
 from data import ImageTextClassificationDataset
 
-def evaluate(data_loader, model, model_type="visualbert"):
+def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
     model.cuda()
     model.eval()
 
@@ -54,11 +54,15 @@ def evaluate(data_loader, model, model_type="visualbert"):
                 #model.config.id2label[idx]
 
         scores = outputs.logits
-        preds_current = torch.argmax(scores, dim=1)
-        correct += sum(y == preds_current)
+        preds_current = torch.nn.Sigmoid()(scores) >= threshold
+        for yi,pi in zip(y,preds_current):
+            y_label = ''.join([str(i.detach().cpu().item()) for i in yi])
+            p = ''.join([str(int(i)) for i in pi])
+            if y_label == p:
+                correct += 1 
         preds += preds_current.cpu().numpy().tolist()
-        total+=batch_img.shape[0]
-        all_true += sum(y)
+        total+=y.shape[0]
+        all_true += sum(sum(y))
 
         # print errors
         #print (y != torch.argmax(scores, dim=1))

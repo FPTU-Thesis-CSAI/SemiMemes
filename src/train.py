@@ -17,7 +17,7 @@ from data import ImageTextClassificationDataset
 from eval import evaluate
 from lxmert_for_classification import LxmertForBinaryClassification
 
-wandb.init(project="visual-spatial-reasoning", entity="hardyqr")
+wandb.init()
 
 
 def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epoch=-1, \
@@ -136,21 +136,38 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 
 
 if __name__ == "__main__":
+    
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--img_feature_path', type=str, required=True)
-    parser.add_argument('--train_json_path', type=str, required=True)
-    parser.add_argument('--val_json_path', type=str, required=True)
-    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
+    parser.add_argument('--img_feature_path', type=str,default="data/features/lxmert/")
+    parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
+    parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
+    parser.add_argument('--model_type', type=str, default="lxmert", help="visualbert or lxmert or vilt")
+    parser.add_argument('--model_path', type=str, default="unc-nlp/lxmert-base-uncased")
     parser.add_argument('--learning_rate', type=float, default=2e-5)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--amp', action="store_true", \
+    parser.add_argument('--amp',type=bool,default=True, \
                 help="automatic mixed precision training")
     parser.add_argument('--output_dir', type=str, default="./tmp")
     parser.add_argument('--checkpoint_step', type=int, default=100)
     parser.add_argument('--random_seed', type=int, default=42)
+    
+    # parser = argparse.ArgumentParser(description='train')
+    # parser.add_argument('--img_feature_path', type=str, required=True)
+    # parser.add_argument('--train_json_path', type=str, required=True)
+    # parser.add_argument('--val_json_path', type=str, required=True)
+    # parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
+    # parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
+    # parser.add_argument('--learning_rate', type=float, default=2e-5)
+    # parser.add_argument('--epoch', type=int, default=100)
+    # parser.add_argument('--eval_step', type=int, default=100)
+    # parser.add_argument('--batch_size', type=int, default=64)
+    # parser.add_argument('--amp', action="store_true", \
+    #             help="automatic mixed precision training")
+    # parser.add_argument('--output_dir', type=str, default="./tmp")
+    # parser.add_argument('--checkpoint_step', type=int, default=100)
+    # parser.add_argument('--random_seed', type=int, default=42)
     
     args = parser.parse_args()
     
@@ -203,7 +220,7 @@ if __name__ == "__main__":
         img_features = torch.stack(img_features, dim=0)
         boxes = torch.stack(boxes)
         labels = torch.tensor(labels)
-        return toks, boxes, img_features, labels
+        return toks, boxes, img_features, labels 
 
     def collate_fn_batch_vilt(batch):
         #"""
@@ -224,8 +241,8 @@ if __name__ == "__main__":
         #return torch.cat(inputs_ids, dim=0), torch.cat(pixel_values, dim=0), labels
     
     img_feature_path = args.img_feature_path
-    dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_json_path, model_type=model_type, vilt_processor=processor)
-    dataset_val = ImageTextClassificationDataset(img_feature_path, args.val_json_path, model_type=model_type)
+    dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, model_type=model_type, vilt_processor=processor,mode='train')
+    dataset_val = ImageTextClassificationDataset(img_feature_path, args.val_csv_path, model_type=model_type,mode='val')
 
     if model_type == "visualbert":
         collate_fn_batch = collate_fn_batch_visualbert
@@ -239,13 +256,13 @@ if __name__ == "__main__":
         collate_fn = collate_fn_batch,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=16,)
+        num_workers=3,)
     val_loader = torch.utils.data.DataLoader(
         dataset_val,
         collate_fn = collate_fn_batch,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=16,)
+        num_workers=3,)
     
     # mixed precision training 
     if args.amp:
