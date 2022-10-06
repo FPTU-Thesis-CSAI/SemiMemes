@@ -12,10 +12,10 @@ import torch.optim as optim
 from torch.optim import Adam, Adadelta, Adamax, Adagrad, RMSprop, Rprop, SGD
 from torch.cuda.amp import autocast, GradScaler
 from transformers import AutoConfig, BertTokenizer, VisualBertModel, \
-        VisualBertForVisualReasoning, LxmertForPreTraining, LxmertTokenizer
+        VisualBertForVisualReasoning, LxmertModel, LxmertTokenizer, LxmertConfig
 from data import ImageTextClassificationDataset
 from eval import evaluate
-from lxmert_for_classification import LxmertForBinaryClassification
+from model import ModelForBinaryClassification
 
 wandb.init()
 
@@ -100,9 +100,9 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
             if model_type == "visualbert":
-                model.save_pretrained(checkpoint_dir)
+                model.encoder.save_pretrained(checkpoint_dir)
             elif model_type == "lxmert":
-                model.lxmert.save_pretrained(checkpoint_dir)
+                model.encoder.save_pretrained(checkpoint_dir)
             elif model_type == "vilt":
                 processor.save_pretrained(checkpoint_dir)
                 model.save_pretrained(checkpoint_dir)
@@ -123,9 +123,9 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
             if model_type == "visualbert":
-                model.save_pretrained(checkpoint_dir)
+                model.encoder.save_pretrained(checkpoint_dir)
             elif model_type == "lxmert":
-                model.lxmert.save_pretrained(checkpoint_dir)
+                model.encoder.save_pretrained(checkpoint_dir)
             elif model_type == "vilt":
                 processor.save_pretrained(checkpoint_dir)
                 model.save_pretrained(checkpoint_dir)
@@ -176,12 +176,15 @@ if __name__ == "__main__":
     model_type = args.model_type
     # load model
     if model_type == "visualbert":
-        model = VisualBertForVisualReasoning.from_pretrained(args.model_path)
+        config = LxmertConfig.from_pretrained(args.model_path)
+        model = VisualBertModel.from_pretrained(args.model_path)
+        model = ModelForBinaryClassification(model,config)
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         processor = None
     elif model_type == "lxmert":
-        model = LxmertForPreTraining.from_pretrained(args.model_path)
-        model = LxmertForBinaryClassification(model)
+        config = LxmertConfig.from_pretrained(args.model_path)
+        model = LxmertModel.from_pretrained(args.model_path)
+        model = ModelForBinaryClassification(model,config)
         tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased") 
         processor = None
     elif model_type == "vilt":

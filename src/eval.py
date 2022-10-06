@@ -5,7 +5,7 @@ from tqdm.auto import tqdm
 import torch
 from transformers import BertTokenizer, VisualBertModel, \
         VisualBertForVisualReasoning, LxmertForPreTraining, LxmertTokenizer
-from lxmert_for_classification import LxmertForBinaryClassification
+from model import ModelForBinaryClassification
 from data import ImageTextClassificationDataset
 
 def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     elif model_type == "lxmert":
         model = LxmertForPreTraining.from_pretrained(args.checkpoint_path)
-        model = LxmertForBinaryClassification(model)
+        model = ModelForBinaryClassification(model)
         tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased") 
 
     elif model_type == "vilt":
