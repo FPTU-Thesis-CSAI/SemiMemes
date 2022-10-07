@@ -7,3 +7,4 @@ data/*
 # wandb/
 __pycache__
 .ipython_checkpoints/
+tmp/

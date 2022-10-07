@@ -1,0 +1,8 @@
+====== evaliuate ======
+epoch: 0, global step: 100, val performance: 0.3446666666666667
+=======================
+===== best model saved! =======
+epoch: 0, global step: 110, loss: 0.478518396247834
+====== evaliuate ======
+epoch: 1, global step: 200, val performance: 0.3446666666666667
+=======================

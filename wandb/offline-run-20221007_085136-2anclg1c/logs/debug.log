@@ -1,0 +1,22 @@
+2022-10-07 08:51:36,717 INFO    MainThread:6542 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-10-07 08:51:36,719 INFO    MainThread:6542 [wandb_setup.py:_flush():75] Loading settings from /content/SSLMemes/wandb/settings
+2022-10-07 08:51:36,719 INFO    MainThread:6542 [wandb_setup.py:_flush():75] Loading settings from environment variables: {}
+2022-10-07 08:51:36,719 INFO    MainThread:6542 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program_relpath': 'src/train.py', 'program': '/content/SSLMemes/src/train.py'}
+2022-10-07 08:51:36,719 INFO    MainThread:6542 [wandb_setup.py:_flush():75] Applying login settings: {'mode': 'offline'}
+2022-10-07 08:51:36,719 INFO    MainThread:6542 [wandb_init.py:_log_setup():405] Logging user logs to /content/SSLMemes/wandb/offline-run-20221007_085136-2anclg1c/logs/debug.log
+2022-10-07 08:51:36,719 INFO    MainThread:6542 [wandb_init.py:_log_setup():406] Logging internal logs to /content/SSLMemes/wandb/offline-run-20221007_085136-2anclg1c/logs/debug-internal.log
+2022-10-07 08:51:36,720 INFO    MainThread:6542 [wandb_init.py:init():439] calling init triggers
+2022-10-07 08:51:36,720 INFO    MainThread:6542 [wandb_init.py:init():443] wandb.init called with sweep_config: {}
+config: {}
+2022-10-07 08:51:36,720 INFO    MainThread:6542 [wandb_init.py:init():492] starting backend
+2022-10-07 08:51:36,720 INFO    MainThread:6542 [backend.py:_multiprocessing_setup():101] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-10-07 08:51:36,739 INFO    MainThread:6542 [backend.py:ensure_launched():219] starting backend process...
+2022-10-07 08:51:36,755 INFO    MainThread:6542 [backend.py:ensure_launched():225] started backend process with pid: 6625
+2022-10-07 08:51:36,760 INFO    MainThread:6542 [wandb_init.py:init():501] backend started and connected
+2022-10-07 08:51:36,766 INFO    MainThread:6542 [wandb_init.py:init():565] updated telemetry
+2022-10-07 08:51:36,805 INFO    MainThread:6542 [wandb_init.py:init():625] starting run threads in backend
+2022-10-07 08:51:41,821 INFO    MainThread:6542 [wandb_run.py:_console_start():1733] atexit reg
+2022-10-07 08:51:41,822 INFO    MainThread:6542 [wandb_run.py:_redirect():1606] redirect: SettingsConsole.REDIRECT
+2022-10-07 08:51:41,823 INFO    MainThread:6542 [wandb_run.py:_redirect():1611] Redirecting console.
+2022-10-07 08:51:41,829 INFO    MainThread:6542 [wandb_run.py:_redirect():1667] Redirects installed.
+2022-10-07 08:51:41,830 INFO    MainThread:6542 [wandb_init.py:init():664] run started, returning control to user process

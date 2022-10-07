@@ -99,14 +99,22 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
             checkpoint_dir = os.path.join(args.output_dir, f"checkpoint_iter_{step_global}")
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            if model_type == "visualbert":
-                model.encoder.save_pretrained(checkpoint_dir)
-            elif model_type == "lxmert":
-                model.encoder.save_pretrained(checkpoint_dir)
-            elif model_type == "vilt":
+            # if model_type == "visualbert":
+            #     model.encoder.save_pretrained(checkpoint_dir)
+            # elif model_type == "lxmert":
+            #     model.encoder.save_pretrained(checkpoint_dir)
+            # elif model_type == "vilt":
+            #     processor.save_pretrained(checkpoint_dir)
+            #     model.save_pretrained(checkpoint_dir)
+            if model_type == "vilt":
                 processor.save_pretrained(checkpoint_dir)
-                model.save_pretrained(checkpoint_dir)
-
+            checkpoint_path = os.path.join(checkpoint_dir,'saved_model')
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss,
+                }, checkpoint_path)
         # evaluate and save
         if step_global % args.eval_step == 0:
             # evaluate
@@ -122,13 +130,23 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
             checkpoint_dir = os.path.join(args.output_dir, f"best_checkpoint")
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            if model_type == "visualbert":
-                model.encoder.save_pretrained(checkpoint_dir)
-            elif model_type == "lxmert":
-                model.encoder.save_pretrained(checkpoint_dir)
-            elif model_type == "vilt":
+            # if model_type == "visualbert":
+            #     model.encoder.save_pretrained(checkpoint_dir)
+            # elif model_type == "lxmert":
+            #     model.encoder.save_pretrained(checkpoint_dir)
+            # elif model_type == "vilt":
+            #     processor.save_pretrained(checkpoint_dir)
+            #     model.save_pretrained(checkpoint_dir)
+            if model_type == "vilt":
                 processor.save_pretrained(checkpoint_dir)
-                model.save_pretrained(checkpoint_dir)
+            checkpoint_path = os.path.join(checkpoint_dir,'saved_model')
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss,
+                'val_best_score':val_best_score
+                }, checkpoint_path)
             print (f"===== best model saved! =======")
                 
     train_loss /= (train_steps + 1e-9)
@@ -138,11 +156,11 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--img_feature_path', type=str,default="data/features/lxmert/")
+    parser.add_argument('--img_feature_path', type=str,default="data/features/visualbert/")
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
-    parser.add_argument('--model_type', type=str, default="lxmert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--model_path', type=str, default="unc-nlp/lxmert-base-uncased")
+    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
+    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
     parser.add_argument('--learning_rate', type=float, default=2e-5)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
@@ -152,7 +170,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', type=str, default="./tmp")
     parser.add_argument('--checkpoint_step', type=int, default=100)
     parser.add_argument('--random_seed', type=int, default=42)
-    
+    parser.add_argument('--resume_training', type=bool, default=True)
     # parser = argparse.ArgumentParser(description='train')
     # parser.add_argument('--img_feature_path', type=str, required=True)
     # parser.add_argument('--train_json_path', type=str, required=True)
@@ -276,7 +294,18 @@ if __name__ == "__main__":
     optimizer = optim.AdamW(
         [{'params': model.parameters()},], 
         lr=args.learning_rate)
-   
+    
+    if args.resume_training:
+        model.cuda()
+        ck_path = os.path.join(args.output_dir, "best_checkpoint/saved_model")
+        checkpoint = torch.load(ck_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        epoch = checkpoint['epoch']
+        loss = checkpoint['loss']
+        val_best_score = checkpoint['val_best_score']
+        print(f"previous best checkpoint: epoch:{epoch}, loss:{loss}, val_best_score: {val_best_score}")
+
     global_step, val_best_score = 0, 0
     for epoch in range(args.epoch):
         loss, global_step, val_best_score = train(args, train_loader, val_loader, model, scaler=scaler, \
