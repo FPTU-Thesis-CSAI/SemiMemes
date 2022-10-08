@@ -30,8 +30,6 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 
     model.cuda()
     model.train()
-    for data in train_loader:
-        print(data)
     for i, data in tqdm(enumerate(train_loader), total=len(train_loader)):
         optimizer.zero_grad()
 
