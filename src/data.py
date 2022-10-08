@@ -105,27 +105,35 @@ class ImageTextClassificationDataset(Dataset):
             supervise_img = []
             supervise_text = []
             supervise_label = []
+            supervise_box = []
             for i in range(idx*self.pro[0],(idx+1)*self.pro[0]):
                 data_point = self.data_csv[self.labeled_ids[i]-1]
                 img_index = self.img_name2index[data_point["image"]]
                 supervise_img.append(self.img_features[img_index])
                 supervise_text.append(data_point["caption"])
                 supervise_label.append(data_point["labels"])
+                if self.model_type == "lxmert":
+                    supervise_box.append(self.boxes[img_index])
             unsupervise_img = []
             unsupervise_text = []
             unsupervise_label = []
+            unsupervise_box = []
             for i in range(idx*self.pro[1],(idx+1)*self.pro[1]):
                 data_point = self.data_csv[self.unlabeled_ids[i]-1]
                 img_index = self.img_name2index[data_point["image"]]
                 unsupervise_img.append(self.img_features[img_index])
                 unsupervise_text.append(data_point["caption"])
                 unsupervise_label.append(data_point["labels"])
+                if self.model_type == "lxmert":
+                    unsupervise_box.append(self.boxes[img_index])
 
             feature = []
             feature.append(supervise_img)
             feature.append(supervise_text)
+            feature.append(supervise_box)
             feature.append(unsupervise_img)
             feature.append(unsupervise_text)
+            feature.append(unsupervise_box)
             return feature,supervise_label
 
     def __len__(self):
@@ -188,6 +196,53 @@ def collate_fn_batch_visualbert_semi_supervised(batch,tokenizer=None):
     unsupervised_feature.append(unsupervised_img_features)
     unsupervised_feature.append(unsupervised_toks)
     return supervised_feature,unsupervised_feature, labels
+
+def collate_fn_batch_lxmert_semi_supervised(batch,tokenizer=None):
+    feature, labels = zip(*batch)
+    supervised_image_feature = []
+    supervised_text_feature = []
+    supervised_boxes_feature = []
+    unsupervised_image_feature = []
+    unsupervised_text_feature = []
+    unsupervised_boxes_feature = []
+    for f in feature:
+        supervised_image_feature.extend(f[0])
+        supervised_text_feature.extend(f[1])
+        supervised_boxes_feature.extend(f[2])
+        unsupervised_image_feature.extend(f[3])
+        unsupervised_text_feature.extend(f[4])
+        unsupervised_boxes_feature.extend(f[5])
+    supervised_toks = tokenizer.batch_encode_plus(
+        list(supervised_text_feature), 
+        max_length=32, 
+        padding="max_length", 
+        truncation=True,
+        add_special_tokens=True,
+        return_tensors="pt")
+    
+    unsupervised_toks = tokenizer.batch_encode_plus(
+        list(supervised_text_feature), 
+        max_length=32, 
+        padding="max_length", 
+        truncation=True,
+        add_special_tokens=True,
+        return_tensors="pt")
+
+    supervised_img_features = torch.stack(supervised_image_feature, dim=0)
+    unsupervised_img_features = torch.stack(unsupervised_image_feature, dim=0)
+    supervised_boxes_feature = torch.stack(supervised_boxes_feature)
+    unsupervised_boxes_feature = torch.stack(unsupervised_boxes_feature)
+    labels = torch.tensor(labels)
+    labels = labels.view(-1,labels.size()[-1])
+    supervised_feature=[]
+    unsupervised_feature=[]
+    supervised_feature.append(supervised_img_features)
+    supervised_feature.append(supervised_toks)
+    supervised_feature.append(supervised_boxes_feature)
+    unsupervised_feature.append(unsupervised_img_features)
+    unsupervised_feature.append(unsupervised_toks)
+    unsupervised_feature.append(unsupervised_boxes_feature)
+    return supervised_feature,unsupervised_feature, labels 
 
 def collate_fn_batch_lxmert(batch,tokenizer=None):
     captions, boxes, img_features, labels = zip(*batch)

@@ -16,7 +16,7 @@ from transformers import AutoConfig, BertTokenizer, VisualBertModel, \
 from data import ImageTextClassificationDataset
 from eval import evaluate
 from model import ModelForBinaryClassification
-from data import collate_fn_batch_visualbert,collate_fn_batch_lxmert,collate_fn_batch_vilt,collate_fn_batch_visualbert_semi_supervised
+from data import collate_fn_batch_visualbert,collate_fn_batch_lxmert,collate_fn_batch_vilt,collate_fn_batch_visualbert_semi_supervised,collate_fn_batch_lxmert_semi_supervised
 from functools import partial 
 
 wandb.init()
@@ -30,6 +30,8 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 
     model.cuda()
     model.train()
+    for data in train_loader:
+        print(data)
     for i, data in tqdm(enumerate(train_loader), total=len(train_loader)):
         optimizer.zero_grad()
 
@@ -226,7 +228,7 @@ if __name__ == "__main__":
         if model_type == "visualbert":
             collate_fn_batch = partial(collate_fn_batch_visualbert_semi_supervised,tokenizer=tokenizer)
         elif model_type == "lxmert":
-            collate_fn_batch = partial(collate_fn_batch_lxmert,tokenizer=tokenizer)
+            collate_fn_batch = partial(collate_fn_batch_lxmert_semi_supervised,tokenizer=tokenizer)
     else:
         if model_type == "visualbert":
             collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer)
