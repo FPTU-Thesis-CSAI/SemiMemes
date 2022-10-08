@@ -7,6 +7,7 @@ from transformers import BertTokenizer, VisualBertModel, \
         VisualBertForVisualReasoning, LxmertForPreTraining, LxmertTokenizer
 from model import ModelForBinaryClassification
 from data import ImageTextClassificationDataset
+from utils import auroc
 
 def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
     model.cuda()
@@ -14,7 +15,8 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
 
     correct, total, all_true = 0, 0, 0
     preds = []
-    
+    total_preds = []
+    total_y = []
     for i, data in tqdm(enumerate(data_loader), total=len(data_loader)):
         if model_type == "visualbert":
             batch_cap, batch_img, y = data
@@ -54,21 +56,26 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
                 #model.config.id2label[idx]
 
         scores = outputs.logits
-        preds_current = torch.nn.Sigmoid()(scores) >= threshold
-        for yi,pi in zip(y,preds_current):
+        preds_current = torch.nn.Sigmoid()(scores) 
+        pred_labels = preds_current >= threshold
+        for yi,pi in zip(y,pred_labels):
             y_label = ''.join([str(i.detach().cpu().item()) for i in yi])
             p = ''.join([str(int(i)) for i in pi])
             if y_label == p:
                 correct += 1 
-        preds += preds_current.cpu().numpy().tolist()
+        
+        total_preds.append(preds_current)
+        total_y.append(y)
+        preds += pred_labels.cpu().numpy().tolist()
         total+=y.shape[0]
         all_true += sum(sum(y))
-
+        
         # print errors
         #print (y != torch.argmax(scores, dim=1))
-
-    # TODO: save also predictions
-    return correct / total, total, all_true, preds
+    total_preds = torch.cat(total_preds)
+    total_y = torch.cat(total_y)
+    auroc_score = auroc(total_preds,total_y)
+    return correct / total, total, all_true, preds,auroc_score
             
 
 if __name__ == "__main__":

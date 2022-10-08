@@ -16,6 +16,8 @@ from transformers import AutoConfig, BertTokenizer, VisualBertModel, \
 from data import ImageTextClassificationDataset
 from eval import evaluate
 from model import ModelForBinaryClassification
+from data import collate_fn_batch_visualbert,collate_fn_batch_lxmert,collate_fn_batch_vilt,collate_fn_batch_visualbert_semi_supervised
+from functools import partial 
 
 wandb.init()
 
@@ -118,9 +120,9 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
         # evaluate and save
         if step_global % args.eval_step == 0:
             # evaluate
-            acc, _, _, _ = evaluate(val_loader, model, model_type=model_type)
             print (f"====== evaliuate ======")
-            print (f"epoch: {epoch}, global step: {step_global}, val performance: {acc}")
+            acc, _, _, _,auc = evaluate(val_loader, model, model_type=model_type)
+            print (f"epoch: {epoch}, global step: {step_global}, val performance: {acc}, auc: {auc}")
             print (f"=======================")
             wandb.log({"eval_acc": acc})
             if val_best_score < acc:
@@ -156,11 +158,11 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--img_feature_path', type=str,default="data/features/visualbert/")
+    parser.add_argument('--img_feature_path', type=str,default="data/features/lxmert/")
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
-    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
+    parser.add_argument('--model_type', type=str, default="lxmert", help="visualbert or lxmert or vilt")
+    parser.add_argument('--model_path', type=str, default="unc-nlp/lxmert-base-uncased")
     parser.add_argument('--learning_rate', type=float, default=2e-5)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
@@ -170,7 +172,8 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', type=str, default="./tmp")
     parser.add_argument('--checkpoint_step', type=int, default=100)
     parser.add_argument('--random_seed', type=int, default=42)
-    parser.add_argument('--resume_training', type=bool, default=True)
+    parser.add_argument('--resume_training', type=bool, default=False)
+    parser.add_argument('--semi-supervised', type=bool, default=True)
     # parser = argparse.ArgumentParser(description='train')
     # parser.add_argument('--img_feature_path', type=str, required=True)
     # parser.add_argument('--train_json_path', type=str, required=True)
@@ -213,64 +216,24 @@ if __name__ == "__main__":
         model.vilt = ViltModel.from_pretrained(args.model_path)
         processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")
         tokenizer = None
-
-        
-    # load data
-    def collate_fn_batch_visualbert(batch):
-        captions, img_features, labels = zip(*batch)
-        toks = tokenizer.batch_encode_plus(
-            list(captions), 
-            max_length=32, 
-            padding="max_length", 
-            truncation=True,
-            add_special_tokens=True,
-            return_tensors="pt")
-        img_features = torch.stack(img_features, dim=0)
-        labels = torch.tensor(labels)
-        return toks, img_features, labels
-    
-    def collate_fn_batch_lxmert(batch):
-        captions, boxes, img_features, labels = zip(*batch)
-        toks = tokenizer.batch_encode_plus(
-            list(captions), 
-            max_length=32, 
-            padding="max_length", 
-            truncation=True,
-            add_special_tokens=True,
-            return_tensors="pt")
-        img_features = torch.stack(img_features, dim=0)
-        boxes = torch.stack(boxes)
-        labels = torch.tensor(labels)
-        return toks, boxes, img_features, labels 
-
-    def collate_fn_batch_vilt(batch):
-        #"""
-        imgs, captions, labels = zip(*batch)
-        inputs = processor(images=list(imgs), text=list(captions), return_tensors="pt", 
-                padding='max_length', truncation=True, add_special_tokens=True)
-        #"""
-        #print (inputs.input_ids.shape, inputs.pixel_values.shape)
-        """
-        inputs, labels = zip(*batch)
-        inputs_ids = [i.input_ids for i in inputs]
-        pixel_values = [i.pixel_values for i in inputs]
-        for i in pixel_values:
-            print (i.shape)
-        """
-        labels = torch.tensor(labels)
-        return inputs.input_ids, inputs.pixel_values, labels
-        #return torch.cat(inputs_ids, dim=0), torch.cat(pixel_values, dim=0), labels
     
     img_feature_path = args.img_feature_path
-    dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, model_type=model_type, vilt_processor=processor,mode='train')
+    dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, 
+                supervise = not args.semi_supervised,model_type=model_type, vilt_processor=processor,mode='train')
     dataset_val = ImageTextClassificationDataset(img_feature_path, args.val_csv_path, model_type=model_type,mode='val')
 
-    if model_type == "visualbert":
-        collate_fn_batch = collate_fn_batch_visualbert
-    elif model_type == "lxmert":
-        collate_fn_batch = collate_fn_batch_lxmert
-    elif model_type == "vilt":
-        collate_fn_batch = collate_fn_batch_vilt
+    if args.semi_supervised:
+        if model_type == "visualbert":
+            collate_fn_batch = partial(collate_fn_batch_visualbert_semi_supervised,tokenizer=tokenizer)
+        elif model_type == "lxmert":
+            collate_fn_batch = partial(collate_fn_batch_lxmert,tokenizer=tokenizer)
+    else:
+        if model_type == "visualbert":
+            collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer)
+        elif model_type == "lxmert":
+            collate_fn_batch = partial(collate_fn_batch_lxmert,tokenizer=tokenizer)
+        elif model_type == "vilt":
+            collate_fn_batch = partial(collate_fn_batch_vilt,processor=processor)
 
     train_loader = torch.utils.data.DataLoader(
         dataset_train,
