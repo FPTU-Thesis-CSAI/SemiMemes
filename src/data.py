@@ -61,23 +61,24 @@ class ImageTextClassificationDataset(Dataset):
             data_item["image"] = str(row["Id"])+".jpg"
             data_item["caption"] = row["ocr_text"]
             labels = []
-            if row["humour"] == "not_funny":
-                labels.append(0)
-            else:
-                labels.append(1)
-            if row["sarcastic"] == "not_sarcastic":
-                labels.append(0)
-            else:
-                labels.append(1)
-            if row["offensive"] == "not_offensive":
-                labels.append(0)
-            else:
-                labels.append(1)
-            if row["motivational"] == "not_motivational":
-                labels.append(0)
-            else:
-                labels.append(1)
-            data_item["labels"] = labels
+            if mode != "test":
+                if row["humour"] == "not_funny":
+                    labels.append(0)
+                else:
+                    labels.append(1)
+                if row["sarcastic"] == "not_sarcastic":
+                    labels.append(0)
+                else:
+                    labels.append(1)
+                if row["offensive"] == "not_offensive":
+                    labels.append(0)
+                else:
+                    labels.append(1)
+                if row["motivational"] == "not_motivational":
+                    labels.append(0)
+                else:
+                    labels.append(1)
+                data_item["labels"] = labels
             self.data_csv.append(data_item)
         
             

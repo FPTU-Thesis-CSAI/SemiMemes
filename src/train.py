@@ -12,7 +12,7 @@ import torch.optim as optim
 from torch.optim import Adam, Adadelta, Adamax, Adagrad, RMSprop, Rprop, SGD
 from torch.cuda.amp import autocast, GradScaler
 from transformers import AutoConfig, BertTokenizer, VisualBertModel, \
-        VisualBertForVisualReasoning, LxmertModel, LxmertTokenizer, LxmertConfig
+        VisualBertForVisualReasoning, LxmertModel, LxmertTokenizer, LxmertConfig,VisualBertConfig
 from data import ImageTextClassificationDataset
 from eval import evaluate
 from model import ModelForBinaryClassification
@@ -96,7 +96,7 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
         train_steps += 1
         step_global += 1
 
-        # save model every K iterations
+        # save model every K iterationsn
         if step_global % args.checkpoint_step == 0:
             checkpoint_dir = os.path.join(args.output_dir, f"checkpoint_iter_{step_global}")
             if not os.path.exists(checkpoint_dir):
@@ -121,12 +121,22 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
         if step_global % args.eval_step == 0:
             # evaluate
             print (f"====== evaliuate ======")
-            acc, _, _, _,auc = evaluate(val_loader, model, model_type=model_type)
-            print (f"epoch: {epoch}, global step: {step_global}, val performance: {acc}, auc: {auc}")
+            average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,_ = evaluate(val_loader, model, model_type=model_type)
+            print(f"epoch:{epoch},global step:{step_global},val performance"
+                +f"\naccuarcy:{accuarcy}\nf_score_micro:{f_score_micro}\nf_score_macro:{f_score_macro}"
+                +f"\naverage_precison1:{average_precison1}\nexample_auc1:{example_auc1}"
+                +f"\nmacro_auc1:{macro_auc1}\nmicro_auc1:{micro_auc1}\nranking_loss1:{ranking_loss1}")
             print (f"=======================")
-            wandb.log({"eval_acc": acc})
-            if val_best_score < acc:
-                val_best_score = acc
+            wandb.log({"eval_accuarcy": accuarcy})
+            wandb.log({"eval_f_score_micro": f_score_micro})
+            wandb.log({"eval_f_score_macro": f_score_macro})
+            wandb.log({"eval_average_precison1": average_precison1})
+            wandb.log({"eval_example_auc1": example_auc1})
+            wandb.log({"eval_macro_auc1": macro_auc1})
+            wandb.log({"eval_micro_auc1": micro_auc1})
+            wandb.log({"eval_ranking_loss1": ranking_loss1})
+            if val_best_score < f_score_macro:
+                val_best_score = f_score_macro
             else:
                 continue
             checkpoint_dir = os.path.join(args.output_dir, f"best_checkpoint")
@@ -158,11 +168,11 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--img_feature_path', type=str,default="data/features/lxmert/")
+    parser.add_argument('--img_feature_path', type=str,default="data/features/visualbert/")
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
-    parser.add_argument('--model_type', type=str, default="lxmert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--model_path', type=str, default="unc-nlp/lxmert-base-uncased")
+    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
+    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
     parser.add_argument('--learning_rate', type=float, default=2e-5)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
@@ -173,7 +183,7 @@ if __name__ == "__main__":
     parser.add_argument('--checkpoint_step', type=int, default=100)
     parser.add_argument('--random_seed', type=int, default=42)
     parser.add_argument('--resume_training', type=bool, default=False)
-    parser.add_argument('--semi-supervised', type=bool, default=True)
+    parser.add_argument('--semi-supervised', type=bool, default=False)
     # parser = argparse.ArgumentParser(description='train')
     # parser.add_argument('--img_feature_path', type=str, required=True)
     # parser.add_argument('--train_json_path', type=str, required=True)
@@ -197,7 +207,7 @@ if __name__ == "__main__":
     model_type = args.model_type
     # load model
     if model_type == "visualbert":
-        config = LxmertConfig.from_pretrained(args.model_path)
+        config = VisualBertConfig.from_pretrained(args.model_path)
         model = VisualBertModel.from_pretrained(args.model_path)
         model = ModelForBinaryClassification(model,config)
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")

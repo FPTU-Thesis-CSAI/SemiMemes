@@ -1,0 +1,47 @@
+====== evaliuate ======
+epoch: 0, global step: 100, val performance  average_precison1: 0.9300641797031681, example_auc1: 0.9163056558363418,macro_auc1:0.4802897481234984,micro_auc1:0.8365172064299948,ranking_loss1:0.08369434416365824
+=======================
+===== best model saved! =======
+epoch: 0, global step: 110, loss: 0.478518396247834
+====== evaliuate ======
+epoch: 1, global step: 200, val performance  average_precison1: 0.9300641797031681, example_auc1: 0.9163056558363418,macro_auc1:0.5231227607131417,micro_auc1:0.8412255261990451,ranking_loss1:0.08369434416365824
+=======================
+epoch: 1, global step: 220, loss: 0.456003283182993
+====== evaliuate ======
+epoch: 2, global step: 300, val performance  average_precison1: 0.9300641797031681, example_auc1: 0.9163056558363418,macro_auc1:0.5205248761747719,micro_auc1:0.8414185685780745,ranking_loss1:0.08369434416365824
+=======================
+epoch: 2, global step: 330, loss: 0.45509770210995415
+====== evaliuate ======
+epoch: 3, global step: 400, val performance  average_precison1: 0.9300641797031681, example_auc1: 0.9163056558363418,macro_auc1:0.5268033569201295,micro_auc1:0.84224712860993,ranking_loss1:0.08369434416365824
+=======================
+epoch: 3, global step: 440, loss: 0.45473793243201566
+====== evaliuate ======
+epoch: 4, global step: 500, val performance  average_precison1: 0.9300641797031681, example_auc1: 0.9163056558363418,macro_auc1:0.5298009450444303,micro_auc1:0.8424169920653124,ranking_loss1:0.08369434416365824
+=======================
+epoch: 4, global step: 550, loss: 0.4535941359395628
+====== evaliuate ======
+epoch: 5, global step: 600, val performance  average_precison1: 0.9300641797031681, example_auc1: 0.9163056558363418,macro_auc1:0.5037373544262523,micro_auc1:0.8410713459954835,ranking_loss1:0.08369434416365824
+=======================
+epoch: 5, global step: 660, loss: 0.4470279059177424
+Some weights of the model checkpoint at uclanlp/visualbert-nlvr2-coco-pre were not used when initializing VisualBertModel: ['cls.seq_relationship.weight', 'cls.predictions.decoder.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.weight', 'cls.predictions.bias', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.dense.bias']
+- This IS expected if you are initializing VisualBertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing VisualBertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24/24 [00:11<00:00,  2.02it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [01:18<00:00,  1.40it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24/24 [00:12<00:00,  1.89it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [01:16<00:00,  1.43it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24/24 [00:12<00:00,  1.90it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [01:18<00:00,  1.40it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24/24 [00:12<00:00,  1.90it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [01:18<00:00,  1.40it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24/24 [00:12<00:00,  1.90it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [01:18<00:00,  1.40it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24/24 [00:12<00:00,  1.89it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [01:18<00:00,  1.41it/s]
+ 30%|██████████████████████████████████████▋                                                                                          | 33/110 [00:19<00:44,  1.72it/s]
+Traceback (most recent call last):
+  File "/content/SSLMemes/src/train.py", line 280, in <module>
+    step_global=global_step, epoch=epoch, val_best_score=val_best_score, processor=processor)
+  File "/content/SSLMemes/src/train.py", line 94, in train
+    train_loss += loss.item()
+KeyboardInterrupt

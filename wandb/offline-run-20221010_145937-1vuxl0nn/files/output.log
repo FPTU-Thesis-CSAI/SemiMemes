@@ -1,0 +1,13 @@
+
+====== evaliuate ======
+Some weights of the model checkpoint at uclanlp/visualbert-nlvr2-coco-pre were not used when initializing VisualBertModel: ['cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.decoder.weight', 'cls.predictions.decoder.bias', 'cls.predictions.bias', 'cls.seq_relationship.bias', 'cls.predictions.transform.LayerNorm.bias']
+- This IS expected if you are initializing VisualBertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing VisualBertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24/24 [00:11<00:00,  2.13it/s]
+ 90%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████             | 99/110 [01:06<00:07,  1.50it/s]
+Traceback (most recent call last):
+  File "/content/SSLMemes/src/train.py", line 284, in <module>
+    step_global=global_step, epoch=epoch, val_best_score=val_best_score, processor=processor)
+  File "/content/SSLMemes/src/train.py", line 127, in train
+    +f"\naverage_precison1:{average_precison1}\nexample_auc1:{example_auc1}\nmacro_auc1:{macro_auc1}\nmicro_auc1:{micro_auc1}\nranking_loss1:{ranking_loss1}")
+TypeError: bad operand type for unary +: 'str'
