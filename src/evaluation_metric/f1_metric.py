@@ -11,5 +11,6 @@ def metrics(results, truths):
     f_score_micro = f1_score(truth, preds, average='micro')
     f_score_macro = f1_score(truth, preds, average='macro')
     accuarcy = accuracy_score(truth, preds)
-
-    return accuarcy, f_score_micro, f_score_macro
+    recall = recall_score(truth, preds, average='weighted')
+    precision = precision_score(truth, preds, average='weighted')
+    return accuarcy, f_score_micro, f_score_macro, recall, precision

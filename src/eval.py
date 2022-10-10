@@ -91,13 +91,13 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
     for i in range(1, len(total_y)):
         temp = np.vstack((temp, total_y[i]))
     total_y = temp
-    accuarcy, f_score_micro, f_score_macro = f1_metric.metrics(total_preds,total_y)
+    accuarcy, f_score_micro, f_score_macro,recall, precision = f1_metric.metrics(total_preds,total_y)
     average_precison1 = measure_average_precision.average_precision(total_preds, total_y)
     example_auc1 = measure_example_auc.example_auc(total_preds, total_y)
     macro_auc1 = measure_macro_auc.macro_auc(total_preds, total_y)
     micro_auc1 = measure_micro_auc.micro_auc(total_preds, total_y)
     ranking_loss1 = measure_ranking_loss.ranking_loss(total_preds, total_y)
-    return average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,total_preds
+    return average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,recall, precision,total_preds
             
 
 if __name__ == "__main__":
