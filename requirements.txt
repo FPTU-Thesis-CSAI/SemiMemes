@@ -98,3 +98,4 @@ wandb == 0.12.11
 # visual-spatial-reasoning/feature_extraction/lxmert/extract_img_features.py: 16
 # visual-spatial-reasoning/feature_extraction/lxmert/utils.py: 43
 wget == 3.2
+torchmetrics==0.9.3
