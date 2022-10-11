@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/content/project/SSLMemes/src/data.py", line 335, in <module>
+    supervise = True,model_type="lxmert", vilt_processor=None,mode='train')
+  File "/content/project/SSLMemes/src/data.py", line 33, in __init__
+    self.img_features = torch.load(os.path.join(img_feature_path, "features.pt"))
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 579, in load
+    with _open_file_like(f, 'rb') as opened_file:
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 230, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 211, in __init__
+    super(_open_file, self).__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: 'data/features/lxmert/train_images/features.pt'

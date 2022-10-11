@@ -1,7 +1,7 @@
-data/images/*
-data/features/*
-data/*
-!data/features/README.md
+SSLMemes/data/images/*
+SSLMemes/data/features/*
+SSLMemes/data/*
+!SSLMemes/data/features/README.md
 # tmp/
 # logs/
 # wandb/

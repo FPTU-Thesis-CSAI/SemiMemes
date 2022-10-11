@@ -1,0 +1,40 @@
+
+Downloading: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 631/631 [00:00<00:00, 409kB/s]
+
+
+
+
+Downloading:  44%|██████████████████████████████████████████████████                                                                | 186M/425M [00:11<00:12, 19.6MB/s]Traceback (most recent call last):
+  File "/content/project/SSLMemes/src/train.py", line 240, in <module>
+    train(config=config,args=args)
+  File "/content/project/SSLMemes/src/train.py", line 179, in train
+    model,tokenizer,processor = create_model(config,model_type)
+  File "/content/project/SSLMemes/src/utils.py", line 24, in create_model
+    model = VisualBertModel.from_pretrained(cfg.model_path)
+  File "/usr/local/lib/python3.7/dist-packages/transformers/modeling_utils.py", line 1366, in from_pretrained
+    user_agent=user_agent,
+  File "/usr/local/lib/python3.7/dist-packages/transformers/file_utils.py", line 1929, in cached_path
+    local_files_only=local_files_only,
+  File "/usr/local/lib/python3.7/dist-packages/transformers/file_utils.py", line 2217, in get_from_cache
+    http_get(url_to_download, temp_file, proxies=proxies, resume_size=resume_size, headers=headers)
+  File "/usr/local/lib/python3.7/dist-packages/transformers/file_utils.py", line 2076, in http_get
+    for chunk in r.iter_content(chunk_size=1024):
+  File "/usr/local/lib/python3.7/dist-packages/requests/models.py", line 760, in generate
+    for chunk in self.raw.stream(chunk_size, decode_content=True):
+  File "/usr/local/lib/python3.7/dist-packages/urllib3/response.py", line 627, in stream
+    data = self.read(amt=amt, decode_content=decode_content)
+  File "/usr/local/lib/python3.7/dist-packages/urllib3/response.py", line 566, in read
+    data = self._fp_read(amt) if not fp_closed else b""
+  File "/usr/local/lib/python3.7/dist-packages/urllib3/response.py", line 532, in _fp_read
+    return self._fp.read(amt) if amt is not None else self._fp.read()
+  File "/usr/lib/python3.7/http/client.py", line 465, in read
+    n = self.readinto(b)
+  File "/usr/lib/python3.7/http/client.py", line 509, in readinto
+    n = self.fp.readinto(b)
+  File "/usr/lib/python3.7/socket.py", line 589, in readinto
+    return self._sock.recv_into(b)
+  File "/usr/lib/python3.7/ssl.py", line 1071, in recv_into
+    return self.read(nbytes, buffer)
+  File "/usr/lib/python3.7/ssl.py", line 929, in read
+    return self._sslobj.read(len, buffer)
+KeyboardInterrupt

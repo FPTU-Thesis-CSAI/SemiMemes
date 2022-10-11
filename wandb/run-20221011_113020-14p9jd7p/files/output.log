@@ -1,0 +1,19 @@
+Some weights of the model checkpoint at uclanlp/visualbert-nlvr2-coco-pre were not used when initializing VisualBertModel: ['cls.predictions.decoder.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.seq_relationship.weight', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.decoder.bias']
+- This IS expected if you are initializing VisualBertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing VisualBertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Traceback (most recent call last):
+  File "/content/project/SSLMemes/src/train.py", line 240, in <module>
+    train(config=config,args=args)
+  File "/content/project/SSLMemes/src/train.py", line 180, in train
+    train_loader, val_loader = create_loaders(config,model_type,processor,tokenizer)
+  File "/content/project/SSLMemes/src/utils.py", line 48, in create_loaders
+    supervise = not cfg.semi_supervised,model_type=model_type, vilt_processor=processor,mode='train')
+  File "/content/project/SSLMemes/src/data.py", line 33, in __init__
+    self.img_features = torch.load(os.path.join(img_feature_path, "features.pt"))
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 579, in load
+    with _open_file_like(f, 'rb') as opened_file:
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 230, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 211, in __init__
+    super(_open_file, self).__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: './SSLMemes/data/features/visualberttrain_images/features.pt'

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/content/project/SSLMemes/src/train.py", line 236, in <module>
+    with open(args.hyper_yaml_path, 'r') as stream:
+FileNotFoundError: [Errno 2] No such file or directory: './config/hyper1.yml'

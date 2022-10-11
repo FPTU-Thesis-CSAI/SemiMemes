@@ -1,0 +1,27 @@
+%s not found in cache or force_download set to True, downloading to %s https://s3.amazonaws.com/models.huggingface.co/bert/unc-nlp/frcnn-vg-finetuned/config.yaml /root/.cache/torch/transformers/tmpcv0tytod
+loading configuration file cache
+Downloading: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2.13k/2.13k [00:00<00:00, 1.55MB/s]
+Traceback (most recent call last):
+  File "/content/project/SSLMemes/src/data.py", line 339, in <module>
+    data.show_image(1)
+  File "/content/project/SSLMemes/src/data.py", line 185, in show_image
+    images, sizes, scales_yx = image_preprocess(img_path)
+  File "/usr/local/lib/python3.7/dist-packages/SSLMemes-1.0-py3.7.egg/SSLMemes/feature_extraction/lxmert/processing_image.py", line 112, in __call__
+    torch.as_tensor(img_tensorize(images.pop(i), input_format=self.input_format))
+  File "/usr/local/lib/python3.7/dist-packages/SSLMemes-1.0-py3.7.egg/SSLMemes/feature_extraction/lxmert/utils.py", line 552, in img_tensorize
+    img = get_image_from_url(im)
+  File "/usr/local/lib/python3.7/dist-packages/SSLMemes-1.0-py3.7.egg/SSLMemes/feature_extraction/lxmert/utils.py", line 518, in get_image_from_url
+    response = requests.get(url)
+  File "/usr/local/lib/python3.7/dist-packages/requests/api.py", line 75, in get
+    return request('get', url, params=params, **kwargs)
+  File "/usr/local/lib/python3.7/dist-packages/requests/api.py", line 61, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/usr/local/lib/python3.7/dist-packages/requests/sessions.py", line 515, in request
+    prep = self.prepare_request(req)
+  File "/usr/local/lib/python3.7/dist-packages/requests/sessions.py", line 453, in prepare_request
+    hooks=merge_hooks(request.hooks, self.hooks),
+  File "/usr/local/lib/python3.7/dist-packages/requests/models.py", line 318, in prepare
+    self.prepare_url(url, params)
+  File "/usr/local/lib/python3.7/dist-packages/requests/models.py", line 392, in prepare_url
+    raise MissingSchema(error)
+requests.exceptions.MissingSchema: Invalid URL './data/Memotion2.0/images/train_images/2.jpg': No scheme supplied. Perhaps you meant http://./data/Memotion2.0/images/train_images/2.jpg?

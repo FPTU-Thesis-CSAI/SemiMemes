@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/content/project/SSLMemes/src/data.py", line 339, in <module>
+    data.show_image(1)
+  File "/content/project/SSLMemes/src/data.py", line 199, in show_image
+    box_image = wandb.Image(images, boxes = {"predictions": {"box_data": all_boxes}})
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 2111, in __init__
+    self._initialize_from_data(data_or_path, mode)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 2236, in _initialize_from_data
+    self.to_uint8(data), mode=mode or self.guess_mode(data)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 2366, in guess_mode
+    "Un-supported shape for image conversion %s" % list(data.shape)
+ValueError: Un-supported shape for image conversion [3, 800, 895]
+loading configuration file cache

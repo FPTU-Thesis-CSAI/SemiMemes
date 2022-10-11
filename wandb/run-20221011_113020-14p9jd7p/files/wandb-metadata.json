@@ -1,0 +1,18 @@
+{
+    "os": "Linux-5.10.133+-x86_64-with-Ubuntu-18.04-bionic",
+    "python": "3.7.14",
+    "heartbeatAt": "2022-10-11T11:30:24.378810",
+    "startedAt": "2022-10-11T11:30:20.306215",
+    "docker": null,
+    "gpu": "Tesla T4",
+    "gpu_count": 1,
+    "cpu_count": 4,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/content/project/SSLMemes/src/train.py",
+    "codePath": "SSLMemes/src/train.py",
+    "host": "2a837182e63e",
+    "username": "root",
+    "executable": "/usr/bin/python3"
+}
