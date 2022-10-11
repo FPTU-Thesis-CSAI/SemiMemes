@@ -1,0 +1,15 @@
+2022-10-08 05:12:50,485 INFO    MainThread:26531 [internal.py:wandb_internal():95] W&B internal server running at pid: 26531, started at: 2022-10-08 05:12:50.484404
+2022-10-08 05:12:50,493 DEBUG   HandlerThread:26531 [handler.py:handle_request():141] handle_request: run_start
+2022-10-08 05:12:50,494 INFO    WriterThread:26531 [datastore.py:open_for_write():77] open: /content/SSLMemes/wandb/offline-run-20221008_051244-1q4ra4l1/run-1q4ra4l1.wandb
+2022-10-08 05:12:55,892 DEBUG   HandlerThread:26531 [meta.py:__init__():37] meta init
+2022-10-08 05:12:55,892 DEBUG   HandlerThread:26531 [meta.py:__init__():51] meta init done
+2022-10-08 05:12:55,892 DEBUG   HandlerThread:26531 [meta.py:probe():211] probe
+2022-10-08 05:12:55,985 DEBUG   HandlerThread:26531 [meta.py:_setup_git():201] setup git
+2022-10-08 05:12:56,102 DEBUG   HandlerThread:26531 [meta.py:_setup_git():208] setup git done
+2022-10-08 05:12:56,102 DEBUG   HandlerThread:26531 [meta.py:_save_pip():55] save pip
+2022-10-08 05:12:56,106 DEBUG   HandlerThread:26531 [meta.py:_save_pip():69] save pip done
+2022-10-08 05:12:56,106 DEBUG   HandlerThread:26531 [meta.py:probe():249] probe done
+2022-10-08 05:13:29,135 WARNING MainThread:26531 [internal.py:wandb_internal():155] Internal process interrupt: 1
+2022-10-08 05:13:29,743 DEBUG   HandlerThread:26531 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-08 05:13:32,003 WARNING MainThread:26531 [internal.py:wandb_internal():155] Internal process interrupt: 2
+2022-10-08 05:13:32,003 ERROR   MainThread:26531 [internal.py:wandb_internal():158] Internal process interrupted.

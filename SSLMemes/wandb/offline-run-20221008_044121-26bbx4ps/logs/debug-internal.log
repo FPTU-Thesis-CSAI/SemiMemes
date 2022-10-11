@@ -1,0 +1,11 @@
+2022-10-08 04:41:26,959 INFO    MainThread:21242 [internal.py:wandb_internal():95] W&B internal server running at pid: 21242, started at: 2022-10-08 04:41:26.959097
+2022-10-08 04:41:26,969 DEBUG   HandlerThread:21242 [handler.py:handle_request():141] handle_request: run_start
+2022-10-08 04:41:26,970 INFO    WriterThread:21242 [datastore.py:open_for_write():77] open: /content/SSLMemes/wandb/offline-run-20221008_044121-26bbx4ps/run-26bbx4ps.wandb
+2022-10-08 04:41:31,736 DEBUG   HandlerThread:21242 [meta.py:__init__():37] meta init
+2022-10-08 04:41:31,736 DEBUG   HandlerThread:21242 [meta.py:__init__():51] meta init done
+2022-10-08 04:41:31,737 DEBUG   HandlerThread:21242 [meta.py:probe():211] probe
+2022-10-08 04:41:31,768 DEBUG   HandlerThread:21242 [meta.py:_setup_git():201] setup git
+2022-10-08 04:41:31,801 DEBUG   HandlerThread:21242 [meta.py:_setup_git():208] setup git done
+2022-10-08 04:41:31,801 DEBUG   HandlerThread:21242 [meta.py:_save_pip():55] save pip
+2022-10-08 04:41:31,804 DEBUG   HandlerThread:21242 [meta.py:_save_pip():69] save pip done
+2022-10-08 04:41:31,804 DEBUG   HandlerThread:21242 [meta.py:probe():249] probe done

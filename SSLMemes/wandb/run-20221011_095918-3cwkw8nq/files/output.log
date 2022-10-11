@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/content/SSLMemes/src/data.py", line 331, in <module>
+    data.show_image(1)
+  File "/content/SSLMemes/src/data.py", line 193, in show_image
+    box_image = wandb.Image(img, boxes = {"predictions": {"box_data": all_boxes}})
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 2113, in __init__
+    self._set_initialization_meta(grouping, caption, classes, boxes, masks)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 2141, in _set_initialization_meta
+    boxes_final[key] = BoundingBoxes2D(box_item, key)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 1848, in __init__
+    super(BoundingBoxes2D, self).__init__(val)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 1391, in __init__
+    self.validate(val)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/data_types.py", line 1926, in validate
+    raise TypeError(error_str)
+TypeError: Each box must contain a position with: middle, width, and height or
+minX, maxX, minY, maxY.

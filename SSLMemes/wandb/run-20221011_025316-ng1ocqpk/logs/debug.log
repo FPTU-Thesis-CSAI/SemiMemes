@@ -1,0 +1,40 @@
+2022-10-11 02:53:16,853 INFO    Thread-12 :12262 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-10-11 02:53:16,853 INFO    Thread-12 :12262 [wandb_setup.py:_flush():75] Loading settings from wandb/settings
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_setup.py:_flush():75] Loading settings from environment variables: {'project': 'meme_experiments', 'entity': 'vietnguyen', 'root_dir': '/content/SSLMemes', 'sweep_id': 'x1uex3wq', 'run_id': 'ng1ocqpk', 'sweep_param_path': '/content/SSLMemes/wandb/sweep-x1uex3wq/config-ng1ocqpk.yaml'}
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program_relpath': 'src/train.py', 'program': '/content/SSLMemes/src/train.py'}
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_init.py:_log_setup():405] Logging user logs to /content/SSLMemes/wandb/run-20221011_025316-ng1ocqpk/logs/debug.log
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_init.py:_log_setup():406] Logging internal logs to /content/SSLMemes/wandb/run-20221011_025316-ng1ocqpk/logs/debug-internal.log
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_init.py:init():439] calling init triggers
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_init.py:init():443] wandb.init called with sweep_config: {'amp': True, 'batch_size': 168, 'dropout': 0.3, 'epochs': 1, 'eval_step': 100, 'hidden_size': 128, 'img_feature_path': 'data/features/visualbert/', 'learning_rate': 0.026868732379981875, 'model_path': 'uclanlp/visualbert-nlvr2-coco-pre', 'model_type': 'visualbert', 'optimizer': 'adam', 'output_dir': './tmp', 'random_seed': 42, 'resume_training': True, 'semi-supervised': True, 'train_csv_path': 'data/splits/random/memotion_train.csv', 'val_csv_path': 'val_csv_path'}
+config: {}
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_init.py:init():487] wandb.init() called when a run is still active
+2022-10-11 02:53:16,854 INFO    Thread-12 :12262 [wandb_run.py:finish():1539] finishing run vietnguyen/meme_experiments/3gwohiwp
+2022-10-11 02:53:16,855 INFO    Thread-12 :12262 [wandb_run.py:_atexit_cleanup():1702] got exitcode: 1
+2022-10-11 02:53:16,857 INFO    Thread-12 :12262 [wandb_run.py:_restore():1674] restore
+2022-10-11 02:53:19,032 INFO    Thread-12 :12262 [wandb_run.py:_restore():1674] restore
+2022-10-11 02:53:21,804 ERROR   Thread-12 :12262 [wandb_run.py:_atexit_cleanup():1723] Problem finishing run
+Traceback (most recent call last):
+  File "/content/SSLMemes/src/train.py", line 154, in train
+    model_type = config.model_type
+AttributeError: 'NoneType' object has no attribute 'model_type'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_run.py", line 1711, in _atexit_cleanup
+    self._on_finish()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_run.py", line 1811, in _on_finish
+    self._console_stop()  # TODO: there's a race here with jupyter console logging
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_run.py", line 1751, in _console_stop
+    self._restore()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_run.py", line 1680, in _restore
+    self._err_redir.uninstall()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/lib/redirect.py", line 754, in uninstall
+    _WSCH.remove_fd(self._pipe_read_fd)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/lib/redirect.py", line 667, in remove_fd
+    self._unregister()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/lib/redirect.py", line 655, in _unregister
+    signal.signal(signal.SIGWINCH, self._old_handler)
+  File "/usr/lib/python3.7/signal.py", line 47, in signal
+    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))
+ValueError: signal only works in main thread

@@ -1,0 +1,21 @@
+
+[34m[1mwandb[39m[22m: [33mWARNING[39m Calling wandb.login() after wandb.init() has no effect.
+Create sweep with ID: fylcdgcn
+Sweep URL: https://wandb.ai/vietnguyen/meme_experiments/sweeps/fylcdgcn
+[34m[1mwandb[39m[22m: Agent Starting Run: uat8gi7o with config:
+[34m[1mwandb[39m[22m: 	amp: True
+[34m[1mwandb[39m[22m: 	batch_size: 128
+[34m[1mwandb[39m[22m: 	dropout: 0
+[34m[1mwandb[39m[22m: 	epochs: 1
+[34m[1mwandb[39m[22m: 	eval_step: 100
+[34m[1mwandb[39m[22m: 	hidden_size: 128
+[34m[1mwandb[39m[22m: 	img_feature_path: data/features/visualbert/
+[34m[1mwandb[39m[22m: 	learning_rate: 0.09727540980175386
+[34m[1mwandb[39m[22m: 	model_path: uclanlp/visualbert-nlvr2-coco-pre
+[34m[1mwandb[39m[22m: 	model_type: visualbert
+[34m[1mwandb[39m[22m: 	optimizer: adam
+[34m[1mwandb[39m[22m: 	output_dir: ./tmp
+[34m[1mwandb[39m[22m: 	random_seed: 42
+[34m[1mwandb[39m[22m: 	resume_training: True
+[34m[1mwandb[39m[22m: 	semi-supervised: True
+[34m[1mwandb[39m[22m: 	train_csv_path: data/splits/random/memotion_train.csv

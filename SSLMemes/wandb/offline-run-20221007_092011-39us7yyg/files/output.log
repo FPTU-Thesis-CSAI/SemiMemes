@@ -1,0 +1,14 @@
+You are using a model of type visual_bert to instantiate a model of type lxmert. This is not supported for all configurations of models and can yield errors.
+Some weights of the model checkpoint at uclanlp/visualbert-nlvr2-coco-pre were not used when initializing VisualBertModel: ['cls.seq_relationship.bias', 'cls.seq_relationship.weight', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.bias', 'cls.predictions.decoder.bias']
+- This IS expected if you are initializing VisualBertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing VisualBertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Traceback (most recent call last):
+  File "/content/SSLMemes/src/train.py", line 299, in <module>
+    checkpoint = torch.load(ck_path)
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 579, in load
+    with _open_file_like(f, 'rb') as opened_file:
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 230, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/usr/local/lib/python3.7/dist-packages/torch/serialization.py", line 211, in __init__
+    super(_open_file, self).__init__(open(name, mode))
+IsADirectoryError: [Errno 21] Is a directory: './tmp/best_checkpoint'

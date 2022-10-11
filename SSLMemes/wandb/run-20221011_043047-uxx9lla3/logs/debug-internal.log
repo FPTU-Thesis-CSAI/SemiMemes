@@ -1,0 +1,37 @@
+2022-10-11 04:30:54,854 INFO    MainThread:29748 [internal.py:wandb_internal():95] W&B internal server running at pid: 29748, started at: 2022-10-11 04:30:54.853354
+2022-10-11 04:30:54,861 INFO    WriterThread:29748 [datastore.py:open_for_write():77] open: /content/SSLMemes/wandb/run-20221011_043047-uxx9lla3/run-uxx9lla3.wandb
+2022-10-11 04:30:54,865 DEBUG   SenderThread:29748 [sender.py:send():235] send: header
+2022-10-11 04:30:54,865 DEBUG   SenderThread:29748 [sender.py:send():235] send: run
+2022-10-11 04:30:55,095 DEBUG   HandlerThread:29748 [handler.py:handle_request():141] handle_request: check_version
+2022-10-11 04:30:55,107 INFO    SenderThread:29748 [dir_watcher.py:__init__():169] watching files in: /content/SSLMemes/wandb/run-20221011_043047-uxx9lla3/files
+2022-10-11 04:30:55,107 INFO    SenderThread:29748 [sender.py:_start_run_threads():815] run started: uxx9lla3 with start time 1665462647
+2022-10-11 04:30:55,107 DEBUG   SenderThread:29748 [sender.py:send():235] send: summary
+2022-10-11 04:30:55,108 INFO    SenderThread:29748 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:30:55,109 DEBUG   SenderThread:29748 [sender.py:send_request():249] send_request: check_version
+2022-10-11 04:30:55,160 DEBUG   HandlerThread:29748 [handler.py:handle_request():141] handle_request: run_start
+2022-10-11 04:30:56,115 INFO    Thread-13 :29748 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_043047-uxx9lla3/files/wandb-summary.json
+2022-10-11 04:31:00,089 DEBUG   HandlerThread:29748 [meta.py:__init__():37] meta init
+2022-10-11 04:31:00,089 DEBUG   HandlerThread:29748 [meta.py:__init__():51] meta init done
+2022-10-11 04:31:00,090 DEBUG   HandlerThread:29748 [meta.py:probe():211] probe
+2022-10-11 04:31:00,117 DEBUG   HandlerThread:29748 [meta.py:_setup_git():201] setup git
+2022-10-11 04:31:00,152 DEBUG   HandlerThread:29748 [meta.py:_setup_git():208] setup git done
+2022-10-11 04:31:00,152 DEBUG   HandlerThread:29748 [meta.py:_save_pip():55] save pip
+2022-10-11 04:31:00,154 DEBUG   HandlerThread:29748 [meta.py:_save_pip():69] save pip done
+2022-10-11 04:31:00,155 DEBUG   HandlerThread:29748 [meta.py:probe():249] probe done
+2022-10-11 04:31:00,161 DEBUG   SenderThread:29748 [sender.py:send():235] send: files
+2022-10-11 04:31:00,162 INFO    SenderThread:29748 [sender.py:_save_file():947] saving file wandb-metadata.json with policy now
+2022-10-11 04:31:00,176 DEBUG   HandlerThread:29748 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:31:00,177 DEBUG   SenderThread:29748 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 04:31:00,319 DEBUG   SenderThread:29748 [sender.py:send():235] send: telemetry
+2022-10-11 04:31:00,320 DEBUG   SenderThread:29748 [sender.py:send():235] send: config
+2022-10-11 04:31:00,568 DEBUG   SenderThread:29748 [sender.py:send():235] send: config
+2022-10-11 04:31:00,646 INFO    Thread-17 :29748 [upload_job.py:push():137] Uploaded file /tmp/tmp0cqxmw_nwandb/3feo3g3l-wandb-metadata.json
+2022-10-11 04:31:01,147 INFO    Thread-13 :29748 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_043047-uxx9lla3/files/requirements.txt
+2022-10-11 04:31:01,148 INFO    Thread-13 :29748 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_043047-uxx9lla3/files/wandb-metadata.json
+2022-10-11 04:31:01,148 INFO    Thread-13 :29748 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_043047-uxx9lla3/files/output.log
+2022-10-11 04:31:15,321 DEBUG   HandlerThread:29748 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:31:15,321 DEBUG   SenderThread:29748 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 04:31:26,160 INFO    Thread-13 :29748 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_043047-uxx9lla3/files/config.yaml
+2022-10-11 04:31:28,287 DEBUG   SenderThread:29748 [sender.py:send():235] send: stats
+2022-10-11 04:31:30,467 DEBUG   HandlerThread:29748 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:31:30,468 DEBUG   SenderThread:29748 [sender.py:send_request():249] send_request: stop_status

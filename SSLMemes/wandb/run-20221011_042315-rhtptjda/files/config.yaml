@@ -1,0 +1,41 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.12.11
+    framework: huggingface
+    huggingface_version: 4.17.0
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.7.14
+    start_time: 1665462195
+    t:
+      1:
+      - 1
+      - 5
+      - 11
+      - 49
+      4: 3.7.14
+      5: 0.12.11
+      6: 4.17.0
+      8:
+      - 5
+batch_size:
+  desc: null
+  value: 40
+dropout:
+  desc: null
+  value: 0.5
+epochs:
+  desc: null
+  value: 1
+fc_layer_size:
+  desc: null
+  value: 512
+learning_rate:
+  desc: null
+  value: 0.0057273190814828845
+optimizer:
+  desc: null
+  value: sgd
