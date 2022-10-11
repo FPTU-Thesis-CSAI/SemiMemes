@@ -1,0 +1,146 @@
+2022-10-11 03:17:14,669 INFO    Thread-8  :14974 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-10-11 03:17:14,669 INFO    Thread-8  :14974 [wandb_setup.py:_flush():75] Loading settings from wandb/settings
+2022-10-11 03:17:14,669 INFO    Thread-8  :14974 [wandb_setup.py:_flush():75] Loading settings from environment variables: {'project': 'meme_experiments', 'entity': 'vietnguyen', 'root_dir': '/content/SSLMemes', 'sweep_id': 'k8qp7sz5', 'run_id': 'wic29qgm', 'sweep_param_path': '/content/SSLMemes/wandb/sweep-k8qp7sz5/config-wic29qgm.yaml'}
+2022-10-11 03:17:14,669 INFO    Thread-8  :14974 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program_relpath': 'src/train.py', 'program': '/content/SSLMemes/src/train.py'}
+2022-10-11 03:17:14,670 INFO    Thread-8  :14974 [wandb_init.py:_log_setup():405] Logging user logs to /content/SSLMemes/wandb/run-20221011_031714-wic29qgm/logs/debug.log
+2022-10-11 03:17:14,670 INFO    Thread-8  :14974 [wandb_init.py:_log_setup():406] Logging internal logs to /content/SSLMemes/wandb/run-20221011_031714-wic29qgm/logs/debug-internal.log
+2022-10-11 03:17:14,670 INFO    Thread-8  :14974 [wandb_init.py:init():439] calling init triggers
+2022-10-11 03:17:14,670 INFO    Thread-8  :14974 [wandb_init.py:init():443] wandb.init called with sweep_config: {'batch_size': 104, 'dropout': 0, 'epochs': 1, 'hidden_size': 128, 'learning_rate': 0.019148832272662897, 'optimizer': 'adam'}
+config: {}
+2022-10-11 03:17:14,670 INFO    Thread-8  :14974 [wandb_init.py:init():492] starting backend
+2022-10-11 03:17:14,670 INFO    Thread-8  :14974 [backend.py:_multiprocessing_setup():101] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-10-11 03:17:14,695 INFO    Thread-8  :14974 [backend.py:ensure_launched():219] starting backend process...
+2022-10-11 03:17:14,709 INFO    Thread-8  :14974 [backend.py:ensure_launched():225] started backend process with pid: 15059
+2022-10-11 03:17:14,713 INFO    Thread-8  :14974 [wandb_init.py:init():501] backend started and connected
+2022-10-11 03:17:14,727 INFO    Thread-8  :14974 [wandb_run.py:_config_callback():992] config_cb None None {'batch_size': 104, 'dropout': 0, 'epochs': 1, 'hidden_size': 128, 'learning_rate': 0.019148832272662897, 'optimizer': 'adam'}
+2022-10-11 03:17:14,729 INFO    Thread-8  :14974 [wandb_init.py:init():565] updated telemetry
+2022-10-11 03:17:14,757 INFO    Thread-8  :14974 [wandb_init.py:init():596] communicating run to backend with 30 second timeout
+2022-10-11 03:17:21,999 INFO    Thread-8  :14974 [wandb_run.py:_on_init():1759] communicating current version
+2022-10-11 03:17:22,081 INFO    Thread-8  :14974 [wandb_run.py:_on_init():1763] got version response upgrade_message: "wandb version 0.13.4 is available!  To upgrade, please run:\n $ pip install wandb --upgrade"
+
+2022-10-11 03:17:22,081 INFO    Thread-8  :14974 [wandb_init.py:init():625] starting run threads in backend
+2022-10-11 03:17:26,975 INFO    Thread-8  :14974 [wandb_run.py:_console_start():1733] atexit reg
+2022-10-11 03:17:26,976 INFO    Thread-8  :14974 [wandb_run.py:_redirect():1606] redirect: SettingsConsole.REDIRECT
+2022-10-11 03:17:26,978 INFO    Thread-8  :14974 [wandb_run.py:_redirect():1611] Redirecting console.
+2022-10-11 03:17:26,980 ERROR   Thread-8  :14974 [wandb_run.py:_redirect():1670] Failed to redirect.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_run.py", line 1663, in _redirect
+    out_redir.install()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/lib/redirect.py", line 709, in install
+    _WSCH.add_fd(self._pipe_read_fd)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/lib/redirect.py", line 659, in add_fd
+    self._register()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/lib/redirect.py", line 644, in _register
+    old_handler = signal.signal(signal.SIGWINCH, lambda *_: None)
+  File "/usr/lib/python3.7/signal.py", line 47, in signal
+    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))
+ValueError: signal only works in main thread
+2022-10-11 03:17:26,982 INFO    Thread-8  :14974 [wandb_init.py:init():664] run started, returning control to user process
+2022-10-11 03:17:44,316 INFO    Thread-8  :14974 [wandb_run.py:_config_callback():992] config_cb None None {'img_feature_path': 'data/features/visualbert/', 'train_csv_path': 'data/splits/random/memotion_train.csv', 'val_csv_path': 'data/splits/random/memotion_val.csv', 'model_type': 'visualbert', 'model_path': 'uclanlp/visualbert-nlvr2-coco-pre', 'epoch': 100, 'eval_step': 100, 'amp': True, 'output_dir': './tmp', 'checkpoint_step': 100, 'random_seed': 42, 'resume_training': False, 'semi_supervised': False}
+2022-10-11 03:18:27,391 INFO    Thread-8  :14974 [wandb_run.py:finish():1539] finishing run vietnguyen/meme_experiments/wic29qgm
+2022-10-11 03:18:27,391 INFO    Thread-8  :14974 [wandb_run.py:_atexit_cleanup():1702] got exitcode: 1
+2022-10-11 03:18:27,394 INFO    Thread-8  :14974 [wandb_run.py:_restore():1674] restore
+2022-10-11 03:18:27,401 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 1
+}
+pusher_stats {
+  uploaded_bytes: 699
+  total_bytes: 699
+}
+
+2022-10-11 03:18:27,632 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 1
+}
+pusher_stats {
+  uploaded_bytes: 699
+  total_bytes: 699
+}
+
+2022-10-11 03:18:28,082 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 3
+}
+pusher_stats {
+  uploaded_bytes: 699
+  total_bytes: 8781
+}
+
+2022-10-11 03:18:28,184 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 699
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:28,287 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:28,390 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:28,493 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:28,597 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:28,700 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:28,802 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:29,214 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+
+2022-10-11 03:18:29,606 INFO    Thread-8  :14974 [wandb_run.py:_on_finish():1831] got exit ret: done: true
+exit_result {
+}
+file_counts {
+  wandb_count: 4
+}
+pusher_stats {
+  uploaded_bytes: 10095
+  total_bytes: 10095
+}
+local_info {
+}
+
+2022-10-11 03:18:31,899 INFO    Thread-8  :14974 [wandb_run.py:_footer_history_summary_info():2865] rendering history
+2022-10-11 03:18:31,899 INFO    Thread-8  :14974 [wandb_run.py:_footer_history_summary_info():2894] rendering summary
+2022-10-11 03:18:31,903 INFO    Thread-8  :14974 [wandb_run.py:_footer_sync_info():2822] logging synced files

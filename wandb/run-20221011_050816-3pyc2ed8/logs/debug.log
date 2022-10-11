@@ -1,0 +1,46 @@
+2022-10-11 05:08:16,872 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-10-11 05:08:16,873 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from /content/SSLMemes/wandb/settings
+2022-10-11 05:08:16,873 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from environment variables: {}
+2022-10-11 05:08:16,873 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program_relpath': 'src/train.py', 'program': '/content/SSLMemes/src/train.py'}
+2022-10-11 05:08:16,873 INFO    MainThread:38354 [wandb_init.py:_log_setup():405] Logging user logs to /content/SSLMemes/wandb/run-20221011_050816-3pyc2ed8/logs/debug.log
+2022-10-11 05:08:16,873 INFO    MainThread:38354 [wandb_init.py:_log_setup():406] Logging internal logs to /content/SSLMemes/wandb/run-20221011_050816-3pyc2ed8/logs/debug-internal.log
+2022-10-11 05:08:16,873 INFO    MainThread:38354 [wandb_init.py:init():439] calling init triggers
+2022-10-11 05:08:16,873 INFO    MainThread:38354 [wandb_init.py:init():443] wandb.init called with sweep_config: {}
+config: {}
+2022-10-11 05:08:16,874 INFO    MainThread:38354 [wandb_init.py:init():492] starting backend
+2022-10-11 05:08:16,874 INFO    MainThread:38354 [backend.py:_multiprocessing_setup():101] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-10-11 05:08:16,896 INFO    MainThread:38354 [backend.py:ensure_launched():219] starting backend process...
+2022-10-11 05:08:16,915 INFO    MainThread:38354 [backend.py:ensure_launched():225] started backend process with pid: 38430
+2022-10-11 05:08:16,919 INFO    MainThread:38354 [wandb_init.py:init():501] backend started and connected
+2022-10-11 05:08:16,934 INFO    MainThread:38354 [wandb_init.py:init():565] updated telemetry
+2022-10-11 05:08:16,979 INFO    MainThread:38354 [wandb_init.py:init():596] communicating run to backend with 30 second timeout
+2022-10-11 05:08:24,258 INFO    MainThread:38354 [wandb_run.py:_on_init():1759] communicating current version
+2022-10-11 05:08:24,345 INFO    MainThread:38354 [wandb_run.py:_on_init():1763] got version response upgrade_message: "wandb version 0.13.4 is available!  To upgrade, please run:\n $ pip install wandb --upgrade"
+
+2022-10-11 05:08:24,345 INFO    MainThread:38354 [wandb_init.py:init():625] starting run threads in backend
+2022-10-11 05:08:29,248 INFO    MainThread:38354 [wandb_run.py:_console_start():1733] atexit reg
+2022-10-11 05:08:29,249 INFO    MainThread:38354 [wandb_run.py:_redirect():1606] redirect: SettingsConsole.REDIRECT
+2022-10-11 05:08:29,249 INFO    MainThread:38354 [wandb_run.py:_redirect():1611] Redirecting console.
+2022-10-11 05:08:29,272 INFO    MainThread:38354 [wandb_run.py:_redirect():1667] Redirects installed.
+2022-10-11 05:08:29,272 INFO    MainThread:38354 [wandb_init.py:init():664] run started, returning control to user process
+2022-10-11 05:08:29,307 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-10-11 05:08:29,307 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from /content/SSLMemes/wandb/settings
+2022-10-11 05:08:29,307 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from environment variables: {}
+2022-10-11 05:08:29,307 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program_relpath': 'src/train.py', 'program': '/content/SSLMemes/src/train.py'}
+2022-10-11 05:08:29,308 INFO    MainThread:38354 [wandb_init.py:_log_setup():405] Logging user logs to /content/SSLMemes/wandb/run-20221011_050829-2bb0n4cq/logs/debug.log
+2022-10-11 05:08:29,308 INFO    MainThread:38354 [wandb_init.py:_log_setup():406] Logging internal logs to /content/SSLMemes/wandb/run-20221011_050829-2bb0n4cq/logs/debug-internal.log
+2022-10-11 05:08:29,308 INFO    MainThread:38354 [wandb_init.py:init():439] calling init triggers
+2022-10-11 05:08:29,309 INFO    MainThread:38354 [wandb_init.py:init():443] wandb.init called with sweep_config: {}
+config: {'batch_size': 64, 'dropout': 0.3, 'epochs': 1, 'hidden_size': 128, 'learning_rate': '2e-5', 'optimizer': 'adam'}
+2022-10-11 05:08:29,309 INFO    MainThread:38354 [wandb_init.py:init():487] wandb.init() called when a run is still active
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from /content/SSLMemes/wandb/settings
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Loading settings from environment variables: {}
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program_relpath': 'src/train.py', 'program': '/content/SSLMemes/src/train.py'}
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_init.py:_log_setup():405] Logging user logs to /content/SSLMemes/wandb/run-20221011_051032-1cqdk3rb/logs/debug.log
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_init.py:_log_setup():406] Logging internal logs to /content/SSLMemes/wandb/run-20221011_051032-1cqdk3rb/logs/debug-internal.log
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_init.py:init():439] calling init triggers
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_init.py:init():443] wandb.init called with sweep_config: {}
+config: {'batch_size': 64, 'dropout': 0.3, 'epochs': 1, 'hidden_size': 128, 'learning_rate': '2e-5', 'optimizer': 'adam'}
+2022-10-11 05:10:32,910 INFO    MainThread:38354 [wandb_init.py:init():487] wandb.init() called when a run is still active
+2022-10-11 05:11:00,189 INFO    MainThread:38354 [wandb_run.py:_config_callback():992] config_cb None None {'batch_size': 64, 'dropout': 0.3, 'epochs': 1, 'hidden_size': 128, 'learning_rate': '2e-5', 'optimizer': 'adam'}

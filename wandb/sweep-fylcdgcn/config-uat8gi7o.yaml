@@ -1,0 +1,36 @@
+wandb_version: 1
+
+amp:
+  value: true
+batch_size:
+  value: 128
+dropout:
+  value: 0
+epochs:
+  value: 1
+eval_step:
+  value: 100
+hidden_size:
+  value: 128
+img_feature_path:
+  value: data/features/visualbert/
+learning_rate:
+  value: 0.09727540980175386
+model_path:
+  value: uclanlp/visualbert-nlvr2-coco-pre
+model_type:
+  value: visualbert
+optimizer:
+  value: adam
+output_dir:
+  value: ./tmp
+random_seed:
+  value: 42
+resume_training:
+  value: true
+semi-supervised:
+  value: true
+train_csv_path:
+  value: data/splits/random/memotion_train.csv
+val_csv_path:
+  value: val_csv_path

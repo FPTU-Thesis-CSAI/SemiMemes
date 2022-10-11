@@ -1,0 +1,991 @@
+2022-10-11 04:50:26,509 INFO    MainThread:33363 [internal.py:wandb_internal():95] W&B internal server running at pid: 33363, started at: 2022-10-11 04:50:26.509277
+2022-10-11 04:50:26,512 INFO    WriterThread:33363 [datastore.py:open_for_write():77] open: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/run-bgyr7qwn.wandb
+2022-10-11 04:50:26,514 DEBUG   SenderThread:33363 [sender.py:send():235] send: header
+2022-10-11 04:50:26,515 DEBUG   SenderThread:33363 [sender.py:send():235] send: run
+2022-10-11 04:50:26,701 INFO    SenderThread:33363 [dir_watcher.py:__init__():169] watching files in: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files
+2022-10-11 04:50:26,701 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: check_version
+2022-10-11 04:50:26,701 INFO    SenderThread:33363 [sender.py:_start_run_threads():815] run started: bgyr7qwn with start time 1665463825
+2022-10-11 04:50:26,701 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:26,702 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:26,702 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: check_version
+2022-10-11 04:50:26,749 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: run_start
+2022-10-11 04:50:27,703 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:29,655 DEBUG   HandlerThread:33363 [meta.py:__init__():37] meta init
+2022-10-11 04:50:29,655 DEBUG   HandlerThread:33363 [meta.py:__init__():51] meta init done
+2022-10-11 04:50:29,655 DEBUG   HandlerThread:33363 [meta.py:probe():211] probe
+2022-10-11 04:50:29,684 DEBUG   HandlerThread:33363 [meta.py:_setup_git():201] setup git
+2022-10-11 04:50:29,713 DEBUG   HandlerThread:33363 [meta.py:_setup_git():208] setup git done
+2022-10-11 04:50:29,713 DEBUG   HandlerThread:33363 [meta.py:_save_pip():55] save pip
+2022-10-11 04:50:29,714 DEBUG   HandlerThread:33363 [meta.py:_save_pip():69] save pip done
+2022-10-11 04:50:29,714 DEBUG   HandlerThread:33363 [meta.py:probe():249] probe done
+2022-10-11 04:50:29,717 DEBUG   SenderThread:33363 [sender.py:send():235] send: files
+2022-10-11 04:50:29,717 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-metadata.json with policy now
+2022-10-11 04:50:29,726 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:50:29,726 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 04:50:29,871 DEBUG   SenderThread:33363 [sender.py:send():235] send: telemetry
+2022-10-11 04:50:29,872 DEBUG   SenderThread:33363 [sender.py:send():235] send: config
+2022-10-11 04:50:30,096 DEBUG   SenderThread:33363 [sender.py:send():235] send: config
+2022-10-11 04:50:30,266 INFO    Thread-11 :33363 [upload_job.py:push():137] Uploaded file /tmp/tmpm8nsf0jnwandb/2um7wmps-wandb-metadata.json
+2022-10-11 04:50:30,708 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/requirements.txt
+2022-10-11 04:50:30,709 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/output.log
+2022-10-11 04:50:30,709 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-metadata.json
+2022-10-11 04:50:41,422 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:41,423 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:41,423 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:41,425 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:41,712 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:41,729 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:41,730 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:41,730 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:41,731 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:41,946 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:41,947 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:41,948 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:41,948 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:42,251 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:42,252 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:42,252 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:42,253 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:42,474 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:42,475 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:42,475 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:42,475 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:42,713 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:42,763 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:42,764 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:42,764 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:42,765 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:42,964 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:42,964 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:42,965 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:42,965 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:43,251 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:43,252 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:43,252 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:43,253 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:43,462 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:43,463 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:43,463 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:43,465 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:43,713 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:43,746 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:43,747 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:43,747 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:43,748 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:43,947 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:43,948 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:43,949 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:43,949 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:44,252 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:44,253 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:44,253 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:44,254 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:44,478 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:44,479 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:44,479 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:44,479 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:44,714 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:44,767 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:44,768 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:44,769 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:44,769 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:44,873 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:50:44,873 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 04:50:44,984 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:45,005 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:45,005 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:45,006 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:45,282 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:45,283 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:45,283 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:45,284 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:45,506 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:45,507 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:45,507 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:45,511 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:45,714 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:45,798 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:45,799 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:45,799 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:45,800 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:46,016 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:46,017 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:46,017 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:46,018 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:46,307 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:46,308 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:46,308 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:46,309 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:46,532 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:46,533 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:46,533 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:46,534 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:46,715 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:46,821 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:46,821 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:46,822 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:46,822 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:47,039 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:47,040 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:47,040 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:47,041 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:47,332 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:47,333 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:47,334 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:47,334 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:47,558 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:47,559 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:47,559 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:47,562 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:47,715 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:47,849 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:47,850 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:47,850 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:47,850 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:48,067 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:48,068 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:48,068 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:48,069 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:48,359 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:48,360 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:48,360 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:48,361 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:48,588 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:48,589 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:48,589 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:48,590 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:48,716 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:48,878 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:48,879 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:48,879 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:48,880 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:49,097 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:49,098 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:49,099 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:49,099 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:49,388 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:49,389 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:49,389 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:49,390 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:49,615 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:49,616 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:49,616 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:49,619 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:49,716 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:49,905 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:49,905 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:49,906 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:49,906 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:50,124 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:50,125 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:50,125 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:50,126 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:50,414 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:50,415 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:50,415 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:50,415 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:50,645 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:50,646 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:50,647 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:50,648 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:50,716 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:50,935 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:50,936 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:50,936 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:50,937 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:51,156 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:51,158 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:51,158 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:51,158 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:51,463 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:51,464 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:51,464 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:51,465 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:51,717 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:51,726 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:51,732 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:51,732 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:51,735 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:52,019 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:52,021 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:52,021 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:52,021 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:52,241 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:52,242 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:52,243 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:52,243 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:52,533 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:52,535 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:52,535 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:52,536 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:52,717 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:52,767 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:52,768 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:52,769 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:52,769 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:53,057 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:53,058 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:53,058 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:53,059 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:53,276 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:53,277 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:53,278 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:53,278 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:53,568 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:53,569 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:53,569 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:53,570 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:53,718 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:53,802 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:53,803 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:53,803 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:53,805 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:54,092 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:54,093 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:54,093 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:54,094 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:54,312 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:54,313 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:54,314 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:54,314 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:54,603 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:54,604 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:54,604 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:54,605 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:54,718 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:54,834 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:54,835 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:54,835 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:54,836 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:55,126 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:55,127 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:55,128 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:55,128 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:55,345 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:55,346 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:55,346 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:55,346 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:55,641 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:55,642 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:55,642 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:55,642 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:55,718 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:55,872 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:55,873 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:55,874 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:55,876 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:56,163 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:56,164 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:56,164 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:56,165 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:56,383 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:56,384 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:56,384 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:56,385 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:56,679 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:56,680 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:56,719 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:56,910 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:56,930 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:56,930 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:56,931 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:56,931 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:56,931 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:57,200 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:57,200 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:57,201 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:57,201 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:57,419 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:57,420 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:57,421 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:57,421 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:57,714 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:57,715 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:57,716 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:57,716 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:57,719 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/config.yaml
+2022-10-11 04:50:57,719 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:57,843 DEBUG   SenderThread:33363 [sender.py:send():235] send: stats
+2022-10-11 04:50:57,944 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:57,945 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:57,945 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:57,947 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:58,234 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:58,235 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:58,235 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:58,236 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:58,452 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:58,453 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:58,453 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:58,454 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:58,720 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:58,745 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:58,746 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:58,746 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:58,747 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:58,972 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:58,973 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:58,974 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:58,974 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:59,263 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:59,264 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:59,265 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:59,265 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:59,484 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:59,485 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:59,485 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:59,486 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:50:59,720 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:50:59,776 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:50:59,777 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:50:59,777 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:50:59,778 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:00,004 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:00,005 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:00,006 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:00,008 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:51:00,009 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:00,009 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 04:51:00,298 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:00,299 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:00,299 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:00,299 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:00,516 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:00,517 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:00,517 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:00,518 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:00,720 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:00,807 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:00,808 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:00,809 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:00,809 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:01,039 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:01,040 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:01,041 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:01,041 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:01,331 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:01,331 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:01,332 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:01,332 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:01,549 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:01,550 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:01,551 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:01,551 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:01,721 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:01,844 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:01,845 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:01,845 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:01,846 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:02,073 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:02,074 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:02,074 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:02,078 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:02,364 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:02,365 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:02,366 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:02,366 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:02,583 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:02,584 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:02,585 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:02,585 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:02,721 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:02,878 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:02,878 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:02,878 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:02,879 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:03,106 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:03,107 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:03,108 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:03,108 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:03,397 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:03,398 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:03,398 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:03,399 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:03,618 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:03,619 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:03,619 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:03,620 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:03,722 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:03,914 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:03,915 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:03,915 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:03,916 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:04,143 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:04,144 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:04,144 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:04,146 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:04,434 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:04,435 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:04,436 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:04,436 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:04,655 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:04,656 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:04,656 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:04,657 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:04,722 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:04,951 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:04,952 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:04,952 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:04,953 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:05,180 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:05,180 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:05,181 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:05,181 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:05,473 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:05,474 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:05,474 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:05,475 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:05,693 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:05,694 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:05,694 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:05,695 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:05,722 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:05,988 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:05,989 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:05,989 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:05,989 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:06,216 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:06,217 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:06,217 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:06,220 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:06,509 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:06,510 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:06,510 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:06,510 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:06,723 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:06,732 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:06,734 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:06,734 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:06,734 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:07,026 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:07,027 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:07,028 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:07,028 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:07,256 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:07,257 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:07,257 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:07,257 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:07,548 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:07,549 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:07,549 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:07,550 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:07,723 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:07,769 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:07,770 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:07,770 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:07,771 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:08,063 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:08,064 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:08,064 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:08,065 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:08,291 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:08,292 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:08,293 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:08,295 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:08,584 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:08,585 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:08,586 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:08,586 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:08,723 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:08,809 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:08,810 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:08,810 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:08,811 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:09,111 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:09,112 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:09,112 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:09,112 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:09,338 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:09,339 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:09,339 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:09,340 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:09,630 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:09,631 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:09,632 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:09,632 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:09,724 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:09,855 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:09,856 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:09,856 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:09,857 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:10,151 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:10,152 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:10,152 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:10,152 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:10,378 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:10,379 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:10,380 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:10,382 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:10,670 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:10,671 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:10,671 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:10,672 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:10,724 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:10,892 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:10,893 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:10,893 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:10,894 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:11,189 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:11,190 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:11,190 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:11,191 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:11,421 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:11,422 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:11,422 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:11,423 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:11,714 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:11,715 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:11,715 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:11,716 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:11,725 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:11,935 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:11,936 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:11,937 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:11,937 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:12,229 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:12,230 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:12,230 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:12,231 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:12,463 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:12,464 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:12,464 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:12,467 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:12,725 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:12,754 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:12,755 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:12,756 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:12,756 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:12,976 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:12,977 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:12,977 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:12,978 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:13,269 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:13,270 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:13,270 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:13,271 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:13,498 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:13,499 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:13,499 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:13,500 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:13,725 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:13,790 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:13,791 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:13,792 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:13,792 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:14,011 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:14,012 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:14,012 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:14,013 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:14,306 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:14,307 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:14,307 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:14,308 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:14,541 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:14,542 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:14,542 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:14,544 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:14,726 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:14,832 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:14,833 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:14,833 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:14,833 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:15,057 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:15,058 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:15,058 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:15,058 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:15,142 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:51:15,142 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 04:51:15,355 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:15,356 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:15,357 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:15,357 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:15,591 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:15,592 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:15,593 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:15,593 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:15,726 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:15,884 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:15,885 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:15,886 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:15,886 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:16,107 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:16,108 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:16,108 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:16,109 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:16,405 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:16,406 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:16,406 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:16,407 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:16,634 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:16,635 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:16,635 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:16,637 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:16,727 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:16,926 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:16,927 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:16,927 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:16,927 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:17,148 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:17,149 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:17,149 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:17,150 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:17,446 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:17,447 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:17,447 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:17,448 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:17,681 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:17,682 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:17,682 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:17,683 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:17,727 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:17,975 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:17,976 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:17,976 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:17,977 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:18,198 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:18,199 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:18,200 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:18,200 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:18,493 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:18,494 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:18,495 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:18,495 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:18,727 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:18,728 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:18,729 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:18,729 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:18,732 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:19,025 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:19,026 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:19,026 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:19,027 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:19,251 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:19,252 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:19,252 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:19,253 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:19,545 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:19,546 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:19,546 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:19,547 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:19,728 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:19,780 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:19,781 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:19,781 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:19,782 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:20,081 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:20,082 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:20,082 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:20,083 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:20,304 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:20,305 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:20,306 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:20,307 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:20,600 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:20,601 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:20,601 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:20,601 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:20,728 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:20,834 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:20,836 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:20,836 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:20,839 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:21,127 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:21,128 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:21,129 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:21,129 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:21,354 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:21,355 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:21,355 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:21,356 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:21,652 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:21,652 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:21,653 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:21,653 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:21,729 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:21,887 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:21,888 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:21,888 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:21,889 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:22,181 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:22,182 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:22,182 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:22,183 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:22,405 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:22,406 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:22,406 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:22,407 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:22,703 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:22,704 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:22,705 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:22,705 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:22,729 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:22,937 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:22,938 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:22,938 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:22,940 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:23,232 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:23,233 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:23,233 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:23,234 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:23,457 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:23,458 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:23,458 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:23,459 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:23,729 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:23,754 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:23,755 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:23,755 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:23,756 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:23,980 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:23,982 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:23,982 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:23,983 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:24,278 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:24,278 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:24,279 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:24,279 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:24,505 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:24,506 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:24,507 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:24,507 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:24,730 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:24,804 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:24,805 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:24,805 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:24,806 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:25,040 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:25,041 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:25,041 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:25,042 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:25,333 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:25,334 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:25,334 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:25,334 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:25,558 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:25,559 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:25,559 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:25,560 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:25,730 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:25,856 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:25,857 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:25,858 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:25,858 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:26,096 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:26,097 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:26,097 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:26,098 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:26,392 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:26,393 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:26,393 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:26,394 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:26,618 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:26,619 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:26,619 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:26,619 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:26,731 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:26,916 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:26,916 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:26,917 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:26,917 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:27,149 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:27,149 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:27,150 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:27,150 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:27,444 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:27,444 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:27,445 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:27,445 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:27,669 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:27,670 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:27,670 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:27,671 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:27,731 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:27,967 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:27,968 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:27,969 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:27,969 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:28,015 DEBUG   SenderThread:33363 [sender.py:send():235] send: stats
+2022-10-11 04:51:28,204 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:28,205 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:28,205 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:28,206 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:28,501 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:28,502 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:28,502 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:28,502 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:28,727 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:28,728 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:28,729 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:28,729 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:28,731 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:29,026 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:29,027 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:29,027 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:29,028 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:29,260 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:29,260 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:29,261 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:29,261 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:29,556 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:29,556 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:29,557 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:29,557 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:29,732 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:29,781 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:29,781 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:29,781 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:29,782 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:30,079 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:30,080 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:30,080 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:30,080 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:30,277 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 04:51:30,277 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 04:51:30,313 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:30,408 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:30,408 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:30,409 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:30,608 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:30,609 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:30,609 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:30,609 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:30,732 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:30,834 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:30,835 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:30,836 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:30,836 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:31,133 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:31,134 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:31,134 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:31,134 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:31,366 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:31,367 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:31,368 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:31,368 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:31,662 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:31,663 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:31,663 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:31,664 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:31,731 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:31,732 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:31,733 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:31,733 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:31,734 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:31,830 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:31,830 DEBUG   SenderThread:33363 [sender.py:send():235] send: history
+2022-10-11 04:51:31,830 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:31,831 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:31,994 DEBUG   SenderThread:33363 [sender.py:send():235] send: telemetry
+2022-10-11 04:51:31,997 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 04:51:31,997 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:31,998 DEBUG   SenderThread:33363 [sender.py:send():235] send: telemetry
+2022-10-11 04:51:31,998 DEBUG   SenderThread:33363 [sender.py:send():235] send: exit
+2022-10-11 04:51:31,998 INFO    SenderThread:33363 [sender.py:send_exit():371] handling exit code: 0
+2022-10-11 04:51:31,998 INFO    SenderThread:33363 [sender.py:send_exit():373] handling runtime: 65
+2022-10-11 04:51:31,999 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:31,999 INFO    SenderThread:33363 [sender.py:send_exit():379] send defer
+2022-10-11 04:51:31,999 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:31,999 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,000 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 0
+2022-10-11 04:51:32,000 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,000 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 0
+2022-10-11 04:51:32,000 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 1
+2022-10-11 04:51:32,000 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,000 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 1
+2022-10-11 04:51:32,034 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,034 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 1
+2022-10-11 04:51:32,035 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 2
+2022-10-11 04:51:32,035 DEBUG   SenderThread:33363 [sender.py:send():235] send: stats
+2022-10-11 04:51:32,035 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,035 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 2
+2022-10-11 04:51:32,036 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,036 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 2
+2022-10-11 04:51:32,036 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 3
+2022-10-11 04:51:32,036 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,036 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 3
+2022-10-11 04:51:32,036 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,037 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 3
+2022-10-11 04:51:32,037 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 4
+2022-10-11 04:51:32,037 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,037 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 4
+2022-10-11 04:51:32,037 DEBUG   SenderThread:33363 [sender.py:send():235] send: summary
+2022-10-11 04:51:32,038 INFO    SenderThread:33363 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 04:51:32,038 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,038 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 4
+2022-10-11 04:51:32,038 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 5
+2022-10-11 04:51:32,039 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,039 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 5
+2022-10-11 04:51:32,039 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,039 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 5
+2022-10-11 04:51:32,101 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:32,197 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 6
+2022-10-11 04:51:32,197 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:32,198 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,198 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 6
+2022-10-11 04:51:32,198 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,198 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 6
+2022-10-11 04:51:32,198 INFO    SenderThread:33363 [dir_watcher.py:finish():283] shutting down directory watcher
+2022-10-11 04:51:32,299 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:32,734 INFO    Thread-7  :33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/config.yaml
+2022-10-11 04:51:32,735 INFO    SenderThread:33363 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:32,735 INFO    SenderThread:33363 [dir_watcher.py:finish():313] scan: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files
+2022-10-11 04:51:32,735 INFO    SenderThread:33363 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-metadata.json wandb-metadata.json
+2022-10-11 04:51:32,736 INFO    SenderThread:33363 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/requirements.txt requirements.txt
+2022-10-11 04:51:32,736 INFO    SenderThread:33363 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json wandb-summary.json
+2022-10-11 04:51:32,739 INFO    SenderThread:33363 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/output.log output.log
+2022-10-11 04:51:32,743 INFO    SenderThread:33363 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/config.yaml config.yaml
+2022-10-11 04:51:32,743 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 7
+2022-10-11 04:51:32,743 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:32,747 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:32,748 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 7
+2022-10-11 04:51:32,749 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:32,749 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 7
+2022-10-11 04:51:32,749 INFO    SenderThread:33363 [file_pusher.py:finish():145] shutting down file pusher
+2022-10-11 04:51:32,849 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:32,850 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:32,951 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:32,951 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,053 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:33,053 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,155 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:33,155 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,234 INFO    Thread-12 :33363 [upload_job.py:push():137] Uploaded file /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/requirements.txt
+2022-10-11 04:51:33,247 INFO    Thread-13 :33363 [upload_job.py:push():137] Uploaded file /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/wandb-summary.json
+2022-10-11 04:51:33,256 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:33,257 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,283 INFO    Thread-14 :33363 [upload_job.py:push():137] Uploaded file /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/files/config.yaml
+2022-10-11 04:51:33,358 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:33,359 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,460 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:33,460 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,483 INFO    Thread-6  :33363 [sender.py:transition_state():392] send defer: 8
+2022-10-11 04:51:33,484 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:33,484 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 8
+2022-10-11 04:51:33,484 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:33,484 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 8
+2022-10-11 04:51:33,562 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:33,642 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 9
+2022-10-11 04:51:33,642 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,643 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:33,643 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 9
+2022-10-11 04:51:33,643 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:33,643 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 9
+2022-10-11 04:51:33,643 INFO    SenderThread:33363 [sender.py:transition_state():392] send defer: 10
+2022-10-11 04:51:33,644 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 04:51:33,644 DEBUG   SenderThread:33363 [sender.py:send():235] send: final
+2022-10-11 04:51:33,644 INFO    HandlerThread:33363 [handler.py:handle_request_defer():164] handle defer: 10
+2022-10-11 04:51:33,644 DEBUG   SenderThread:33363 [sender.py:send():235] send: footer
+2022-10-11 04:51:33,644 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: defer
+2022-10-11 04:51:33,644 INFO    SenderThread:33363 [sender.py:send_request_defer():388] handle sender defer: 10
+2022-10-11 04:51:33,744 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 04:51:33,744 DEBUG   SenderThread:33363 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 04:51:33,744 INFO    SenderThread:33363 [file_pusher.py:join():150] waiting for file pusher
+2022-10-11 04:51:34,098 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: sampled_history
+2022-10-11 04:51:34,100 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: get_summary
+2022-10-11 04:51:34,101 DEBUG   HandlerThread:33363 [handler.py:handle_request():141] handle_request: shutdown
+2022-10-11 04:51:34,101 INFO    HandlerThread:33363 [handler.py:finish():778] shutting down handler
+2022-10-11 04:51:34,644 INFO    WriterThread:33363 [datastore.py:close():281] close: /content/SSLMemes/wandb/run-20221011_045025-bgyr7qwn/run-bgyr7qwn.wandb
+2022-10-11 04:51:34,997 INFO    SenderThread:33363 [sender.py:finish():1078] shutting down sender
+2022-10-11 04:51:34,997 INFO    SenderThread:33363 [file_pusher.py:finish():145] shutting down file pusher
+2022-10-11 04:51:34,997 INFO    SenderThread:33363 [file_pusher.py:join():150] waiting for file pusher
+2022-10-11 04:51:35,000 INFO    MainThread:33363 [internal.py:handle_exit():82] Internal process exited

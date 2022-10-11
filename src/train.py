@@ -1,30 +1,17 @@
 import os
-import cv2
-import json
 import wandb
 import argparse
-import numpy as np
 from copy import deepcopy
-import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 import torch
-import torch.optim as optim
-from torch.optim import Adam, Adadelta, Adamax, Adagrad, RMSprop, Rprop, SGD
 from torch.cuda.amp import autocast, GradScaler
-from transformers import AutoConfig, BertTokenizer, VisualBertModel, \
-        VisualBertForVisualReasoning, LxmertModel, LxmertTokenizer, LxmertConfig,VisualBertConfig
-from data import ImageTextClassificationDataset
 from eval import evaluate
-from model import ModelForBinaryClassification
-from data import collate_fn_batch_visualbert,collate_fn_batch_lxmert,collate_fn_batch_vilt,collate_fn_batch_visualbert_semi_supervised,collate_fn_batch_lxmert_semi_supervised
-from functools import partial 
+from utils import build_optimizer,create_model,create_loaders
+from functools import partial
+import yaml 
 
-wandb.init()
-
-
-def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epoch=-1, \
+def train_on_epoch(cfg, train_loader, val_loader, model,optimizer, scaler=None, step_global=0, epoch=-1, \
         val_best_score=0, processor=None):
-    model_type = args.model_type
     train_loss = 0
     train_steps = 0
 
@@ -33,7 +20,7 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
     for i, data in tqdm(enumerate(train_loader), total=len(train_loader)):
         optimizer.zero_grad()
 
-        if model_type == "visualbert":
+        if cfg.model_type == "visualbert":
             batch_cap, batch_img, y = data
             batch_inputs = {}
             for k,v in batch_cap.items():
@@ -45,7 +32,7 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
                 "visual_token_type_ids": img_token_type_ids.cuda(),
                 "visual_attention_mask": img_attention_mask.cuda(),
                 })
-        elif model_type == "lxmert":
+        elif cfg.model_type == "lxmert":
             batch_cap, batch_box, batch_img, y = data
             batch_inputs = {}
             for k,v in batch_cap.items():
@@ -54,21 +41,21 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
                 "visual_feats": batch_img.cuda(),
                 "visual_pos": batch_box.cuda(),
                 })
-        elif model_type == "vilt":
+        elif cfg.model_type == "vilt":
             input_ids, pixel_values, y = data
         y = y.cuda()
 
-        if args.amp:
+        if cfg.amp:
             with autocast():
-                if model_type in ["visualbert", "lxmert"]:
+                if cfg.model_type in ["visualbert", "lxmert"]:
                     outputs = model(**batch_inputs, labels=y)
-                elif model_type == "vilt":
+                elif cfg.model_type == "vilt":
                     outputs = model(input_ids=input_ids.cuda(), 
                         pixel_values=pixel_values.cuda(), labels=y)
         else:
-            if model_type in ["visualbert", "lxmert"]:
+            if cfg.model_type in ["visualbert", "lxmert"]:
                 outputs = model(**batch_inputs, labels=y)
-            elif model_type == "vilt":
+            elif cfg.model_type == "vilt":
                 outputs = model(input_ids=input_ids.cuda(), 
                         pixel_values=pixel_values.cuda(), labels=y)
                 #logits = outputs.logits
@@ -79,7 +66,7 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
         scores = outputs.logits
         wandb.log({"loss": loss})
 
-        if args.amp:
+        if cfg.amp:
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
@@ -97,18 +84,11 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
         step_global += 1
 
         # save model every K iterationsn
-        if step_global % args.checkpoint_step == 0:
-            checkpoint_dir = os.path.join(args.output_dir, f"checkpoint_iter_{step_global}")
+        if step_global % cfg.checkpoint_step == 0:
+            checkpoint_dir = os.path.join(cfg.output_dir, f"checkpoint_iter_{step_global}")
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            # if model_type == "visualbert":
-            #     model.encoder.save_pretrained(checkpoint_dir)
-            # elif model_type == "lxmert":
-            #     model.encoder.save_pretrained(checkpoint_dir)
-            # elif model_type == "vilt":
-            #     processor.save_pretrained(checkpoint_dir)
-            #     model.save_pretrained(checkpoint_dir)
-            if model_type == "vilt":
+            if cfg.model_type == "vilt":
                 processor.save_pretrained(checkpoint_dir)
             checkpoint_path = os.path.join(checkpoint_dir,'saved_model')
             torch.save({
@@ -118,10 +98,10 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
                 'loss': loss,
                 }, checkpoint_path)
         # evaluate and save
-        if step_global % args.eval_step == 0:
+        if step_global % cfg.eval_step == 0:
             # evaluate
             print (f"====== evaliuate ======")
-            average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro, recall, precision,_ = evaluate(val_loader, model, model_type=model_type)
+            average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro, recall, precision,_ = evaluate(val_loader, model, model_type=cfg.model_type)
             print(f"epoch:{epoch},global step:{step_global},val performance"
                 +f"\naccuarcy:{accuarcy}\nf_score_micro:{f_score_micro}\nf_score_macro:{f_score_macro}"
                 +f"\nrecall:{recall} \nprecision:{precision}"
@@ -142,17 +122,10 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
                 val_best_score = f_score_macro
             else:
                 continue
-            checkpoint_dir = os.path.join(args.output_dir, f"best_checkpoint")
+            checkpoint_dir = os.path.join(cfg.output_dir, f"best_checkpoint")
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            # if model_type == "visualbert":
-            #     model.encoder.save_pretrained(checkpoint_dir)
-            # elif model_type == "lxmert":
-            #     model.encoder.save_pretrained(checkpoint_dir)
-            # elif model_type == "vilt":
-            #     processor.save_pretrained(checkpoint_dir)
-            #     model.save_pretrained(checkpoint_dir)
-            if model_type == "vilt":
+            if cfg.model_type == "vilt":
                 processor.save_pretrained(checkpoint_dir)
             checkpoint_path = os.path.join(checkpoint_dir,'saved_model')
             torch.save({
@@ -167,6 +140,68 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
     train_loss /= (train_steps + 1e-9)
     return train_loss, step_global, val_best_score
 
+def train(config=None,args=None):
+    # Initialize a new wandb run
+    if args.use_sweep:
+        with wandb.init(config=config):
+            config = wandb.config
+            config.update(args)
+            model_type = config.model_type
+            model,tokenizer,processor = create_model(config,model_type)
+            train_loader, val_loader = create_loaders(config,model_type,processor,tokenizer)
+            # mixed precision training 
+            if config.amp:
+                scaler = GradScaler()
+            else:
+                scaler = None
+            
+            optimizer = build_optimizer(model, config.optimizer, config.learning_rate)
+            
+            if config.resume_training:
+                model.cuda()
+                ck_path = os.path.join(config.output_dir, "best_checkpoint/saved_model")
+                checkpoint = torch.load(ck_path)
+                model.load_state_dict(checkpoint['model_state_dict'])
+                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                epoch = checkpoint['epoch']
+                loss = checkpoint['loss']
+                val_best_score = checkpoint['val_best_score']
+                print(f"previous best checkpoint: epoch:{epoch}, loss:{loss}, val_best_score: {val_best_score}")
+
+            global_step, val_best_score = 0, 0
+            for epoch in range(config.epochs):
+                loss, global_step, val_best_score = train_on_epoch(config, train_loader, val_loader, model,optimizer, scaler=scaler, \
+                        step_global=global_step, epoch=epoch, val_best_score=val_best_score, processor=processor)
+                print (f"epoch: {epoch}, global step: {global_step}, loss: {loss}")
+    else:
+        config.update(args)
+        model_type = config.model_type
+        model,tokenizer,processor = create_model(config,model_type)
+        train_loader, val_loader = create_loaders(config,model_type,processor,tokenizer)
+        # mixed precision training 
+        if config.amp:
+            scaler = GradScaler()
+        else:
+            scaler = None
+        
+        optimizer = build_optimizer(model, config.optimizer, config.learning_rate)
+        
+        if config.resume_training:
+            model.cuda()
+            ck_path = os.path.join(config.output_dir, "best_checkpoint/saved_model")
+            checkpoint = torch.load(ck_path)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            epoch = checkpoint['epoch']
+            loss = checkpoint['loss']
+            val_best_score = checkpoint['val_best_score']
+            print(f"previous best checkpoint: epoch:{epoch}, loss:{loss}, val_best_score: {val_best_score}")
+
+        global_step, val_best_score = 0, 0
+        for epoch in range(config.epochs):
+            loss, global_step, val_best_score = train_on_epoch(config, train_loader, val_loader, model,optimizer, scaler=scaler, \
+                    step_global=global_step, epoch=epoch, val_best_score=val_best_score, processor=processor)
+            print (f"epoch: {epoch}, global step: {global_step}, loss: {loss}")
 
 if __name__ == "__main__":
     
@@ -176,10 +211,7 @@ if __name__ == "__main__":
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
     parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
-    parser.add_argument('--learning_rate', type=float, default=2e-5)
-    parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
-    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--amp',type=bool,default=True, \
                 help="automatic mixed precision training")
     parser.add_argument('--output_dir', type=str, default="./tmp")
@@ -187,104 +219,24 @@ if __name__ == "__main__":
     parser.add_argument('--random_seed', type=int, default=42)
     parser.add_argument('--resume_training', type=bool, default=False)
     parser.add_argument('--semi-supervised', type=bool, default=False)
-    # parser = argparse.ArgumentParser(description='train')
-    # parser.add_argument('--img_feature_path', type=str, required=True)
-    # parser.add_argument('--train_json_path', type=str, required=True)
-    # parser.add_argument('--val_json_path', type=str, required=True)
-    # parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
-    # parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
-    # parser.add_argument('--learning_rate', type=float, default=2e-5)
-    # parser.add_argument('--epoch', type=int, default=100)
-    # parser.add_argument('--eval_step', type=int, default=100)
-    # parser.add_argument('--batch_size', type=int, default=64)
-    # parser.add_argument('--amp', action="store_true", \
-    #             help="automatic mixed precision training")
-    # parser.add_argument('--output_dir', type=str, default="./tmp")
-    # parser.add_argument('--checkpoint_step', type=int, default=100)
-    # parser.add_argument('--random_seed', type=int, default=42)
+    parser.add_argument('--use-sweep', type=bool, default=False)
+    parser.add_argument('--hyper_yaml_path', type=str, default="config/hyper1.yml")
     
     args = parser.parse_args()
     
     torch.manual_seed(args.random_seed)
-
-    model_type = args.model_type
-    # load model
-    if model_type == "visualbert":
-        config = VisualBertConfig.from_pretrained(args.model_path)
-        model = VisualBertModel.from_pretrained(args.model_path)
-        model = ModelForBinaryClassification(model,config)
-        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        processor = None
-    elif model_type == "lxmert":
-        config = LxmertConfig.from_pretrained(args.model_path)
-        model = LxmertModel.from_pretrained(args.model_path)
-        model = ModelForBinaryClassification(model,config)
-        tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased") 
-        processor = None
-    elif model_type == "vilt":
-        from transformers import ViltProcessor, ViltModel, ViltForImagesAndTextClassification
-        config = AutoConfig.from_pretrained("dandelin/vilt-b32-mlm")
-        config.num_images = 1
-        model = ViltForImagesAndTextClassification(config)
-        model.vilt = ViltModel.from_pretrained(args.model_path)
-        processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")
-        tokenizer = None
     
-    img_feature_path = args.img_feature_path
-    dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, 
-                supervise = not args.semi_supervised,model_type=model_type, vilt_processor=processor,mode='train')
-    dataset_val = ImageTextClassificationDataset(img_feature_path, args.val_csv_path, model_type=model_type,mode='val')
-
-    if args.semi_supervised:
-        if model_type == "visualbert":
-            collate_fn_batch = partial(collate_fn_batch_visualbert_semi_supervised,tokenizer=tokenizer)
-        elif model_type == "lxmert":
-            collate_fn_batch = partial(collate_fn_batch_lxmert_semi_supervised,tokenizer=tokenizer)
+    if args.use_sweep:
+        with open(args.hyper_yaml_path, 'r') as stream:
+            hyper_config = yaml.safe_load(stream)
+        sweep_id = wandb.sweep(hyper_config, project="meme_experiments")
+        train = partial(train,args=args)
+        wandb.agent(sweep_id, train, count=5)
     else:
-        if model_type == "visualbert":
-            collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer)
-        elif model_type == "lxmert":
-            collate_fn_batch = partial(collate_fn_batch_lxmert,tokenizer=tokenizer)
-        elif model_type == "vilt":
-            collate_fn_batch = partial(collate_fn_batch_vilt,processor=processor)
-
-    train_loader = torch.utils.data.DataLoader(
-        dataset_train,
-        collate_fn = collate_fn_batch,
-        batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=3,)
-    val_loader = torch.utils.data.DataLoader(
-        dataset_val,
-        collate_fn = collate_fn_batch,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=3,)
-    
-    # mixed precision training 
-    if args.amp:
-        scaler = GradScaler()
-    else:
-        scaler = None
-    
-    optimizer = optim.AdamW(
-        [{'params': model.parameters()},], 
-        lr=args.learning_rate)
-    
-    if args.resume_training:
-        model.cuda()
-        ck_path = os.path.join(args.output_dir, "best_checkpoint/saved_model")
-        checkpoint = torch.load(ck_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        epoch = checkpoint['epoch']
-        loss = checkpoint['loss']
-        val_best_score = checkpoint['val_best_score']
-        print(f"previous best checkpoint: epoch:{epoch}, loss:{loss}, val_best_score: {val_best_score}")
-
-    global_step, val_best_score = 0, 0
-    for epoch in range(args.epoch):
-        loss, global_step, val_best_score = train(args, train_loader, val_loader, model, scaler=scaler, \
-                step_global=global_step, epoch=epoch, val_best_score=val_best_score, processor=processor)
-        print (f"epoch: {epoch}, global step: {global_step}, loss: {loss}")
+        wandb.init(project="meme_experiments", entity="vietnguyen")
+        with open(args.hyper_yaml_path, 'r') as stream:
+            hyper_config = yaml.safe_load(stream)
+        wandb.config.update(hyper_config)
+        config = wandb.config
+        train(config=config,args=args)
 

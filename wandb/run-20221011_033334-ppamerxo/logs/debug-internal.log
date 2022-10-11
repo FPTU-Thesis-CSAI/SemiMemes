@@ -1,0 +1,149 @@
+2022-10-11 03:33:42,401 INFO    MainThread:17580 [internal.py:wandb_internal():95] W&B internal server running at pid: 17580, started at: 2022-10-11 03:33:42.400680
+2022-10-11 03:33:42,410 INFO    WriterThread:17580 [datastore.py:open_for_write():77] open: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/run-ppamerxo.wandb
+2022-10-11 03:33:42,413 DEBUG   SenderThread:17580 [sender.py:send():235] send: header
+2022-10-11 03:33:42,413 DEBUG   SenderThread:17580 [sender.py:send():235] send: run
+2022-10-11 03:33:42,644 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: check_version
+2022-10-11 03:33:42,656 INFO    SenderThread:17580 [dir_watcher.py:__init__():169] watching files in: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files
+2022-10-11 03:33:42,656 INFO    SenderThread:17580 [sender.py:_start_run_threads():815] run started: ppamerxo with start time 1665459214
+2022-10-11 03:33:42,656 DEBUG   SenderThread:17580 [sender.py:send():235] send: summary
+2022-10-11 03:33:42,657 INFO    SenderThread:17580 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 03:33:42,658 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: check_version
+2022-10-11 03:33:42,707 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: run_start
+2022-10-11 03:33:43,664 INFO    Thread-13 :17580 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/wandb-summary.json
+2022-10-11 03:33:47,250 DEBUG   HandlerThread:17580 [meta.py:__init__():37] meta init
+2022-10-11 03:33:47,251 DEBUG   HandlerThread:17580 [meta.py:__init__():51] meta init done
+2022-10-11 03:33:47,251 DEBUG   HandlerThread:17580 [meta.py:probe():211] probe
+2022-10-11 03:33:47,281 DEBUG   HandlerThread:17580 [meta.py:_setup_git():201] setup git
+2022-10-11 03:33:47,313 DEBUG   HandlerThread:17580 [meta.py:_setup_git():208] setup git done
+2022-10-11 03:33:47,313 DEBUG   HandlerThread:17580 [meta.py:_save_pip():55] save pip
+2022-10-11 03:33:47,315 DEBUG   HandlerThread:17580 [meta.py:_save_pip():69] save pip done
+2022-10-11 03:33:47,315 DEBUG   HandlerThread:17580 [meta.py:probe():249] probe done
+2022-10-11 03:33:47,322 DEBUG   SenderThread:17580 [sender.py:send():235] send: files
+2022-10-11 03:33:47,322 INFO    SenderThread:17580 [sender.py:_save_file():947] saving file wandb-metadata.json with policy now
+2022-10-11 03:33:47,337 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 03:33:47,338 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 03:33:47,484 DEBUG   SenderThread:17580 [sender.py:send():235] send: telemetry
+2022-10-11 03:33:47,485 DEBUG   SenderThread:17580 [sender.py:send():235] send: config
+2022-10-11 03:33:47,701 INFO    Thread-13 :17580 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/requirements.txt
+2022-10-11 03:33:47,702 INFO    Thread-13 :17580 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/output.log
+2022-10-11 03:33:47,702 INFO    Thread-13 :17580 [dir_watcher.py:_on_file_created():217] file/dir created: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/wandb-metadata.json
+2022-10-11 03:33:47,717 DEBUG   SenderThread:17580 [sender.py:send():235] send: config
+2022-10-11 03:33:47,810 INFO    Thread-17 :17580 [upload_job.py:push():137] Uploaded file /tmp/tmpsxuffgc6wandb/1i6zwsba-wandb-metadata.json
+2022-10-11 03:34:02,486 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 03:34:02,487 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 03:34:13,715 INFO    Thread-13 :17580 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/config.yaml
+2022-10-11 03:34:15,430 DEBUG   SenderThread:17580 [sender.py:send():235] send: stats
+2022-10-11 03:34:17,633 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: stop_status
+2022-10-11 03:34:17,634 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: stop_status
+2022-10-11 03:34:19,414 DEBUG   SenderThread:17580 [sender.py:send():235] send: telemetry
+2022-10-11 03:34:19,414 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: partial_history
+2022-10-11 03:34:19,415 DEBUG   SenderThread:17580 [sender.py:send():235] send: telemetry
+2022-10-11 03:34:19,416 DEBUG   SenderThread:17580 [sender.py:send():235] send: exit
+2022-10-11 03:34:19,416 INFO    SenderThread:17580 [sender.py:send_exit():371] handling exit code: 1
+2022-10-11 03:34:19,416 INFO    SenderThread:17580 [sender.py:send_exit():373] handling runtime: 36
+2022-10-11 03:34:19,417 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:19,421 INFO    SenderThread:17580 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 03:34:19,421 INFO    SenderThread:17580 [sender.py:send_exit():379] send defer
+2022-10-11 03:34:19,422 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:19,423 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,423 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 0
+2022-10-11 03:34:19,423 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,423 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 0
+2022-10-11 03:34:19,423 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 1
+2022-10-11 03:34:19,424 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,424 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 1
+2022-10-11 03:34:19,454 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,454 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 1
+2022-10-11 03:34:19,454 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 2
+2022-10-11 03:34:19,455 DEBUG   SenderThread:17580 [sender.py:send():235] send: stats
+2022-10-11 03:34:19,455 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,455 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 2
+2022-10-11 03:34:19,456 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,456 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 2
+2022-10-11 03:34:19,456 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 3
+2022-10-11 03:34:19,456 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,456 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 3
+2022-10-11 03:34:19,457 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,457 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 3
+2022-10-11 03:34:19,457 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 4
+2022-10-11 03:34:19,457 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,458 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 4
+2022-10-11 03:34:19,458 DEBUG   SenderThread:17580 [sender.py:send():235] send: summary
+2022-10-11 03:34:19,458 INFO    SenderThread:17580 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-10-11 03:34:19,459 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,459 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 4
+2022-10-11 03:34:19,459 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 5
+2022-10-11 03:34:19,459 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,459 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 5
+2022-10-11 03:34:19,460 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,460 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 5
+2022-10-11 03:34:19,524 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:19,633 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 6
+2022-10-11 03:34:19,633 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:19,634 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,634 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 6
+2022-10-11 03:34:19,635 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,635 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 6
+2022-10-11 03:34:19,635 INFO    SenderThread:17580 [dir_watcher.py:finish():283] shutting down directory watcher
+2022-10-11 03:34:19,718 INFO    SenderThread:17580 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/config.yaml
+2022-10-11 03:34:19,718 INFO    SenderThread:17580 [dir_watcher.py:_on_file_modified():230] file/dir modified: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/wandb-summary.json
+2022-10-11 03:34:19,719 INFO    SenderThread:17580 [dir_watcher.py:finish():313] scan: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files
+2022-10-11 03:34:19,719 INFO    SenderThread:17580 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/wandb-metadata.json wandb-metadata.json
+2022-10-11 03:34:19,719 INFO    SenderThread:17580 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/requirements.txt requirements.txt
+2022-10-11 03:34:19,720 INFO    SenderThread:17580 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/wandb-summary.json wandb-summary.json
+2022-10-11 03:34:19,720 INFO    SenderThread:17580 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/output.log output.log
+2022-10-11 03:34:19,721 INFO    SenderThread:17580 [dir_watcher.py:finish():327] scan save: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/config.yaml config.yaml
+2022-10-11 03:34:19,722 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 7
+2022-10-11 03:34:19,731 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:19,732 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 7
+2022-10-11 03:34:19,738 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:19,741 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:19,743 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 7
+2022-10-11 03:34:19,743 INFO    SenderThread:17580 [file_pusher.py:finish():145] shutting down file pusher
+2022-10-11 03:34:19,743 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:19,852 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:19,852 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:19,954 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:19,954 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:20,057 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:20,057 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:20,159 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:20,159 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:20,217 INFO    Thread-20 :17580 [upload_job.py:push():137] Uploaded file /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/config.yaml
+2022-10-11 03:34:20,234 INFO    Thread-19 :17580 [upload_job.py:push():137] Uploaded file /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/wandb-summary.json
+2022-10-11 03:34:20,240 INFO    Thread-18 :17580 [upload_job.py:push():137] Uploaded file /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/files/requirements.txt
+2022-10-11 03:34:20,261 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:20,262 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:20,364 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:20,364 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:20,441 INFO    Thread-12 :17580 [sender.py:transition_state():392] send defer: 8
+2022-10-11 03:34:20,441 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:20,442 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 8
+2022-10-11 03:34:20,442 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:20,442 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 8
+2022-10-11 03:34:20,466 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:20,873 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 9
+2022-10-11 03:34:20,874 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:20,875 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:20,875 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 9
+2022-10-11 03:34:20,875 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:20,876 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 9
+2022-10-11 03:34:20,876 INFO    SenderThread:17580 [sender.py:transition_state():392] send defer: 10
+2022-10-11 03:34:20,877 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: defer
+2022-10-11 03:34:20,877 DEBUG   SenderThread:17580 [sender.py:send():235] send: final
+2022-10-11 03:34:20,878 INFO    HandlerThread:17580 [handler.py:handle_request_defer():164] handle defer: 10
+2022-10-11 03:34:20,878 DEBUG   SenderThread:17580 [sender.py:send():235] send: footer
+2022-10-11 03:34:20,878 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: defer
+2022-10-11 03:34:20,878 INFO    SenderThread:17580 [sender.py:send_request_defer():388] handle sender defer: 10
+2022-10-11 03:34:20,977 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: poll_exit
+2022-10-11 03:34:20,977 DEBUG   SenderThread:17580 [sender.py:send_request():249] send_request: poll_exit
+2022-10-11 03:34:20,977 INFO    SenderThread:17580 [file_pusher.py:join():150] waiting for file pusher
+2022-10-11 03:34:21,342 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: sampled_history
+2022-10-11 03:34:21,343 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: get_summary
+2022-10-11 03:34:21,345 DEBUG   HandlerThread:17580 [handler.py:handle_request():141] handle_request: shutdown
+2022-10-11 03:34:21,345 INFO    HandlerThread:17580 [handler.py:finish():778] shutting down handler
+2022-10-11 03:34:21,877 INFO    WriterThread:17580 [datastore.py:close():281] close: /content/SSLMemes/wandb/run-20221011_033334-ppamerxo/run-ppamerxo.wandb
+2022-10-11 03:34:22,241 INFO    SenderThread:17580 [sender.py:finish():1078] shutting down sender
+2022-10-11 03:34:22,241 INFO    SenderThread:17580 [file_pusher.py:finish():145] shutting down file pusher
+2022-10-11 03:34:22,241 INFO    SenderThread:17580 [file_pusher.py:join():150] waiting for file pusher
+2022-10-11 03:34:22,760 INFO    MainThread:17580 [internal.py:handle_exit():82] Internal process exited
