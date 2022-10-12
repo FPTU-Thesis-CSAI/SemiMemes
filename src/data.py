@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset
 import pandas as pd 
+from feature_extraction.lxmert.processing_image import Preprocess
+from feature_extraction.lxmert.utils import Config
 
 class ImageTextClassificationDataset(Dataset):
     def __init__(self, img_feature_path, csv_path, supervise = True,model_type="visualbert", vilt_processor=None,mode='train',superviseunsuperviseproportion = [3, 7]): 

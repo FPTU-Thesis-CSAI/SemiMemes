@@ -1,0 +1,33 @@
+2022-10-12 05:14:58,080 INFO    MainThread:4967 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-10-12 05:14:58,080 INFO    MainThread:4967 [wandb_setup.py:_flush():75] Loading settings from /content/SSLMemes/wandb/settings
+2022-10-12 05:14:58,080 INFO    MainThread:4967 [wandb_setup.py:_flush():75] Loading settings from environment variables: {}
+2022-10-12 05:14:58,080 INFO    MainThread:4967 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program_relpath': 'src/train.py', 'program': '/content/SSLMemes/src/train.py'}
+2022-10-12 05:14:58,080 INFO    MainThread:4967 [wandb_setup.py:_flush():75] Applying login settings: {'mode': 'offline'}
+2022-10-12 05:14:58,080 INFO    MainThread:4967 [wandb_init.py:_log_setup():405] Logging user logs to /content/SSLMemes/wandb/offline-run-20221012_051458-2wobt7td/logs/debug.log
+2022-10-12 05:14:58,080 INFO    MainThread:4967 [wandb_init.py:_log_setup():406] Logging internal logs to /content/SSLMemes/wandb/offline-run-20221012_051458-2wobt7td/logs/debug-internal.log
+2022-10-12 05:14:58,081 INFO    MainThread:4967 [wandb_init.py:init():439] calling init triggers
+2022-10-12 05:14:58,081 INFO    MainThread:4967 [wandb_init.py:init():443] wandb.init called with sweep_config: {}
+config: {}
+2022-10-12 05:14:58,081 INFO    MainThread:4967 [wandb_init.py:init():492] starting backend
+2022-10-12 05:14:58,081 INFO    MainThread:4967 [backend.py:_multiprocessing_setup():101] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-10-12 05:14:58,093 INFO    MainThread:4967 [backend.py:ensure_launched():219] starting backend process...
+2022-10-12 05:14:58,105 INFO    MainThread:4967 [backend.py:ensure_launched():225] started backend process with pid: 4996
+2022-10-12 05:14:58,106 INFO    MainThread:4967 [wandb_init.py:init():501] backend started and connected
+2022-10-12 05:14:58,112 INFO    MainThread:4967 [wandb_init.py:init():565] updated telemetry
+2022-10-12 05:14:58,129 INFO    MainThread:4967 [wandb_init.py:init():625] starting run threads in backend
+2022-10-12 05:15:01,871 INFO    MainThread:4967 [wandb_run.py:_console_start():1733] atexit reg
+2022-10-12 05:15:01,871 INFO    MainThread:4967 [wandb_run.py:_redirect():1606] redirect: SettingsConsole.REDIRECT
+2022-10-12 05:15:01,872 INFO    MainThread:4967 [wandb_run.py:_redirect():1611] Redirecting console.
+2022-10-12 05:15:01,873 INFO    MainThread:4967 [wandb_run.py:_redirect():1667] Redirects installed.
+2022-10-12 05:15:01,874 INFO    MainThread:4967 [wandb_init.py:init():664] run started, returning control to user process
+2022-10-12 05:15:42,854 INFO    MainThread:4967 [wandb_run.py:_atexit_cleanup():1702] got exitcode: 255
+2022-10-12 05:15:42,856 INFO    MainThread:4967 [wandb_run.py:_restore():1674] restore
+2022-10-12 05:15:45,062 INFO    MainThread:4967 [wandb_run.py:_on_finish():1831] got exit ret: 
+2022-10-12 05:15:45,164 INFO    MainThread:4967 [wandb_run.py:_on_finish():1831] got exit ret: done: true
+exit_result {
+}
+local_info {
+}
+
+2022-10-12 05:15:46,717 INFO    MainThread:4967 [wandb_run.py:_footer_history_summary_info():2865] rendering history
+2022-10-12 05:15:46,717 INFO    MainThread:4967 [wandb_run.py:_footer_history_summary_info():2894] rendering summary

@@ -158,11 +158,11 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--img_feature_path', type=str,default="data/features/lxmert/")
+    parser.add_argument('--img_feature_path', type=str,default="data/features/visualbert/")
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
-    parser.add_argument('--model_type', type=str, default="lxmert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--model_path', type=str, default="unc-nlp/lxmert-base-uncased")
+    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
+    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
     parser.add_argument('--learning_rate', type=float, default=2e-5)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
@@ -170,10 +170,10 @@ if __name__ == "__main__":
     parser.add_argument('--amp',type=bool,default=True, \
                 help="automatic mixed precision training")
     parser.add_argument('--output_dir', type=str, default="./tmp")
-    parser.add_argument('--checkpoint_step', type=int, default=100)
+    parser.add_argument('--checkpoint_step', type=int, default=1000)
     parser.add_argument('--random_seed', type=int, default=42)
     parser.add_argument('--resume_training', type=bool, default=False)
-    parser.add_argument('--semi-supervised', type=bool, default=True)
+    parser.add_argument('--semi-supervised', type=bool, default=False)
     # parser = argparse.ArgumentParser(description='train')
     # parser.add_argument('--img_feature_path', type=str, required=True)
     # parser.add_argument('--train_json_path', type=str, required=True)

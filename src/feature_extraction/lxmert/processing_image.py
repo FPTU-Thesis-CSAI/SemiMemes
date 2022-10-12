@@ -23,7 +23,7 @@ import torch
 from PIL import Image
 from torch import nn
 
-from utils import img_tensorize
+from .utils import img_tensorize
 
 
 class ResizeShortestEdge:
