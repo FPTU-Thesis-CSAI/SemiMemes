@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.10.133+-x86_64-with-Ubuntu-18.04-bionic",
+    "python": "3.7.14",
+    "heartbeatAt": "2022-10-12T06:21:43.453323",
+    "startedAt": "2022-10-12T06:21:38.677712",
+    "docker": null,
+    "gpu": "Tesla T4",
+    "gpu_count": 1,
+    "cpu_count": 4,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/content/SSLMemes/src/train.py",
+    "codePath": "src/train.py",
+    "git": {
+        "remote": "https://github.com/FPTU-Thesis-CSAI/SSLMemes.git",
+        "commit": "b892c10a985c7b6583fbb9de10eb682cf824465e"
+    },
+    "email": "phamthaihoangtung@gmail.com",
+    "root": "/content/SSLMemes",
+    "host": "d8fc9721849b",
+    "username": "root",
+    "executable": "/usr/bin/python3"
+}

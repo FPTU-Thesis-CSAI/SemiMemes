@@ -8,3 +8,4 @@ data/*
 __pycache__
 .ipython_checkpoints/
 tmp/
+build/
