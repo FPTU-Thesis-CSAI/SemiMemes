@@ -1,3 +1,5 @@
+SSLMemes/build/*
+SSLMemes/SSLMemes.egg-info/*
 SSLMemes/data/images/*
 SSLMemes/data/features/*
 SSLMemes/data/*
@@ -8,3 +10,7 @@ SSLMemes/data/*
 __pycache__
 .ipython_checkpoints/
 tmp/
+SSLMemes/foo.egg-info/*
+data/images/*
+data/features/*
+data/*
