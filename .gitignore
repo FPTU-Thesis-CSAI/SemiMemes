@@ -4,7 +4,7 @@ data/*
 !data/features/README.md
 # tmp/
 # logs/
-# wandb/
+wandb/
 __pycache__
 .ipython_checkpoints/
 tmp/
