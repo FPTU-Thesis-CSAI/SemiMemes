@@ -9,3 +9,4 @@ __pycache__
 .ipython_checkpoints/
 tmp/
 build/
+src.egg-info/
