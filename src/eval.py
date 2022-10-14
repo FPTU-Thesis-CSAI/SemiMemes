@@ -4,10 +4,18 @@ import argparse
 from tqdm.auto import tqdm
 import torch
 from transformers import BertTokenizer, VisualBertModel, \
-        VisualBertForVisualReasoning, LxmertForPreTraining, LxmertTokenizer
+        VisualBertForVisualReasoning, LxmertForPreTraining, LxmertTokenizer,VisualBertConfig
 from model import ModelForBinaryClassification
 from data import ImageTextClassificationDataset
-from utils import auroc
+from evaluation_metric import measure_average_precision
+from evaluation_metric import measure_coverage
+from evaluation_metric import measure_example_auc
+from evaluation_metric import measure_macro_auc
+from evaluation_metric import measure_micro_auc
+from evaluation_metric import measure_ranking_loss
+from evaluation_metric import f1_metric
+
+import numpy as np 
 
 def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
     model.cuda()
@@ -43,9 +51,10 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
         elif model_type == "vilt":
             input_ids, pixel_values, y = data
         y = y.cuda()
+        batch_inputs.update({"labels":y})
         with torch.no_grad():
             if model_type in ["visualbert", "lxmert"]:
-                outputs = model(**batch_inputs, labels=y)
+                outputs = model(**batch_inputs)
             elif model_type == "vilt":
                 batch_cap = input_ids.cuda()
                 batch_img = pixel_values.cuda()
@@ -72,31 +81,45 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
         
         # print errors
         #print (y != torch.argmax(scores, dim=1))
-    total_preds = torch.cat(total_preds)
-    total_y = torch.cat(total_y)
-    auroc_score = auroc(total_preds,total_y)
-    return correct / total, total, all_true, preds,auroc_score
+    total_preds = torch.cat(total_preds).detach().cpu().numpy()
+    total_y = torch.cat(total_y).detach().cpu().numpy()
+    temp = total_preds[0]
+    for i in range(1, len(total_preds)):
+        temp = np.vstack((temp, total_preds[i]))
+    total_preds = temp
+    temp = total_y[0]
+    for i in range(1, len(total_y)):
+        temp = np.vstack((temp, total_y[i]))
+    total_y = temp
+    accuarcy, f_score_micro, f_score_macro,recall, precision = f1_metric.metrics(total_preds,total_y)
+    average_precison1 = measure_average_precision.average_precision(total_preds, total_y)
+    example_auc1 = measure_example_auc.example_auc(total_preds, total_y)
+    macro_auc1 = measure_macro_auc.macro_auc(total_preds, total_y)
+    micro_auc1 = measure_micro_auc.micro_auc(total_preds, total_y)
+    ranking_loss1 = measure_ranking_loss.ranking_loss(total_preds, total_y)
+    return average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,recall, precision,total_preds
             
 
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='eval')
-    parser.add_argument('--checkpoint_path', type=str, required=True)
+    # parser.add_argument('--checkpoint_path', type=str, required=True)
     parser.add_argument('--model_type', type=str, default='visualbert')
-    parser.add_argument('--img_feature_path', type=str, required=True)
-    parser.add_argument('--test_json_path', type=str, required=True)
-    parser.add_argument('--output_preds', action='store_true')
+    parser.add_argument('--img_feature_path', type=str, default="data/features/visualbert/")
+    parser.add_argument('--test_json_path', type=str, default="data/splits/random/memotion_val.csv")
+    parser.add_argument('--output_preds', default="../tmp")
 
     args = parser.parse_args()
 
     model_type = args.model_type
     # load model
     if model_type == "visualbert":
-        model = VisualBertForVisualReasoning.from_pretrained(args.checkpoint_path)
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-
+        config = VisualBertConfig.from_pretrained("uclanlp/visualbert-nlvr2-coco-pre")
+        model = VisualBertModel.from_pretrained("uclanlp/visualbert-nlvr2-coco-pre")
+        model = ModelForBinaryClassification(model,config)
     elif model_type == "lxmert":
-        model = LxmertForPreTraining.from_pretrained(args.checkpoint_path)
+        model = LxmertForPreTraining.from_pretrained("unc-nlp/lxmert-base-uncased")
         model = ModelForBinaryClassification(model)
         tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased") 
 
@@ -143,7 +166,7 @@ if __name__ == "__main__":
     img_feature_path = args.img_feature_path
     json_path = args.test_json_path
     if model_type in ["visualbert", "lxmert"]:
-        dataset = ImageTextClassificationDataset(img_feature_path, json_path, model_type=model_type)
+        dataset = ImageTextClassificationDataset(img_feature_path, json_path, model_type=model_type,mode='val')
     elif model_type == "vilt":
         dataset = ImageTextClassificationDataset(img_feature_path, json_path, model_type=model_type, vilt_processor=processor)
     if model_type == "visualbert":
