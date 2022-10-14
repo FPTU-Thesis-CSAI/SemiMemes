@@ -120,13 +120,16 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
         # evaluate and save
         if step_global % args.eval_step == 0:
             # evaluate
-            print (f"====== evaliuate ======")
+            print (f"====== evaluate ======")
             average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro, recall, precision,_ = evaluate(val_loader, model, model_type=model_type)
-            print(f"epoch:{epoch},global step:{step_global},val performance"
-                +f"\naccuarcy:{accuarcy}\nf_score_micro:{f_score_micro}\nf_score_macro:{f_score_macro}"
-                +f"\nrecall:{recall} \nprecision:{precision}"
-                +f"\naverage_precison1:{average_precison1}\nexample_auc1:{example_auc1}"
-                +f"\nmacro_auc1:{macro_auc1}\nmicro_auc1:{micro_auc1}\nranking_loss1:{ranking_loss1}")
+            # print(f"epoch:{epoch},global step:{step_global},val performance"
+            #     +f"\naccuarcy:{accuarcy}\nf_score_micro:{f_score_micro}\nf_score_macro:{f_score_macro}"
+            #     +f"\nrecall:{recall} \nprecision:{precision}"
+            #     +f"\naverage_precison1:{average_precison1}\nexample_auc1:{example_auc1}"
+            #     +f"\nmacro_auc1:{macro_auc1}\nmicro_auc1:{micro_auc1}\nranking_loss1:{ranking_loss1}")
+
+            print(f"\nf_score_macro:{f_score_macro}")
+
             print (f"=======================")
             wandb.log({"eval_recall": recall})
             wandb.log({"eval_precision": precision})
