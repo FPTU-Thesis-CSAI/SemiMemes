@@ -25,8 +25,8 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
     preds = []
     total_preds = []
     total_y = []
-    # for i, data in tqdm(enumerate(data_loader), total=len(data_loader)):
-    for i, data in tqdm(enumerate(data_loader), total=1):
+    for i, data in tqdm(enumerate(data_loader), total=len(data_loader)):
+    # for i, data in tqdm(enumerate(data_loader), total=1):
 
         if model_type == "visualbert":
             batch_cap, batch_img, y = data
