@@ -309,7 +309,8 @@ def filter_boxes(keep_boxes, max_conf, min_boxes, max_boxes):
 def get_visual_embeds(box_features, keep_boxes):
     return box_features[keep_boxes.copy()]
 
-
+# def get_boxes(proposal, keep_boxes):
+#     return box_features[keep_boxes.copy()]
 
 def extract_visual_features(cfg, model, images): 
     images, batched_inputs = prepare_image_inputs(cfg, images, model)
@@ -331,3 +332,25 @@ def extract_visual_features(cfg, model, images):
     del images, batched_inputs, features, proposals, box_features, pred_class_logits, pred_proposal_deltas, features_list
     return visual_embeds
 
+def extract_visual_features(cfg, model, images, debug=False): 
+    images, batched_inputs = prepare_image_inputs(cfg, images, model)
+    features = get_features(model, images)
+    proposals = get_proposals(model, images, features)
+    box_features, features_list, num_proposals = get_box_features(model, features, proposals)
+    pred_class_logits, pred_proposal_deltas = get_prediction_logits(model, features_list, proposals)
+    boxes, scores, image_shapes = get_box_scores(cfg, pred_class_logits, pred_proposal_deltas, proposals)
+    output_boxes = [get_output_boxes(boxes[i], batched_inputs[i], proposals[i].image_size) for i in range(len(proposals))]
+    temp = [select_boxes(cfg, output_boxes[i], scores[i], num_proposals=num_proposals) for i in range(len(scores))]
+    keep_boxes, max_conf = [],[]
+    for keep_box, mx_conf in temp:
+        keep_boxes.append(keep_box)
+        max_conf.append(mx_conf)
+    MIN_BOXES=10
+    MAX_BOXES=100
+    keep_boxes = [filter_boxes(keep_box, mx_conf, MIN_BOXES, MAX_BOXES) for keep_box, mx_conf in zip(keep_boxes, max_conf)]
+    visual_embeds = [get_visual_embeds(box_feature, keep_box).detach().cpu() for box_feature, keep_box in zip(box_features, keep_boxes)]
+    if debug:
+        return features, proposals, box_features, pred_class_logits, pred_proposal_deltas, features_list
+    else:
+        del images, batched_inputs, features, proposals, box_features, pred_class_logits, pred_proposal_deltas, features_list
+        return visual_embeds
