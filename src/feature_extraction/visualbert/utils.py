@@ -309,8 +309,11 @@ def filter_boxes(keep_boxes, max_conf, min_boxes, max_boxes):
 def get_visual_embeds(box_features, keep_boxes):
     return box_features[keep_boxes.copy()]
 
-# def get_boxes(proposal, keep_boxes):
-#     return box_features[keep_boxes.copy()]
+def get_boxes(proposal, keep_boxes):
+    return proposal.proposal_boxes[keep_boxes.copy()].tensor
+
+def get_confidences(max_cnf, keep_boxes):
+    return max_cnf[keep_boxes.copy()]
 
 def extract_visual_features(cfg, model, images): 
     images, batched_inputs = prepare_image_inputs(cfg, images, model)
@@ -348,9 +351,13 @@ def extract_visual_features(cfg, model, images, debug=False):
     MIN_BOXES=10
     MAX_BOXES=100
     keep_boxes = [filter_boxes(keep_box, mx_conf, MIN_BOXES, MAX_BOXES) for keep_box, mx_conf in zip(keep_boxes, max_conf)]
+
     visual_embeds = [get_visual_embeds(box_feature, keep_box).detach().cpu() for box_feature, keep_box in zip(box_features, keep_boxes)]
+    selected_boxes = [get_boxes(proposal, keep_box) for proposal, keep_box in zip(proposals, keep_boxes)]
+    selected_conf = [get_confidences(max_confidence, keep_box) for max_confidence, keep_box in zip(max_conf, keep_boxes)]
+
     if debug:
-        return features, proposals, box_features, pred_class_logits, pred_proposal_deltas, features_list
+        return visual_embeds, selected_boxes, selected_conf
     else:
         del images, batched_inputs, features, proposals, box_features, pred_class_logits, pred_proposal_deltas, features_list
         return visual_embeds

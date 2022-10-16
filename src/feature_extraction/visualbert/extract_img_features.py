@@ -45,20 +45,28 @@ def extract_features(all_img_paths, cfg, model, batch_size=1):
     # encode images
     print (f"encode images...")
     visual_embeds_all = []
+    bboxes_all = []
+    confidences_all = []
     for i in tqdm(np.arange(0, len(images), batch_size)):
-        print(len(images))
-        visual_embeds = extract_visual_features(cfg, visual_model, images[i:i+batch_size], debug=True)
+        # print(len(images))
+        visual_embeds, selected_boxes, selected_conf = extract_visual_features(cfg, visual_model, images[i:i+batch_size], debug=True)
         visual_embeds_all += visual_embeds
+        bboxes_all += selected_boxes
+        confidences_all += selected_conf
+
     visual_embeds_all = torch.stack(visual_embeds_all, dim=0)
+    bboxes_all = torch.stack(bboxes_all, dim=0)
+    confidences_all = torch.stack(confidences_all, dim=0)
+
     print (f"visual embedding shape:{visual_embeds_all.shape}, # names: {len(names)}")
 
-    return names, visual_embeds_all
+    return names, visual_embeds_all, bboxes_all, confidences_all
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='compute Detectron2 image embeddings')
     parser.add_argument('--img_folder', type=str, required=False, default='data/Memotion2.0/images/train_images')
-    parser.add_argument('--output_folder_path', type=str, required=False, default='data/splits/random/memotion_train.csv')
+    parser.add_argument('--output_folder_path', type=str, required=False, default='data/features/visualbert/train_images')
 
     args = parser.parse_args()
 
@@ -67,12 +75,12 @@ if __name__ == "__main__":
     visual_model = get_model(cfg).cuda()
     img_folder = args.img_folder
     # names, features = extract_features(img_folder, cfg, visual_model, batch_size=1)
-    names, features = extract_features(all_img_paths=glob.glob(os.path.join(img_folder, "*.jpg"))[:40], cfg=cfg, model=visual_model, batch_size=1)
+    names, features, bboxes, confidences = extract_features(all_img_paths=glob.glob(os.path.join(img_folder, "*.jpg"))[:40], cfg=cfg, model=visual_model, batch_size=1)
     assert len(names) == features.shape[0]
     
     # write out
     if not os.path.isdir(args.output_folder_path):
-        os.mkdir(args.output_folder_path)
+        os.makedirs(args.output_folder_path)
 
     output_path_txt = os.path.join(args.output_folder_path, "names.txt")
     output_path_feature = os.path.join(args.output_folder_path, "features.pt")
