@@ -14,6 +14,7 @@ from evaluation_metric import measure_macro_auc
 from evaluation_metric import measure_micro_auc
 from evaluation_metric import measure_ranking_loss
 from evaluation_metric import f1_metric
+from evaluation_metric import roc_auc
 
 import numpy as np 
 
@@ -85,31 +86,38 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
         #print (y != torch.argmax(scores, dim=1))
     total_preds = torch.cat(total_preds).detach().cpu().numpy()
     total_y = torch.cat(total_y).detach().cpu().numpy()
-    temp = total_preds[0]
-    for i in range(1, len(total_preds)):
-        temp = np.vstack((temp, total_preds[i]))
-    total_preds = temp
-    temp = total_y[0]
-    for i in range(1, len(total_y)):
-        temp = np.vstack((temp, total_y[i]))
-    total_y = temp
+
+    print(total_preds.shape)
+    print(total_y.shape)
+
+    roc_auc_score = roc_auc.multilabel_binary_auroc(total_preds, total_y)
+
+    # temp = total_preds[0]
+    # for i in range(1, len(total_preds)):
+    #     temp = np.vstack((temp, total_preds[i]))
+    # total_preds = temp
+    # temp = total_y[0]
+    # for i in range(1, len(total_y)):
+    #     temp = np.vstack((temp, total_y[i]))
+    # total_y = temp
     accuarcy, f_score_micro, f_score_macro,recall, precision = f1_metric.metrics(total_preds,total_y)
     average_precison1 = measure_average_precision.average_precision(total_preds, total_y)
     example_auc1 = measure_example_auc.example_auc(total_preds, total_y)
     macro_auc1 = measure_macro_auc.macro_auc(total_preds, total_y)
     micro_auc1 = measure_micro_auc.micro_auc(total_preds, total_y)
     ranking_loss1 = measure_ranking_loss.ranking_loss(total_preds, total_y)
-    return average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,recall, precision,total_preds
+    return average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,recall, precision,total_preds, roc_auc_score
             
 
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='eval')
     # parser.add_argument('--checkpoint_path', type=str, required=True)
+    parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
     parser.add_argument('--model_type', type=str, default='visualbert')
-    parser.add_argument('--img_feature_path', type=str, default="data/features/visualbert/")
     parser.add_argument('--test_json_path', type=str, default="data/splits/random/memotion_val.csv")
     parser.add_argument('--output_preds', default="../tmp")
+    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")    
 
     args = parser.parse_args()
 
@@ -117,8 +125,8 @@ if __name__ == "__main__":
     # load model
     if model_type == "visualbert":
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        config = VisualBertConfig.from_pretrained("uclanlp/visualbert-nlvr2-coco-pre")
-        model = VisualBertModel.from_pretrained("uclanlp/visualbert-nlvr2-coco-pre")
+        config = VisualBertConfig.from_pretrained(args.model_path)
+        model = VisualBertModel.from_pretrained(args.model_path)
         model = ModelForBinaryClassification(model,config)
     elif model_type == "lxmert":
         model = LxmertForPreTraining.from_pretrained("unc-nlp/lxmert-base-uncased")
@@ -184,14 +192,16 @@ if __name__ == "__main__":
         batch_size=16,
         shuffle=False,
         num_workers=16,)
-    acc, total, all_true, preds = evaluate(test_loader, model, model_type=model_type)
-    print (f"total example: {total}, # true example: {all_true}, acccuracy: {acc}")
+
+    average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,recall, precision,total_preds, roc_auc_score = evaluate(test_loader, model, model_type=model_type)
+    # print (f"total example: {total}, # true example: {all_true}, acccuracy: {roc_auc_score}")
+    print (f"acccuracy: {roc_auc_score}")
 
     # save preds
-    if args.output_preds:
-        with open(os.path.join(args.checkpoint_path, "preds.txt"), "w") as f:
-            for i in range(len(preds)):
-                f.write(str(preds[i])+"\n")
+    # if args.output_preds:
+    #     with open(os.path.join(args.checkpoint_path, "preds.txt"), "w") as f:
+    #         for i in range(len(preds)):
+    #             f.write(str(preds[i])+"\n")
         
 
 

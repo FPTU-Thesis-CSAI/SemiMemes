@@ -31,4 +31,3 @@ class ModelForBinaryClassification(nn.Module):
                 logits=out_logits,
         )
 
-

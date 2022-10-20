@@ -10,3 +10,6 @@ __pycache__
 tmp/
 build/
 src.egg-info/
+
+models/*
+!models/*/README.md

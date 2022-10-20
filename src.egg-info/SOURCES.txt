@@ -37,7 +37,10 @@ scripts/visualbert_train.sh
 scripts/visualbert_train_zeroshot.sh
 src/__init__.py
 src/data.py
+src/encoder.py
+src/entry.py
 src/eval.py
+src/file_utils.py
 src/model.py
 src/split_train_data.py
 src/test.py

@@ -18,6 +18,7 @@ from eval import evaluate
 from model import ModelForBinaryClassification
 from data import collate_fn_batch_visualbert,collate_fn_batch_lxmert,collate_fn_batch_vilt,collate_fn_batch_visualbert_semi_supervised,collate_fn_batch_lxmert_semi_supervised
 from functools import partial 
+from entry import VBEncoder
 
 wandb.init()
 
@@ -121,14 +122,15 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
         if step_global % args.eval_step == 0:
             # evaluate
             print (f"====== evaluate ======")
-            average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro, recall, precision,_ = evaluate(val_loader, model, model_type=model_type)
+            average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro, recall, precision,_, roc_auc = evaluate(val_loader, model, model_type=model_type)
             # print(f"epoch:{epoch},global step:{step_global},val performance"
             #     +f"\naccuarcy:{accuarcy}\nf_score_micro:{f_score_micro}\nf_score_macro:{f_score_macro}"
             #     +f"\nrecall:{recall} \nprecision:{precision}"
             #     +f"\naverage_precison1:{average_precison1}\nexample_auc1:{example_auc1}"
             #     +f"\nmacro_auc1:{macro_auc1}\nmicro_auc1:{micro_auc1}\nranking_loss1:{ranking_loss1}")
 
-            print(f"\nf_score_macro:{f_score_macro}")
+            # print(f"\nf_score_macro:{f_score_macro}")
+            print(f"\nroc_auc:{roc_auc}")
 
             print (f"=======================")
             wandb.log({"eval_recall": recall})
@@ -174,11 +176,11 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--img_feature_path', type=str,default="data/features/visualbert/")
+    parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
     parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-nlvr2-coco-pre")
+    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     parser.add_argument('--learning_rate', type=float, default=2e-5)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
@@ -232,6 +234,19 @@ if __name__ == "__main__":
         model.vilt = ViltModel.from_pretrained(args.model_path)
         processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")
         tokenizer = None
+    elif model_type == 'vbencoder': # another implementation of visualbert
+        args.model_type = 'visualbert'
+        model_type = 'visualbert'
+        if args.model_path.split('/')[-1] == 'nlvr2_coco_pre_trained.th':
+            config = VisualBertConfig.from_pretrained('uclanlp/visualbert-nlvr2-coco-pre')
+        elif args.model_path.split('/')[-1] == 'vqa_coco_pre_trained.th':
+            config = VisualBertConfig.from_pretrained('uclanlp/visualbert-vqa-coco-pre')
+
+        model = VBEncoder(args)
+        model.load(args.model_path)
+        model = ModelForBinaryClassification(model, config)
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        processor = None
     
     img_feature_path = args.img_feature_path
     dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, 
@@ -250,6 +265,8 @@ if __name__ == "__main__":
             collate_fn_batch = partial(collate_fn_batch_lxmert,tokenizer=tokenizer)
         elif model_type == "vilt":
             collate_fn_batch = partial(collate_fn_batch_vilt,processor=processor)
+        elif model_type == "vbencoder":
+            collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer)
 
     train_loader = torch.utils.data.DataLoader(
         dataset_train,
