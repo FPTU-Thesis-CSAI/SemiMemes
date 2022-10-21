@@ -12,9 +12,12 @@ from torch.utils.data import Dataset
 import pandas as pd 
 from feature_extraction.lxmert.processing_image import Preprocess
 from feature_extraction.lxmert.utils import Config
+import argparse
+
+from transformers import BertTokenizer
 
 class ImageTextClassificationDataset(Dataset):
-    def __init__(self, img_feature_path, csv_path, supervise = True,model_type="visualbert", vilt_processor=None,mode='train',superviseunsuperviseproportion = [3, 7]): 
+    def __init__(self, img_feature_path, csv_path, supervise = True,model_type="visualbert", vilt_processor=None,mode='train',superviseunsuperviseproportion = [3, 7], debug=False, metadata_path = None): 
         self.supervise = supervise
         self.model_type = model_type
         self.train=False
@@ -82,14 +85,24 @@ class ImageTextClassificationDataset(Dataset):
                     labels.append(1)
                 data_item["labels"] = labels
             self.data_csv.append(data_item)
-        
+
+            self.debug = debug
+            if self.debug:
+                assert not metadata_path is None, "provide metadata to debug"
+                with open(metadata_path, 'r') as f:
+                    self.metadata = json.load(f)
             
     def __getitem__(self, idx):
         if (self.train==True and self.supervise==True) or self.train==False:
             data_point = self.data_csv[idx]
             if self.model_type == "visualbert":
                 img_index = self.img_name2index[data_point["image"]]
-                return data_point["caption"], self.img_features[img_index], data_point["labels"]
+                if not self.debug:
+                    return data_point["caption"], self.img_features[img_index], data_point["labels"]
+                else:
+                    metadata = self.metadata[img_index]
+                    return data_point["caption"], self.img_features[img_index], data_point["labels"], metadata
+
             elif self.model_type == "lxmert":
                 img_index = self.img_name2index[data_point["image"]]
                 return data_point["caption"], self.boxes[img_index], self.img_features[img_index], data_point["labels"]
@@ -278,3 +291,72 @@ def collate_fn_batch_vilt(batch,processor=None):
     labels = torch.tensor(labels)
     return inputs.input_ids, inputs.pixel_values, labels
     #return torch.cat(inputs_ids, dim=0), torch.cat(pixel_values, dim=0), labels
+
+if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description='train')
+    parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
+    parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
+    parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
+    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
+    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--amp',type=bool,default=True, \
+                help="automatic mixed precision training")
+    parser.add_argument('--random_seed', type=int, default=42)
+    parser.add_argument('--semi-supervised', type=bool, default=False)
+    
+    args = parser.parse_args()
+    
+    torch.manual_seed(args.random_seed)
+
+    model_type = args.model_type
+    # load model
+    if model_type == "visualbert":
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        processor = None
+    elif model_type == "lxmert":
+        tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased") 
+        processor = None
+    elif model_type == 'vbencoder': # another implementation of visualbert
+        args.model_type = 'visualbert'
+        model_type = 'visualbert'
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        processor = None
+    
+    img_feature_path = args.img_feature_path
+    dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, 
+                supervise = not args.semi_supervised,model_type=model_type, vilt_processor=processor,mode='train', 
+                debug=True, metadata_path='data/features/visualgenome/train_images/metadata.json'
+                )
+    dataset_val = ImageTextClassificationDataset(img_feature_path, args.val_csv_path, model_type=model_type,mode='val')
+
+    if args.semi_supervised:
+        if model_type == "visualbert":
+            collate_fn_batch = partial(collate_fn_batch_visualbert_semi_supervised,tokenizer=tokenizer)
+        elif model_type == "lxmert":
+            collate_fn_batch = partial(collate_fn_batch_lxmert_semi_supervised,tokenizer=tokenizer)
+    else:
+        if model_type == "visualbert":
+            collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer)
+        elif model_type == "lxmert":
+            collate_fn_batch = partial(collate_fn_batch_lxmert,tokenizer=tokenizer)
+        elif model_type == "vilt":
+            collate_fn_batch = partial(collate_fn_batch_vilt,processor=processor)
+        elif model_type == "vbencoder":
+            collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer)
+
+    train_loader = torch.utils.data.DataLoader(
+        dataset_train,
+        collate_fn = collate_fn_batch,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=3,)
+    val_loader = torch.utils.data.DataLoader(
+        dataset_val,
+        collate_fn = collate_fn_batch,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=3,)
+
+    next(iter(dataset_train))
