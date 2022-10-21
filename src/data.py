@@ -5,6 +5,7 @@ import glob
 import json
 from tqdm.auto import tqdm
 from PIL import Image, ImageFile
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True 
 import matplotlib.pyplot as plt
 import torch
@@ -13,6 +14,7 @@ import pandas as pd
 from feature_extraction.lxmert.processing_image import Preprocess
 from feature_extraction.lxmert.utils import Config
 import argparse
+from functools import partial
 
 from transformers import BertTokenizer
 
@@ -86,11 +88,11 @@ class ImageTextClassificationDataset(Dataset):
                 data_item["labels"] = labels
             self.data_csv.append(data_item)
 
-            self.debug = debug
-            if self.debug:
-                assert not metadata_path is None, "provide metadata to debug"
-                with open(metadata_path, 'r') as f:
-                    self.metadata = json.load(f)
+        self.debug = debug
+        if self.debug:
+            assert not metadata_path is None, "provide metadata to debug"
+            with open(metadata_path, 'r') as f:
+                self.metadata = json.load(f)
             
     def __getitem__(self, idx):
         if (self.train==True and self.supervise==True) or self.train==False:
@@ -100,7 +102,12 @@ class ImageTextClassificationDataset(Dataset):
                 if not self.debug:
                     return data_point["caption"], self.img_features[img_index], data_point["labels"]
                 else:
-                    metadata = self.metadata[img_index]
+                    try:
+                        metadata = self.metadata[img_index]
+                    except IndexError as e:
+                        print(e)
+                        print(f'at index {img_index}')
+                        print()
                     return data_point["caption"], self.img_features[img_index], data_point["labels"], metadata
 
             elif self.model_type == "lxmert":
@@ -160,8 +167,12 @@ class ImageTextClassificationDataset(Dataset):
 
 
 # load data
-def collate_fn_batch_visualbert(batch,tokenizer=None):
-    captions, img_features, labels = zip(*batch)
+def collate_fn_batch_visualbert(batch, tokenizer=None, debug=False):
+    if not debug:
+        captions, img_features, labels = zip(*batch)
+    elif debug:
+        captions, img_features, labels, metadata = zip(*batch)
+
     toks = tokenizer.batch_encode_plus(
         list(captions), 
         max_length=32, 
@@ -171,7 +182,11 @@ def collate_fn_batch_visualbert(batch,tokenizer=None):
         return_tensors="pt")
     img_features = torch.stack(img_features, dim=0)
     labels = torch.tensor(labels)
-    return toks, img_features, labels
+
+    if not debug:
+        return toks, img_features, labels
+    else:
+        return toks, img_features, labels, metadata
 
 def collate_fn_batch_visualbert_semi_supervised(batch,tokenizer=None):
     feature, labels = zip(*batch)
@@ -360,3 +375,4 @@ if __name__ == "__main__":
         num_workers=3,)
 
     next(iter(dataset_train))
+    print()
