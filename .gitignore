@@ -13,3 +13,6 @@ src.egg-info/
 
 models/*
 !models/*/README.md
+!data/features/visualgenome/
+data/features/visualgenome/*
+!data/features/visualgenome/objects_vocab.txt
