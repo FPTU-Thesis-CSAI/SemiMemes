@@ -18,7 +18,7 @@ from evaluation_metric import roc_auc
 
 import numpy as np 
 
-def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
+def evaluate(data_loader, model,threshold=0.5, model_type="visualbert", num_batch=None):
     model.cuda()
     model.eval()
 
@@ -26,7 +26,7 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
     preds = []
     total_preds = []
     total_y = []
-    for i, data in tqdm(enumerate(data_loader), total=len(data_loader)):
+    for i, data in tqdm(enumerate(data_loader), total=len(data_loader) if not num_batch is None else num_batch):
     # for i, data in tqdm(enumerate(data_loader), total=1):
 
         if model_type == "visualbert":
@@ -82,13 +82,16 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert"):
         total+=y.shape[0]
         all_true += sum(sum(y))
         
+        if not num_batch is None and i+1 == num_batch:
+            break
+
         # print errors
         #print (y != torch.argmax(scores, dim=1))
     total_preds = torch.cat(total_preds).detach().cpu().numpy()
     total_y = torch.cat(total_y).detach().cpu().numpy()
 
-    print(total_preds.shape)
-    print(total_y.shape)
+    # print(total_preds.shape)
+    # print(total_y.shape)
 
     roc_auc_score = roc_auc.multilabel_binary_auroc(total_preds, total_y)
 

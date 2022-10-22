@@ -123,6 +123,9 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
             # evaluate
             print (f"====== evaluate ======")
             average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro, recall, precision,_, roc_auc = evaluate(val_loader, model, model_type=model_type)
+
+            _, _, _, _,_,_, _, _, _, _,_, roc_auc_train = evaluate(train_loader, model, model_type=model_type, num_batch=20)
+
             # print(f"epoch:{epoch},global step:{step_global},val performance"
             #     +f"\naccuarcy:{accuarcy}\nf_score_micro:{f_score_micro}\nf_score_macro:{f_score_macro}"
             #     +f"\nrecall:{recall} \nprecision:{precision}"
@@ -131,6 +134,7 @@ def train(args, train_loader, val_loader, model, scaler=None, step_global=0, epo
 
             # print(f"\nf_score_macro:{f_score_macro}")
             print(f"\nroc_auc:{roc_auc}")
+            print(f"\nroc_auc_train:{roc_auc_train}")
 
             print (f"=======================")
             wandb.log({"eval_recall": recall})
