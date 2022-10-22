@@ -1,5 +1,7 @@
 
+from cgitb import text
 import os
+from random import random, randint
 import cv2
 import glob
 import json
@@ -15,15 +17,31 @@ from feature_extraction.lxmert.processing_image import Preprocess
 from feature_extraction.lxmert.utils import Config
 import argparse
 from functools import partial
+import numpy as np
+import nlpaug.augmenter.char as nac
+import nlpaug.augmenter.word as naw
 
 from transformers import BertTokenizer
 
 class ImageTextClassificationDataset(Dataset):
-    def __init__(self, img_feature_path, csv_path, supervise = True,model_type="visualbert", vilt_processor=None,mode='train',superviseunsuperviseproportion = [3, 7], debug=False, metadata_path = None): 
+    def __init__(self, img_feature_path, csv_path, supervise = True,model_type="visualbert", vilt_processor=None,mode='train',superviseunsuperviseproportion = [3, 7], debug=False, metadata_path = None, augmentation=False): 
         self.supervise = supervise
         self.model_type = model_type
         self.train=False
         self.pro = superviseunsuperviseproportion
+
+        self.augmentation = augmentation
+        if self.augmentation:
+            self.augocr = nac.OcrAug(aug_char_max=5)
+            self.augkey = nac.KeyboardAug(aug_char_max=5)
+
+            self.augspell = naw.SpellingAug(aug_max=5)
+            self.augswap = naw.RandomWordAug(action="swap", aug_max=5)
+            self.augdel = naw.RandomWordAug(aug_max=5)
+            self.augsplit = naw.SplitAug(aug_max=5)
+
+            self.list_aug_text = [self.augocr, self.augkey, self.augspell, self.augswap, self.augdel, self.augsplit]
+
         if mode=='train':
             self.train = True
             img_feature_path += "train_images/"
@@ -93,14 +111,36 @@ class ImageTextClassificationDataset(Dataset):
             assert not metadata_path is None, "provide metadata to debug"
             with open(metadata_path, 'r') as f:
                 self.metadata = json.load(f)
-            
+    
+    def augment_features(self, img_features, rate=0.75):
+        sample_features_idx = np.random.choice(len(img_features), size=int(len(img_features)*rate))
+        img_features = img_features[sample_features_idx]
+        return img_features, sample_features_idx
+
+    def augment_text(self, text):
+        
+        if random() < 0.5:
+            i = randint(0, len(self.list_aug_text)-1)
+            text = self.list_aug_text[i].augment(text)[0]
+
+        return text
+
+
     def __getitem__(self, idx):
         if (self.train==True and self.supervise==True) or self.train==False:
             data_point = self.data_csv[idx]
             if self.model_type == "visualbert":
                 img_index = self.img_name2index[data_point["image"]]
+                img_features = self.img_features[img_index]
+                caption = data_point["caption"]
+
+                if self.augmentation:
+                    img_features, idx_features = self.augment_features(img_features, rate=0.75)
+                    if len(caption) > 20:
+                        caption = self.augment_text(caption)
+
                 if not self.debug:
-                    return data_point["caption"], self.img_features[img_index], data_point["labels"]
+                    return caption, img_features, data_point["labels"]
                 else:
                     try:
                         metadata = self.metadata[img_index]
@@ -108,7 +148,7 @@ class ImageTextClassificationDataset(Dataset):
                         print(e)
                         print(f'at index {img_index}')
                         print()
-                    return data_point["caption"], self.img_features[img_index], data_point["labels"], metadata, idx
+                    return caption, img_features, data_point["labels"], metadata, idx
 
             elif self.model_type == "lxmert":
                 img_index = self.img_name2index[data_point["image"]]
@@ -342,7 +382,7 @@ if __name__ == "__main__":
     img_feature_path = args.img_feature_path
     dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, 
                 supervise = not args.semi_supervised,model_type=model_type, vilt_processor=processor,mode='train', 
-                debug=True, metadata_path='data/features/visualgenome/train_images/metadata.json'
+                debug=True, metadata_path='data/features/visualgenome/train_images/metadata.json', augmentation=True
                 )
     dataset_val = ImageTextClassificationDataset(img_feature_path, args.val_csv_path, model_type=model_type,mode='val')
 
@@ -353,7 +393,7 @@ if __name__ == "__main__":
             collate_fn_batch = partial(collate_fn_batch_lxmert_semi_supervised,tokenizer=tokenizer)
     else:
         if model_type == "visualbert":
-            collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer)
+            collate_fn_batch = partial(collate_fn_batch_visualbert,tokenizer=tokenizer, debug=True)
         elif model_type == "lxmert":
             collate_fn_batch = partial(collate_fn_batch_lxmert,tokenizer=tokenizer)
         elif model_type == "vilt":
@@ -374,5 +414,5 @@ if __name__ == "__main__":
         shuffle=False,
         num_workers=3,)
 
-    next(iter(dataset_train))
+    next(iter(train_loader))
     print()

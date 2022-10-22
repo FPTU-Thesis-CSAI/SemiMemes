@@ -102,3 +102,5 @@ torchmetrics == 0.10.0
 
 sklearn 
 boto3
+requests
+nlpaug

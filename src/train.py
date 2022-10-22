@@ -18,7 +18,7 @@ from eval import evaluate
 from model import ModelForBinaryClassification
 from data import collate_fn_batch_visualbert,collate_fn_batch_lxmert,collate_fn_batch_vilt,collate_fn_batch_visualbert_semi_supervised,collate_fn_batch_lxmert_semi_supervised
 from functools import partial 
-from entry import VBEncoder
+# from entry import VBEncoder
 
 wandb.init()
 
@@ -184,8 +184,10 @@ if __name__ == "__main__":
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
     parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
+    parser.add_argument('--use_small_model', type=bool, default=True, help="visualbert or lxmert or vilt")
+
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
-    parser.add_argument('--learning_rate', type=float, default=2e-5)
+    parser.add_argument('--learning_rate', type=float, default=5e-5)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=64)
@@ -220,41 +222,66 @@ if __name__ == "__main__":
     # load model
     if model_type == "visualbert":
         config = VisualBertConfig.from_pretrained(args.model_path)
-        model = VisualBertModel.from_pretrained(args.model_path)
-        model = ModelForBinaryClassification(model,config)
-        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        processor = None
-    elif model_type == "lxmert":
-        config = LxmertConfig.from_pretrained(args.model_path)
-        model = LxmertModel.from_pretrained(args.model_path)
-        model = ModelForBinaryClassification(model,config)
-        tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased") 
-        processor = None
-    elif model_type == "vilt":
-        from transformers import ViltProcessor, ViltModel, ViltForImagesAndTextClassification
-        config = AutoConfig.from_pretrained("dandelin/vilt-b32-mlm")
-        config.num_images = 1
-        model = ViltForImagesAndTextClassification(config)
-        model.vilt = ViltModel.from_pretrained(args.model_path)
-        processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")
-        tokenizer = None
-    elif model_type == 'vbencoder': # another implementation of visualbert
-        args.model_type = 'visualbert'
-        model_type = 'visualbert'
-        if args.model_path.split('/')[-1] == 'nlvr2_coco_pre_trained.th':
-            config = VisualBertConfig.from_pretrained('uclanlp/visualbert-nlvr2-coco-pre')
-        elif args.model_path.split('/')[-1] == 'vqa_coco_pre_trained.th':
-            config = VisualBertConfig.from_pretrained('uclanlp/visualbert-vqa-coco-pre')
+        if not args.use_small_model:
+            model = VisualBertModel.from_pretrained(args.model_path)
+            model = ModelForBinaryClassification(model,config)
+        else:
+            model = VisualBertModel.from_pretrained(args.model_path)
+            config_dict = {
+                "attention_probs_dropout_prob": 0.3,
+                "hidden_dropout_prob": 0.3,
+                "num_hidden_layers": 6,
+                "visual_embedding_dim": 2048,
+                }
+            config = VisualBertConfig(**config_dict)
+            model_small = VisualBertModel(config)
 
-        model = VBEncoder(args)
-        model.load(args.model_path)
-        model = ModelForBinaryClassification(model, config)
+
+            model_small_dict = model_small.state_dict()
+            load_keys = [k for k in model_small.state_dict().keys() if k not in ['pooler.dense.weight', 'pooler.dense.bias']]
+            state = {k: model.state_dict()[k] for k in load_keys}
+            model_small_dict.update(state)
+            model_small.load_state_dict(model_small_dict)  
+
+            model = model_small
+
+        model = ModelForBinaryClassification(model,config)
+
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         processor = None
+
+
+    # elif model_type == "lxmert":
+    #     config = LxmertConfig.from_pretrained(args.model_path)
+    #     model = LxmertModel.from_pretrained(args.model_path)
+    #     model = ModelForBinaryClassification(model,config)
+    #     tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased") 
+    #     processor = None
+    # elif model_type == "vilt":
+    #     from transformers import ViltProcessor, ViltModel, ViltForImagesAndTextClassification
+    #     config = AutoConfig.from_pretrained("dandelin/vilt-b32-mlm")
+    #     config.num_images = 1
+    #     model = ViltForImagesAndTextClassification(config)
+    #     model.vilt = ViltModel.from_pretrained(args.model_path)
+    #     processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")
+    #     tokenizer = None
+    # elif model_type == 'vbencoder': # another implementation of visualbert
+    #     args.model_type = 'visualbert'
+    #     model_type = 'visualbert'
+    #     if args.model_path.split('/')[-1] == 'nlvr2_coco_pre_trained.th':
+    #         config = VisualBertConfig.from_pretrained('uclanlp/visualbert-nlvr2-coco-pre')
+    #     elif args.model_path.split('/')[-1] == 'vqa_coco_pre_trained.th':
+    #         config = VisualBertConfig.from_pretrained('uclanlp/visualbert-vqa-coco-pre')
+
+        # model = VBEncoder(args)
+        # model.load(args.model_path)
+        # model = ModelForBinaryClassification(model, config)
+        # tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        # processor = None
     
     img_feature_path = args.img_feature_path
     dataset_train = ImageTextClassificationDataset(img_feature_path, args.train_csv_path, 
-                supervise = not args.semi_supervised,model_type=model_type, vilt_processor=processor,mode='train')
+                supervise = not args.semi_supervised,model_type=model_type, vilt_processor=processor,mode='train', augmentation=True)
     dataset_val = ImageTextClassificationDataset(img_feature_path, args.val_csv_path, model_type=model_type,mode='val')
 
     if args.semi_supervised:
