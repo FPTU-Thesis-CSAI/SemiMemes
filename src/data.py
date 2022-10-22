@@ -175,7 +175,7 @@ def collate_fn_batch_visualbert(batch, tokenizer=None, debug=False):
 
     toks = tokenizer.batch_encode_plus(
         list(captions), 
-        max_length=32, 
+        max_length=128, 
         padding="max_length", 
         truncation=True,
         add_special_tokens=True,

@@ -1,5 +1,5 @@
-from src.encoder import VISUAL_CONFIG
-from src.encoder import VBFeatureExtraction as VBE
+# from src.encoder import VISUAL_CONFIG
+# from src.encoder import VBFeatureExtraction as VBE
 
 import os
 
