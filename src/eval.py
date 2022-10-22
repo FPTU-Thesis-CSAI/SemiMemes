@@ -26,8 +26,11 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert", num_batc
     preds = []
     total_preds = []
     total_y = []
-    for i, data in tqdm(enumerate(data_loader), total=len(data_loader) if not num_batch is None else num_batch):
+    for i, data in tqdm(enumerate(data_loader), total=len(data_loader) if num_batch is None else num_batch):
     # for i, data in tqdm(enumerate(data_loader), total=1):
+
+        if not num_batch is None and i >= num_batch:
+            break
 
         if model_type == "visualbert":
             batch_cap, batch_img, y = data
@@ -82,8 +85,6 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert", num_batc
         total+=y.shape[0]
         all_true += sum(sum(y))
         
-        if not num_batch is None and i+1 == num_batch:
-            break
 
         # print errors
         #print (y != torch.argmax(scores, dim=1))
