@@ -108,7 +108,7 @@ class ImageTextClassificationDataset(Dataset):
                         print(e)
                         print(f'at index {img_index}')
                         print()
-                    return data_point["caption"], self.img_features[img_index], data_point["labels"], metadata
+                    return data_point["caption"], self.img_features[img_index], data_point["labels"], metadata, idx
 
             elif self.model_type == "lxmert":
                 img_index = self.img_name2index[data_point["image"]]
@@ -171,7 +171,7 @@ def collate_fn_batch_visualbert(batch, tokenizer=None, debug=False):
     if not debug:
         captions, img_features, labels = zip(*batch)
     elif debug:
-        captions, img_features, labels, metadata = zip(*batch)
+        captions, img_features, labels, metadata, idx = zip(*batch)
 
     toks = tokenizer.batch_encode_plus(
         list(captions), 
@@ -186,7 +186,7 @@ def collate_fn_batch_visualbert(batch, tokenizer=None, debug=False):
     if not debug:
         return toks, img_features, labels
     else:
-        return toks, img_features, labels, metadata
+        return toks, img_features, labels, metadata, idx
 
 def collate_fn_batch_visualbert_semi_supervised(batch,tokenizer=None):
     feature, labels = zip(*batch)
