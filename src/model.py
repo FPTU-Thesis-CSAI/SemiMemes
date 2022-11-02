@@ -5,11 +5,12 @@ from transformers.modeling_outputs import SequenceClassifierOutput
 import torch 
 
 class ModelForBinaryClassification(nn.Module):
-    def __init__(self, encoder,config):
+    def __init__(self,cfg, encoder,num_label):
         super(ModelForBinaryClassification, self).__init__()
         self.encoder = encoder
-        hidden_size = config.hidden_size
-        self.ff = nn.Sequential(nn.Linear(hidden_size,hidden_size),nn.ReLU(),nn.Linear(hidden_size,4))
+        output_hidden = cfg.output_hidden
+        self.num_label = num_label
+        self.ff = nn.Sequential(nn.Linear(output_hidden,cfg.hidden_size),nn.Dropout(cfg.dropout),nn.Linear(cfg.hidden_size,self.num_label))
 
     def forward(self,**kwargs):
         labels = kwargs.pop('labels',None)   

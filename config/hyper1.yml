@@ -1,0 +1,7 @@
+batch_size: 64
+dropout: 0.3
+epochs: 5
+hidden_size: 128
+learning_rate: 2.0E-5
+optimizer: adam
+  

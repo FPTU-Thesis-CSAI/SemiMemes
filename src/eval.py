@@ -110,7 +110,7 @@ def evaluate(data_loader, model,threshold=0.5, model_type="visualbert", num_batc
     macro_auc1 = measure_macro_auc.macro_auc(total_preds, total_y)
     micro_auc1 = measure_micro_auc.micro_auc(total_preds, total_y)
     ranking_loss1 = measure_ranking_loss.ranking_loss(total_preds, total_y)
-    return average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,recall, precision,total_preds, roc_auc_score
+    return average_precison1, example_auc1, macro_auc1, micro_auc1,ranking_loss1,accuarcy, f_score_micro, f_score_macro,recall, precision, roc_auc_score
             
 
 if __name__ == "__main__":
