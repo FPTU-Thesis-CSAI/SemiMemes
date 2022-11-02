@@ -91,6 +91,7 @@ target/
 
 
 
+
 data/images/*
 data/features/*
 data/*
@@ -105,6 +106,7 @@ build/
 src.egg-info/
 
 models/*
+!/models/README.md
 !models/*/README.md
 !data/features/visualgenome/
 data/features/visualgenome/*
