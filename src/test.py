@@ -1,5 +1,4 @@
-
-from utils import *
+from VLMutils import *
 from transformers import BertTokenizer, VisualBertModel
 import torch, torchvision
 import matplotlib.pyplot as plt

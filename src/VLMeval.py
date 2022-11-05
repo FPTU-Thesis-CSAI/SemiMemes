@@ -5,8 +5,8 @@ from tqdm.auto import tqdm
 import torch
 from transformers import BertTokenizer, VisualBertModel, \
         VisualBertForVisualReasoning, LxmertForPreTraining, LxmertTokenizer,VisualBertConfig
-from model import ModelForBinaryClassification
-from data import ImageTextClassificationDataset
+from model.VLM import ModelForBinaryClassification
+from data.dataClass import ImageTextClassificationForVLMDataset
 from evaluation_metric import measure_average_precision
 from evaluation_metric import measure_coverage
 from evaluation_metric import measure_example_auc

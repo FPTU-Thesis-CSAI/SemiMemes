@@ -5,10 +5,13 @@ from copy import deepcopy
 from tqdm.auto import tqdm
 import torch
 from torch.cuda.amp import autocast, GradScaler
-from eval import evaluate
-from utils import build_optimizer,create_model,create_loaders
+from VLMeval import evaluate
+from VLMutils import build_optimizer
+from data.dataLoaders import create_loaders
+from model.VLM import create_model 
 from functools import partial
 import yaml 
+from arguments import get_args 
 
 def train_on_epoch(cfg, train_loader, val_loader, model,optimizer, scaler=None, step_global=0, epoch=-1, \
         val_best_score=0, processor=None):
@@ -204,30 +207,7 @@ def train(config=None,args=None):
             print (f"epoch: {epoch}, global step: {global_step}, loss: {loss}")
 
 if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
-    parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
-    parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
-    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--use_small_model', type=bool, default=True, help="visualbert or lxmert or vilt")
-
-    parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
-    # parser.add_argument('--learning_rate', type=float, default=5e-5)
-    parser.add_argument('--epoch', type=int, default=10)
-    parser.add_argument('--eval_step', type=int, default=100)
-    parser.add_argument('--amp',type=bool,default=True, \
-                help="automatic mixed precision training")
-    parser.add_argument('--output_dir', type=str, default="./tmp")
-    parser.add_argument('--checkpoint_step', type=int, default=1000)
-    parser.add_argument('--random_seed', type=int, default=42)
-    parser.add_argument('--resume_training', type=bool, default=False)
-    parser.add_argument('--semi-supervised', type=bool, default=False)
-    parser.add_argument('--use-sweep', type=bool, default=False)
-    parser.add_argument('--hyper_yaml_path', type=str, default="config/hyper1.yml")
-    
-    args = parser.parse_args()
-    
+    args = get_args()
     torch.manual_seed(args.random_seed)
     
     if args.use_sweep:

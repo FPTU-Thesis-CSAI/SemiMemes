@@ -91,11 +91,14 @@ target/
 
 
 
-
+data/hateful_memes/*
+data/memotion_dataset_7k/*
+data/MMHS150K/*
 data/images/*
 data/features/*
 data/*
 !data/features/README.md
+saved_model/*
 tmp/
 logs/
 wandb/
