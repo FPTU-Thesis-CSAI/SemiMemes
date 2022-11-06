@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='memeloss-supervised-rn18-distilbert-fbh-mmhs-memotion', type=str,
+    parser.add_argument('--experiment', default='memeloss-supervised-rn18-distilbert-fbh-mmhs-memotion-ckpt-20', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='/home/viet/SSLMemes/data/memotion_dataset_7k',
@@ -19,9 +19,9 @@ def get_args():
                     help="Text Model used for encoding text")
     parser.add_argument('--out-dim', default=512, type=int, 
                     help='Embedding dimension for modalities (default: 512)')
-    parser.add_argument('--projector', default='std', type=str,
+    parser.add_argument('--projector', default='pie', type=str,
                     choices=['std', 'clip', 'pie'], help="Projection used for Unsupervised Training")
-    parser.add_argument('--ckpt', default='', type=str,
+    parser.add_argument('--ckpt', default='/home/viet/SSLMemes/saved_model/memeloss-unsupervised-rn18-distilbert-fbh-mmhs/checkpoint_0020.pth.tar', type=str,
                     help='Path to load for checkpoint')
     parser.add_argument('--dropout', default=0.2, type=float,
                     help="Dropout probability in classification layer of model")
@@ -81,7 +81,7 @@ def get_args():
     parser.add_argument('--moco_size', default=0, type=int,
                         help="Size of Memory Bank (MoCo, 2020), size=0 is set for SimCLR")
     # Multimodal Contrastive Learning
-    parser.add_argument('--mmcontr', action='store_true', help="Use MMContrLoss for Unsupervised Training",default=True)
+    parser.add_argument('--mmcontr', action='store_true', help="Use MMContrLoss for Unsupervised Training",default=False)
     parser.add_argument('--measure', default='cosine', type=str,
                         choices=['cosine', 'order'], help="Similarity measure to be used in MMContrLoss")
     parser.add_argument('--margin', default=0, type=float,

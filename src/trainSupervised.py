@@ -169,7 +169,7 @@ def train(args,model,classifier,train_loader,val_loader,optimizer):
         'arch': args.arch,
         'state_dict': classifier.state_dict(),
         'optimizer': optimizer.state_dict(),
-    }, is_best=False, filename=os.path.join(self.writer.log_dir, checkpoint_name))
+    }, is_best=False, filename=os.path.join(log_dir, checkpoint_name))
     print(f"Model checkpoint and metadata has been saved at {log_dir}.")
     msg = "Training F1:{:.4f} and Testset F1:{:.4f}".format(corr_train_f1, best_val_f1)
     if args.num_classes == 2:
@@ -249,7 +249,8 @@ else:
     args.gpu_index = -1
 
 print(args)
-wandb.init(project="meme_experiments", entity="vietnguyen")
+wandb.init(project="meme_experiments", entity="meme-analysts")
+wandb.run.name = args.experiment
 ckpt_use = args.ckpt != ''
 model = UnsupervisedModel(args.arch, args.txtmodel, args.out_dim, args.dropout, args.projector, not ckpt_use, not ckpt_use)
 model.to(args.device)
