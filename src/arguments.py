@@ -6,7 +6,7 @@ def get_args():
     parser.add_argument('--experiment', default='supervised-memotion', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
-    parser.add_argument('-data', metavar='DIR', default='/home/viet/SSLMemes/data/memotion_dataset_7k',
+    parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
                     help='path to dataset')
     parser.add_argument('-dataset-name', default='memotion',
                     help='dataset name', choices=['hatefulmemes', 'harmeme', 'memotion'])
@@ -21,7 +21,7 @@ def get_args():
                     help='Embedding dimension for modalities (default: 512)')
     parser.add_argument('--projector', default='pie', type=str,
                     choices=['std', 'clip', 'pie'], help="Projection used for Unsupervised Training")
-    parser.add_argument('--ckpt', default='/home/viet/SSLMemes/saved_model/model_weights/last_checkpoint-resnet18--distilbert-base-uncased--2x512d--0.20p--pie.pth.tar', type=str,
+    parser.add_argument('--ckpt', default='', type=str,
                     help='Path to load for checkpoint')
     parser.add_argument('--dropout', default=0.2, type=float,
                     help="Dropout probability in classification layer of model")
@@ -43,7 +43,7 @@ def get_args():
 
     parser.add_argument('-j', '--workers', default=20, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
-    parser.add_argument('--epochs', default=100, type=int, metavar='N',
+    parser.add_argument('--epochs', default=10, type=int, metavar='N',
                     help='number of total epochs to run')
     parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N',
@@ -102,28 +102,28 @@ def get_args():
     #CMML
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
-    parser.add_argument('--textfilename', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_train_label.npy",help="Path of text madality feature data")
-    parser.add_argument('--textfilename_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_train_unlabel.npy",
+    parser.add_argument('--textfilename', default = "data/memotion_dataset_7k/text_binary_feature_train_label.npy",help="Path of text madality feature data")
+    parser.add_argument('--textfilename_unlabel', default = "data/memotion_dataset_7k/text_binary_feature_train_unlabel.npy",
     help="Path of text madality feature data")
-    parser.add_argument('--sbertemb', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_train_label.npy",help="Path of text madality feature data")
-    parser.add_argument('--sbertemb_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_train_unlabel.npy",
+    parser.add_argument('--sbertemb', default = "data/memotion_dataset_7k/text_sbert_feature_train_label.npy",help="Path of text madality feature data")
+    parser.add_argument('--sbertemb_unlabel', default = "data/memotion_dataset_7k/text_sbert_feature_train_unlabel.npy",
     help="Path of text madality bert feature data")
-    parser.add_argument('--sbertemb_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_val.npy",help='Path of text madality bert feature data')
-    parser.add_argument('--imgfilenamerecord', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_train_data_label.pkl",
+    parser.add_argument('--sbertemb_val', default = "data/memotion_dataset_7k/text_sbert_feature_val.npy",help='Path of text madality bert feature data')
+    parser.add_argument('--imgfilenamerecord', default = "data/memotion_dataset_7k/list_name_image_train_data_label.pkl",
     help="Path of name list of img madality data")
-    parser.add_argument('--imgfilenamerecord_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_train_data_unlabel.pkl",
+    parser.add_argument('--imgfilenamerecord_unlabel', default = "data/memotion_dataset_7k/list_name_image_train_data_unlabel.pkl",
     help="Path of name list of img madality data")
-    parser.add_argument('--imgfilename', type = str, default = '/home/viet/SSLMemes/data/memotion_dataset_7k/images/',
+    parser.add_argument('--imgfilename', type = str, default = 'data/memotion_dataset_7k/images/',
     help="Path of img madality data")
-    parser.add_argument('--labelfilename', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/label_train.npy",
+    parser.add_argument('--labelfilename', default = "data/memotion_dataset_7k/label_train.npy",
     help="Path of data label")
-    parser.add_argument('--labelfilename_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/label_train_unlabel.npy",help="Path of data label")
-    parser.add_argument('--textfilename_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_val.npy",help="Path of text madality feature data")
-    parser.add_argument('--imgfilenamerecord_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_val.pkl",help="Path of name list of img madality data")
-    parser.add_argument('--imgfilename_val', type = str, default = '/home/viet/SSLMemes/data/memotion_test_data/test_data/2000_data/2000_data/',
+    parser.add_argument('--labelfilename_unlabel', default = "data/memotion_dataset_7k/label_train_unlabel.npy",help="Path of data label")
+    parser.add_argument('--textfilename_val', default = "data/memotion_dataset_7k/text_binary_feature_val.npy",help="Path of text madality feature data")
+    parser.add_argument('--imgfilenamerecord_val', default = "data/memotion_dataset_7k/list_name_image_val.pkl",help="Path of name list of img madality data")
+    parser.add_argument('--imgfilename_val', type = str, default = 'data/memotion_test_data/test_data/2000_data/2000_data/',
     help="Path of img madality data")
-    parser.add_argument('--labelfilename_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/label_val.npy",help="Path of data label")
-    parser.add_argument('--savepath', type = str, default = '/home/viet/SSLMemes/saved_model')
+    parser.add_argument('--labelfilename_val', default = "data/memotion_dataset_7k/label_val.npy",help="Path of data label")
+    parser.add_argument('--savepath', type = str, default = 'models')
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")

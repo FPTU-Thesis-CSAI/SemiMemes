@@ -45,8 +45,8 @@ def divide_data(df_train):
         train_un_label = train_un_label.drop(train_un_label[train_un_label.image_name == i].index)
     train_un_label = train_un_label.reset_index(drop=True)
 
-    train_label.to_csv("/home/viet/SSLMemes/data/memotion_dataset_7k/labeled_data_train.csv", index = False, encoding = 'utf-8-sig')
-    train_un_label.to_csv("/home/viet/SSLMemes/data/memotion_dataset_7k/unlabeled_data_train.csv", index = False, encoding = 'utf-8-sig')
+    train_label.to_csv("data/memotion_dataset_7k/labeled_data_train.csv", index = False, encoding = 'utf-8-sig')
+    train_un_label.to_csv("data/memotion_dataset_7k/unlabeled_data_train.csv", index = False, encoding = 'utf-8-sig')
 
     return train_label , train_un_label
 
@@ -64,15 +64,15 @@ def name_of_image (list_id_image_train,number):
         id_image_train.append(list_id_image_train[i])
 
     if number == 1:
-      output_1 = open('/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_train_data_label.pkl', 'wb')
+      output_1 = open('data/memotion_dataset_7k/list_name_image_train_data_label.pkl', 'wb')
       pickle.dump(id_image_train, output_1)
       output_1.close()
     elif number == 2: 
-      output = open('/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_train_data_unlabel.pkl', 'wb')
+      output = open('data/memotion_dataset_7k/list_name_image_train_data_unlabel.pkl', 'wb')
       pickle.dump(id_image_train, output)
       output.close()
     elif number == 3:
-      output_val = open('/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_val.pkl', 'wb')
+      output_val = open('data/memotion_dataset_7k/list_name_image_val.pkl', 'wb')
       pickle.dump(id_image_train, output_val)
       output_val.close()
 
@@ -102,13 +102,13 @@ def label_from_data(df_data,number):
     train_label = np.asarray(train_label)
 
     if number == 1:
-        with open('/home/viet/SSLMemes/data/memotion_dataset_7k/label_train.npy', 'wb') as f:
+        with open('data/memotion_dataset_7k/label_train.npy', 'wb') as f:
             np.save(f, train_label)
     elif number == 2: 
-        with open('/home/viet/SSLMemes/data/memotion_dataset_7k/label_train_unlabel.npy', 'wb') as f:
+        with open('data/memotion_dataset_7k/label_train_unlabel.npy', 'wb') as f:
             np.save(f, train_label)
     elif number == 3:
-        with open('/home/viet/SSLMemes/data/memotion_dataset_7k/label_val.npy', 'wb') as f:
+        with open('data/memotion_dataset_7k/label_val.npy', 'wb') as f:
             np.save(f, train_label)
     
     return train_label
@@ -148,8 +148,8 @@ def clean_dataset(df_train , val, val_label):
     #rename column val dataset follow train dataset
     val.columns = ['image_name', 'text_ocr', 'text_corrected', 'humour', 'sarcasm','offensive',	'motivational']
 
-    df_train.to_csv("/home/viet/SSLMemes/data/memotion_dataset_7k/train.csv", index = False, encoding = 'utf-8-sig')
-    val.to_csv("/home/viet/SSLMemes/data/memotion_dataset_7k/val.csv", index = False, encoding = 'utf-8-sig')
+    df_train.to_csv("data/memotion_dataset_7k/train.csv", index = False, encoding = 'utf-8-sig')
+    val.to_csv("data/memotion_dataset_7k/val.csv", index = False, encoding = 'utf-8-sig')
 
     return df_train, val
 
@@ -214,23 +214,23 @@ def preprocessing_text(text,number):
     sbert_embedding = model.encode(df_text_train)
 
     if number == 1:
-      with open('/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_train_label.npy', 'wb') as f:
+      with open('data/memotion_dataset_7k/text_binary_feature_train_label.npy', 'wb') as f:
         np.save(f, sentence_vectors_train)
     elif number == 2: 
-      with open('/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_train_unlabel.npy', 'wb') as f:
+      with open('data/memotion_dataset_7k/text_binary_feature_train_unlabel.npy', 'wb') as f:
         np.save(f, sentence_vectors_train)
     elif number == 3:
-      with open('/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_val.npy', 'wb') as f:
+      with open('data/memotion_dataset_7k/text_binary_feature_val.npy', 'wb') as f:
           np.save(f, sentence_vectors_train)
 
     if number == 1:
-      with open('/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_train_label.npy', 'wb') as f:
+      with open('data/memotion_dataset_7k/text_sbert_feature_train_label.npy', 'wb') as f:
         np.save(f, sbert_embedding)
     elif number == 2: 
-      with open('/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_train_unlabel.npy', 'wb') as f:
+      with open('data/memotion_dataset_7k/text_sbert_feature_train_unlabel.npy', 'wb') as f:
         np.save(f, sbert_embedding)
     elif number == 3:
-      with open('/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_val.npy', 'wb') as f:
+      with open('data/memotion_dataset_7k/text_sbert_feature_val.npy', 'wb') as f:
           np.save(f, sbert_embedding)
 
 
@@ -284,6 +284,6 @@ def pipeline(train_path,val_path,val_label_path):
   preprocessing_text(val["text_corrected"],3)
 
 if __name__ == '__main__':
-    pipeline('/home/viet/SSLMemes/data/memotion_dataset_7k/labels.csv',
-    '/home/viet/SSLMemes/data/memotion_test_data/test_data/2000_testdata.csv',
-    '/home/viet/SSLMemes/data/memotion_test_data/test_data/Meme_groundTruth .csv')
+    pipeline('data/memotion_dataset_7k/labels.csv',
+    'data/memotion_test_data/test_data/2000_testdata.csv',
+    'data/memotion_test_data/test_data/Meme_groundTruth .csv')

@@ -19,6 +19,7 @@ from evaluation_metric.measure_micro_auc import *
 from evaluation_metric.roc_auc import *
 import torch.nn as nn
 import wandb   
+from tqdm import tqdm
 
 def test(Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
     if cuda:
@@ -347,7 +348,7 @@ def train(model, dataset,
     for epoch in range(1, supervise_epochs + 1):
         print('train supervise data:', epoch)
         data_loader = DataLoader(dataset = dataset.unsupervise_(), batch_size = batchsize, shuffle = True, num_workers = 0)
-        for batch_index, (x, y) in enumerate(data_loader, 1):
+        for batch_index, (x, y) in tqdm(enumerate(data_loader, 1)):
             batch_count += 1
             scheduler.step()
             x[0] = torch.cat(x[0], 0)
@@ -467,8 +468,8 @@ def train(model, dataset,
             
             wandb.log({"learning rate/lr":scheduler.get_last_lr()[0]})
             wandb.log({"f1_macro_multi_1":f1_macro_multi_1})
-            wandb.log({"f1_macro_multi_1":f1_macro_multi_2})
-            wandb.log({"f1_macro_multi_1":f1_macro_multi_3})
+            wandb.log({"f1_macro_multi_2":f1_macro_multi_2})
+            wandb.log({"f1_macro_multi_3":f1_macro_multi_3})
             
             wandb.log({"f1_skl_all":f1_skl1})
             wandb.log({"f1_skl_image":f1_skl2})

@@ -104,3 +104,5 @@ sklearn
 boto3
 # requests
 nlpaug
+
+sentence-transformers
