@@ -7,7 +7,7 @@ import glob
 import json
 from tqdm.auto import tqdm
 from PIL import Image, ImageFile
-from .utils import stratified_sample_df
+from data.utils import stratified_sample_df
 ImageFile.LOAD_TRUNCATED_IMAGES = True 
 import matplotlib.pyplot as plt
 import torch
