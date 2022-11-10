@@ -1,6 +1,7 @@
 from torch.autograd import Variable
 import torch 
 import torch.nn as nn  
+import torch.nn.functional as F 
 
 def cosine_sim(im, s):
     """Cosine similarity between all the image and sentence pairs
@@ -58,3 +59,12 @@ class MMContrastiveLoss(nn.Module):
             cost_im = cost_im.max(0)[0]
 
         return cost_s.sum(), cost_im.sum()
+
+def focal_binary_cross_entropy(args,p, targets, gamma=2):
+    p = p.reshape(-1)
+    t = targets.reshape(-1)
+    p = torch.where(t >= 0.5, p, 1-p)
+    logp = - torch.log(torch.clamp(p, 1e-4, 1-1e-4))
+    loss = logp*((1-p)**gamma)
+    loss = args.num_classes*loss.mean()
+    return loss

@@ -21,6 +21,9 @@ from .gaussian_blur import GaussianBlur
 from transformers import RobertaTokenizer,DistilBertTokenizer
 from .view_generator import ContrastiveLearningViewGenerator 
 from torch.utils.data import ConcatDataset
+import torch
+import pickle
+from .preprocessing import * 
 
 class ImageTextClassificationForVLMDataset(Dataset):
     def __init__(self, img_feature_path, csv_path, supervise = True,model_type="visualbert", vilt_processor=None,mode='train',superviseunsuperviseproportion = [3, 7], debug=False, metadata_path = None, augmentation=False): 
@@ -204,8 +207,252 @@ class ImageTextClassificationForVLMDataset(Dataset):
         elif self.train==True and self.supervise==False:
             return int(len(self.unlabeled_ids)/self.pro[1])
 
+class MemotionDatasetForCmml(Dataset):
+    def __init__(self, imgfilenamerecord,
+                 imgfilenamerecord_unlabel, 
+                 imgfilename, 
+                 textfilename, 
+                 textfilename_unlabel, 
+                 labelfilename, 
+                 labelfilename_unlabel,
+                 imgfilenamerecord_val, 
+                 imgfilename_val, 
+                 textfilename_val, 
+                 labelfilename_val, 
+                 sbertemb_label,
+                 sbertemb_unlabel,
+                 sbertemb_val,
+                 train = True,
+                 supervise = True):        
+        self.imgfilename = imgfilename
+        self.textfilename_unlabel = textfilename_unlabel
+        self.textfilename = textfilename
+        self.labelfilename = labelfilename
+        self.labelfilename_unlabel = labelfilename_unlabel
+        self.sbertemb_label = sbertemb_label
+        self.sbertemb_unlabel = sbertemb_unlabel
+        self.sbertemb_val = sbertemb_val
+
+        self.imgfilename_val = imgfilename_val
+        self.textfilename_val = textfilename_val
+        self.labelfilename_val = labelfilename_val
+
+        self.train = train
+        self.supervise = supervise
+
+        self.imgfilenamerecord = imgfilenamerecord
+        fr = open(self.imgfilenamerecord,'rb')
+        self.imgrecordlist = pickle.load(fr)
+        for i in range(len(self.imgrecordlist)):
+            self.imgrecordlist[i] = self.imgfilename + self.imgrecordlist[i] 
+
+        self.imgfilenamerecord_unlabel = imgfilenamerecord_unlabel
+        fr = open(self.imgfilenamerecord_unlabel,'rb')
+        self.imgrecordlist_unlabel = pickle.load(fr)
+        for i in range(len(self.imgrecordlist_unlabel)):
+            self.imgrecordlist_unlabel[i] = self.imgfilename + self.imgrecordlist_unlabel[i] 
+    
+        self.superviseimgrecordlist = np.array(self.imgrecordlist)
+        self.supervisetextlist = np.load(self.textfilename)
+        self.superviselabellist = np.load(self.labelfilename)
+        self.sbertemb_label = np.load(self.sbertemb_label)
+
+        self.unsuperviseimgrecordlist = np.array(self.imgrecordlist_unlabel)
+        self.unsupervisetextlist = np.load(self.textfilename_unlabel)
+        self.unsuperviselabellist = np.load(self.labelfilename_unlabel)
+        self.sbertemb_unlabel = np.load(self.sbertemb_unlabel)
+
+        self.imgfilenamerecord_val = imgfilenamerecord_val
+        fr = open(self.imgfilenamerecord_val,'rb')
+        self.imgrecordlist_val = pickle.load(fr)
+        for i in range(len(self.imgrecordlist_val)):
+            self.imgrecordlist_val[i] = self.imgfilename_val + self.imgrecordlist_val[i] 
+        self.testimgrecordlist = np.array(self.imgrecordlist_val)
+        self.testtextlist = np.load(textfilename_val)
+        self.testlabellist = np.load(labelfilename_val)
+        self.sbertemb_val = np.load(self.sbertemb_val)
+
+        self.pro2 = [1,3]
+
+    def supervise_(self):
+        self.train = True
+        self.supervise = True
+        return self
+
+    def test_(self):
+        self.train = False
+        return self
+
+    def unsupervise_(self):
+        self.train = True
+        self.supervise = False
+        return self
+
+    def __getitem__(self, index):
+        if self.train == True and self.supervise == True:
+            img = Image.open(self.superviseimgrecordlist[index]).convert('RGB').resize((256, 256))
+            text = self.supervisetextlist[index]
+            bert_emb = self.sbertemb_label[index]
+            label = self.superviselabellist[index]
+            img = transforms.ToTensor()(img)
+            text = torch.FloatTensor(text)
+            bert_emb = torch.FloatTensor(bert_emb)
+            label = torch.FloatTensor(label)
+            feature = []
+            feature.append(img)
+            feature.append(text)
+            feature.append(bert_emb)
+            return feature, label
+        elif self.train == True and self.supervise == False:
+            supervise_img = []
+            supervise_text = []
+            supervise_bert = []
+            supervise_label = []
+            for i in range(index*self.pro2[0],(index+1)*self.pro2[0]):
+                temp_img = Image.open(self.superviseimgrecordlist[i]).convert('RGB').resize((256, 256))
+                temp_text = self.supervisetextlist[i]
+                temp_label = self.superviselabellist[i]
+                temp_bert = self.sbertemb_label[index]
+                temp_img = transforms.ToTensor()(temp_img)
+                temp_text = torch.FloatTensor(temp_text)
+                temp_bert = torch.FloatTensor(temp_bert)
+                temp_label = torch.FloatTensor(temp_label)
+                supervise_img.append(temp_img)
+                supervise_text.append(temp_text)
+                supervise_bert.append(temp_bert)
+                supervise_label.append(temp_label)
+            unsupervise_img = []
+            unsupervise_text = []
+            unsupervise_bert = []
+            unsupervise_label = []
+            for i in range(index*self.pro2[1],(index+1)*self.pro2[1]):
+                temp_img = Image.open(self.unsuperviseimgrecordlist[i]).convert('RGB').resize((256, 256))
+                temp_text = self.unsupervisetextlist[i]
+                temp_bert = self.sbertemb_unlabel[index]
+                temp_label = self.unsuperviselabellist[i]               
+                temp_img = transforms.ToTensor()(temp_img)
+                temp_text = torch.FloatTensor(temp_text)
+                temp_bert = torch.FloatTensor(temp_bert)
+                temp_label = torch.FloatTensor(temp_label)
+                unsupervise_img.append(temp_img)
+                unsupervise_text.append(temp_text)
+                unsupervise_bert.append(temp_bert)
+                unsupervise_label.append(temp_label)
+            feature = []
+            feature.append(supervise_img)
+            feature.append(supervise_text)
+            feature.append(supervise_bert)
+            feature.append(unsupervise_img)
+            feature.append(unsupervise_text)
+            feature.append(unsupervise_bert)
+            return feature, supervise_label
+        elif self.train == False:
+            img = Image.open(self.testimgrecordlist[index]).convert('RGB').resize((256, 256))
+            text = self.testtextlist[index]
+            bert_emb = self.sbertemb_val[index]
+            label = self.testlabellist[index]
+            img = transforms.ToTensor()(img)
+            text = torch.FloatTensor(text)
+            bert_emb = torch.FloatTensor(bert_emb)
+            label = torch.FloatTensor(label)
+            feature = []
+            feature.append(img)
+            feature.append(text)
+            feature.append(bert_emb)
+            return feature, label
+
+    def __len__(self):
+        if self.train == True and self.supervise == True:
+            return len(self.superviselabellist)
+        elif self.train == True and self.supervise == False:
+            return int(len(self.unsuperviselabellist)/self.pro2[1])
+        elif self.train == False:
+            return len(self.testlabellist)
+
 def np_random_sample(arr, size=1):
         return arr[np.random.choice(len(arr), size=size, replace=False)]
+
+
+class UnsupervisionMemotion2Dataset(Dataset):
+    def __init__(self, folder_path, phase, txt_model, height=224, width=224, im_transforms=None, num_samples=0, txt_max_length=100):
+        jsonpath = folder_path +  '/memotion_train.csv'
+        self.image_dir = folder_path + '/images/'
+        self.data = pd.read_csv(jsonpath)
+        self.phase = phase
+
+        self.num_samples = len(self.data)
+        self.height = height
+        self.width = width
+        self.folder_path = folder_path
+        self.txt_model = txt_model
+        if txt_model == 'roberta-base':
+            self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+        else:
+            self.tokenizer = DistilBertTokenizer.from_pretrained(txt_model, model_max_length=txt_max_length)
+        self.encoded_captions = self.tokenizer(list(self.data.ocr_text), padding='max_length', truncation=True)
+        self.image_transform = im_transforms
+        print("Loaded {} samples in {} Memotion 2 Dataset".format(self.num_samples, phase))
+
+    def __getitem__(self, index):
+        single_image_label = 0
+        imgpath = self.image_dir + '/train_images/'+str(self.data.Id[index])+'.jpg'
+        img_as_img = Image.open(imgpath).convert('RGB')
+        img_views = self.image_transform(img_as_img)
+
+        encoded_caption = {
+            key: torch.tensor(values[index])
+            for key, values in self.encoded_captions.items()
+        }
+        text2tokens, att_mask = encoded_caption['input_ids'], encoded_caption['attention_mask']
+        return img_views, text2tokens, att_mask, single_image_label
+
+    def __len__(self):
+        return self.num_samples
+        
+class SupervisionCovidMemesDataset(Dataset):
+    def __init__(self, folder_path, phase, txt_model, height=224, width=224, im_transforms=None, num_samples=0, txt_max_length=100,pretrain=False):
+        jsonpath = folder_path + '/' + phase + '.jsonl'
+        data = pd.read_json(jsonpath, lines=True)
+        if num_samples != 0:
+            data = stratified_sample_df(data, 'label', num_samples) 
+        self.data = data
+        self.num_samples = len(self.data)
+        self.phase = phase
+        self.pretrain = pretrain
+        if not self.pretrain:
+            self.labels = np.asarray(self.data['label'])
+        self.height = height
+        self.width = width
+        self.folder_path = folder_path
+        self.txt_model = txt_model
+        if txt_model == 'roberta-base':
+            self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+        else:
+            self.tokenizer = DistilBertTokenizer.from_pretrained(txt_model, model_max_length=txt_max_length)
+        self.encoded_captions = self.tokenizer(list(self.data.text), padding='max_length', truncation=True)
+        self.image_transform = im_transforms
+        print("Loaded {} Samples in {} Covid Memes Dataset".format(self.num_samples, phase))
+        if not self.pretrain:
+            print(self.data['label'].value_counts())
+
+    def __getitem__(self, index):
+        if not self.pretrain:
+            single_image_label = self.labels[index]
+        else:
+            single_image_label = 0
+        imgpath = self.folder_path + '/images/' + self.data.image[index]
+        img_as_img = Image.open(imgpath).convert('RGB')
+        img_views = self.image_transform(img_as_img)
+
+        encoded_caption = {
+            key: torch.tensor(values[index])
+            for key, values in self.encoded_captions.items()
+        }
+        text2tokens, att_mask = encoded_caption['input_ids'], encoded_caption['attention_mask']
+        return img_views, text2tokens, att_mask, single_image_label
+
+    def __len__(self):
+        return self.num_samples
 
 class SupervisionHatefulMemesDataset(Dataset):
     def __init__(self, folder_path, phase, txt_model, height=224, width=224, im_transforms=None, num_samples=0, txt_max_length=100):
@@ -250,7 +497,7 @@ class SupervisionHatefulMemesDataset(Dataset):
 class SupervisionHarmemesDataset(Dataset):
     def __init__(self, folder_path, phase, txt_model, height=224, width=224, im_transforms=None, num_samples=0, txt_max_length=100):
         jsonpath = folder_path + '/defaults/annotations/' + phase + '.jsonl'
-        self.image_dir = folder_path + '/defaults/images/'
+        self.image_dir = folder_path + '/defaults/annotations/images/'
         self.data = pd.read_json(jsonpath, lines=True)
         self.phase = phase
 
@@ -343,7 +590,7 @@ class MMHSDataset(Dataset):
     def __len__(self):
         return self.num_samples
 
-class MemotionDataset(Dataset):
+class MemotionDatasetB4(Dataset):
     def __init__(self, folder_path, phase, task, txt_model, height=224, width=224, im_transforms=None, num_samples=0, txt_max_length=100):
         self.phase = phase
         if self.phase == 'train':
@@ -490,6 +737,135 @@ class MemotionDataset(Dataset):
     def __len__(self):
         return self.num_samples
 
+class MemotionDataset(Dataset):
+    def __init__(self, folder_path, phase, task, txt_model, height=224, width=224, im_transforms=None, num_samples=0, txt_max_length=100,pretrain=False):
+        self.phase = phase
+        self.pretrain = pretrain
+        if self.phase == 'train':
+            df_path = os.path.join(folder_path, 'train.csv')
+            self.img_path = os.path.join(folder_path, 'image_train')
+        elif self.phase == 'test':
+            df_path = os.path.join(folder_path,'test.csv') 
+            self.img_path = os.path.join(folder_path, 'image_test')
+        data = pd.read_csv(df_path)
+        try:
+            data.drop(columns=['Unnamed: 0'], inplace=True)
+        except:
+            pass
+        if not self.pretrain:
+            if task == 'A' or task == 'a':
+                data['label'] = data['overall_sentiment'].apply(self.get_sentiment_label)
+            elif task in ['b', 'B']:
+                data['label'] = data.apply(lambda x: self.get_task2_label(x), axis=1)
+            else:
+                data['label'] = data.apply(lambda x: self.get_task3_label(x), axis=1)
+     
+        try:
+            data.drop(columns=['Unnamed: 0'], inplace=True)
+        except:
+            pass
+
+        self.task = task
+        if num_samples != 0 and phase =='train':
+            if task in ['a', 'A']:
+                data = stratified_sample_df(data, 'label', num_samples)
+            else:
+                data = data.sample(n=num_samples)
+        if 'corrected_text' in data:
+            data['text_corrected'] = data['corrected_text']
+        if 'Image_name' in data:
+            data['image_name'] = data['Image_name']
+        self.df = data
+        self.df['text_corrected'].fillna('None', inplace=True)
+        self.num_samples = len(self.df)
+        print("Loaded {} Samples in {} Memotion Dataset".format(self.num_samples, phase))
+        self.height = height
+        self.width = width
+        self.phase = phase
+        self.folder_path = folder_path
+        self.txt_model = txt_model
+        if txt_model == 'roberta-base':
+            self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+        else:
+            self.tokenizer = DistilBertTokenizer.from_pretrained(txt_model, model_max_length=txt_max_length)
+        self.encoded_captions = self.tokenizer(list(self.df['text_corrected']), padding='max_length', truncation=True)
+        self.image_transform = im_transforms
+
+    def get_task3_label(self, row):
+        label = [] 
+        humour_dict = {
+            'not_funny': 0,
+            'funny': 1,
+            'very_funny': 2,
+            'hilarious': 3
+        }
+        sarcasm_dict = {
+            'not_sarcastic': 4,
+            'general': 5,
+            'twisted_meaning': 6,
+            'very_twisted': 7
+        }
+        offen_dict = {
+            'not_offensive': 8,
+            'slight': 9,
+            'very_offensive': 10,
+            'hateful_offensive': 11
+        }
+        motiv_dict = {
+            'not_motivational': 12,
+            'motivational': 13
+        }
+
+        return [humour_dict[row['humour']], sarcasm_dict[row['sarcasm']], offen_dict[row['offensive']], motiv_dict[row['motivational']]]
+
+    def get_task2_label(self, row):
+        label = [] 
+        if row['humour'] in ['funny', 'hilarious', 'very_funny']:
+            label += [0]
+        if row['sarcasm'] in ['general', 'twisted_meaning', 'very_twisted']:
+            label += [1]
+        if row['motivational'] == 'motivational':
+            label += [3]
+        if row['offensive'] != 'not_offensive':
+            label += [2]
+        return label
+
+    def get_sentiment_label(self, label):
+        if label in ['positive', 'very_positive']:
+            return 0 
+        elif label in ['neutral']:
+            return 1 
+        elif label in ['negative', 'very_negative']:
+            return 2 
+        return -1
+
+    def __getitem__(self, index):
+        if not self.pretrain:
+            if self.task in ['a', 'A']:
+                if self.phase == 'test':
+                    single_image_label = float(self.df['Labels'].iloc[index][0]).split('_')[0]
+                else: 
+                    single_image_label = self.df['label'].iloc[index]
+            else:
+                single_image_label = np.array(self.df['label'].iloc[index], dtype=int)
+                zeros = np.zeros(4 if self.task in ['b', 'B'] else 14)
+                zeros[single_image_label] = 1
+                single_image_label = zeros
+        else:
+            single_image_label = 0
+        imgpath = os.path.join(self.img_path, self.df.iloc[index]['image_name'].split(".")[0]+'.jpg')
+        img_as_img = Image.open(imgpath).convert('RGB')
+        img_views = self.image_transform(img_as_img)
+        encoded_caption = {
+            key: torch.tensor(values[index])
+            for key, values in self.encoded_captions.items()
+        }
+        text2tokens, att_mask = encoded_caption['input_ids'], encoded_caption['attention_mask']
+        return img_views, text2tokens, att_mask, single_image_label
+
+    def __len__(self):
+        return self.num_samples
+
 def get_std_image_transform(size):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=size),
@@ -524,7 +900,18 @@ def get_unsupervision_dataset(args):
     dataset1 = SupervisionHatefulMemesDataset(path, 'train', txt_model, im_transforms=imtransforms, num_samples=num_samples)
     path = '/home/viet/SSLMemes/data/MMHS150K'
     dataset2 = MMHSDataset(path, 'train', txt_model, im_transforms=imtransforms, num_samples=num_samples)
-    return ConcatDataset([dataset1, dataset2])
+    path = '/home/viet/SSLMemes/data/Memotion1Fixed'
+    dataset3 = MemotionDataset(
+            path, phase='train', task=args.task, txt_model=txt_model, im_transforms=imtransforms, num_samples=num_samples,pretrain=True)
+    path = '/home/viet/SSLMemes/data/harmfull'
+    dataset4 = SupervisionHarmemesDataset(
+            path, phase='train', txt_model=txt_model, im_transforms=imtransforms, num_samples=num_samples)
+    # path = '/home/viet/SSLMemes/data/Covid_Dataset'
+    # dataset5 = SupervisionCovidMemesDataset(
+    #         path, phase='train', txt_model=txt_model, im_transforms=imtransforms, num_samples=num_samples,pretrain=True)
+    # path = '/home/viet/SSLMemes/data/Memotion2.0'
+    # dataset6 = UnsupervisionMemotion2Dataset(path,'train',txt_model,im_transforms=imtransforms)
+    return ConcatDataset([dataset1, dataset2,dataset3,dataset4])
 
 def get_supervision_dataset_hateful(args):
     path, txt_model = args.data, args.txtmodel
@@ -543,10 +930,10 @@ def get_supervision_dataset_memotion(args):
     train_transform = get_simclr_pipeline_transform(224)
     val_transform = transforms.Compose([transforms.CenterCrop(size=224),
                                         transforms.ToTensor()])
-    traindataset = MemotionDataset(
+    traindataset = MemotionDatasetB4(
             path, phase='train', task=args.task, txt_model=txt_model, im_transforms=train_transform, num_samples=num_samples)
 
-    valdataset = MemotionDataset(path, phase='test', task=args.task, txt_model=txt_model, im_transforms=val_transform)
+    valdataset = MemotionDatasetB4(path, phase='test', task=args.task, txt_model=txt_model, im_transforms=val_transform)
     return traindataset, valdataset
 
 def get_supervision_dataset_harmeme(args):

@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 import torch
 from torch.cuda.amp import autocast, GradScaler
 from VLMeval import evaluate
-from VLMutils import build_optimizer
+from utils.VLMutils import build_optimizer
 from data.dataLoaders import create_loaders
 from model.VLM import create_model 
 from functools import partial

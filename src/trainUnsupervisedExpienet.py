@@ -6,7 +6,7 @@ import os
 import logging 
 from loss import MMContrastiveLoss 
 from lightly.loss import ntx_ent_loss
-from unsupervisedUtils import save_embed,save_config_file,get_batch,EarlyStopping,save_checkpoint,compute_loss
+from utils.unsupervisedUtils import save_embed,save_config_file,get_batch,EarlyStopping,save_checkpoint,compute_loss
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm 
 import wandb 
@@ -40,10 +40,11 @@ def train_on_one_epoch(args,model,train_loader,optimizer,scaler,n_iter,epoch_cou
 def train(args,model,earlyStopper,train_loader,optimizer,scaler,n_iter,meme_mmloss=None,meme_floss=None,mmcontr_loss=None):
     for epoch_counter in tqdm(range(args.epochs), disable=args.no_tqdm):
         loss = train_on_one_epoch(args,model,train_loader,optimizer,scaler,n_iter,epoch_counter,meme_mmloss=meme_mmloss,meme_floss=meme_floss,mmcontr_loss=mmcontr_loss)
-        earlyStopper(loss.item())
+        # earlyStopper(loss.item())
 
         print("Epoch: {}\tLoss: {}".format(epoch_counter, loss.item()))
-        
+        wandb.log({"loss": loss.item()})
+        wandb.log({"epoch": epoch_counter})
         if args.dryrun:
             break
 
@@ -51,7 +52,7 @@ def train(args,model,earlyStopper,train_loader,optimizer,scaler,n_iter,meme_mmlo
             scheduler.step()
         lr = optimizer.param_groups[0]['lr']
         wandb.log({"learning rate": lr})
-        if epoch_counter % 10 == 0:
+        if epoch_counter % 5 == 0:
             checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(epoch_counter)
             save_checkpoint({
                 'epoch': args.epochs,
@@ -80,7 +81,8 @@ else:
     args.gpu_index = -1
 
 print(args)
-wandb.init(project="meme_experiments", entity="vietnguyen")
+wandb.init(project="meme_experiments", entity="meme-analysts",mode="disabled")
+wandb.run.name = args.experiment
 ckpt_use = args.ckpt != ''
 model = UnsupervisedModel(args.arch, args.txtmodel, args.out_dim, args.dropout, args.projector, not ckpt_use, not ckpt_use)
 model.to(args.device)

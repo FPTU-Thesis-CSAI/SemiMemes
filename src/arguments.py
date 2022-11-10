@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='memeloss-supervised-rn18-distilbert-fbh-mmhs-memotion-ckpt-20', type=str,
+    parser.add_argument('--experiment', default='supervised-memotion', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='/home/viet/SSLMemes/data/memotion_dataset_7k',
@@ -21,7 +21,7 @@ def get_args():
                     help='Embedding dimension for modalities (default: 512)')
     parser.add_argument('--projector', default='pie', type=str,
                     choices=['std', 'clip', 'pie'], help="Projection used for Unsupervised Training")
-    parser.add_argument('--ckpt', default='/home/viet/SSLMemes/saved_model/memeloss-unsupervised-rn18-distilbert-fbh-mmhs/checkpoint_0020.pth.tar', type=str,
+    parser.add_argument('--ckpt', default='/home/viet/SSLMemes/saved_model/model_weights/last_checkpoint-resnet18--distilbert-base-uncased--2x512d--0.20p--pie.pth.tar', type=str,
                     help='Path to load for checkpoint')
     parser.add_argument('--dropout', default=0.2, type=float,
                     help="Dropout probability in classification layer of model")
@@ -41,7 +41,7 @@ def get_args():
     parser.add_argument('--dryrun', action='store_true', default=False,
                     help='Use for initial testing purposes only. Runs train for 4 iterations')
 
-    parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
+    parser.add_argument('-j', '--workers', default=20, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -95,10 +95,57 @@ def get_args():
     parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
     parser.add_argument('--use_small_model', type=bool, default=True, help="visualbert or lxmert or vilt")
     # MemeMultimodal Loss
-    parser.add_argument('--memeloss', action='store_true', help="Use Meme Multimodal Loss for Unsupervised Training",default=False)
+    parser.add_argument('--memeloss', action='store_true', help="Use Meme Multimodal Loss for Unsupervised Training",default=True)
     parser.add_argument('--w-f2i', type=float, default=0.2, help="Fuse2Image Loss Weight")
     parser.add_argument('--w-f2t', type=float, default=0.2, help="Fuse2Text Loss Weight")
     parser.add_argument('--w-f2f', type=float, default=0.6, help="Fuse2Fuse Loss Weight")
+    #CMML
+    parser.add_argument('--use-gpu', type = bool, default = True)
+    parser.add_argument('--visible-gpu', type = str, default = '0')
+    parser.add_argument('--textfilename', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_train_label.npy",help="Path of text madality feature data")
+    parser.add_argument('--textfilename_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_train_unlabel.npy",
+    help="Path of text madality feature data")
+    parser.add_argument('--sbertemb', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_train_label.npy",help="Path of text madality feature data")
+    parser.add_argument('--sbertemb_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_train_unlabel.npy",
+    help="Path of text madality bert feature data")
+    parser.add_argument('--sbertemb_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_sbert_feature_val.npy",help='Path of text madality bert feature data')
+    parser.add_argument('--imgfilenamerecord', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_train_data_label.pkl",
+    help="Path of name list of img madality data")
+    parser.add_argument('--imgfilenamerecord_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_train_data_unlabel.pkl",
+    help="Path of name list of img madality data")
+    parser.add_argument('--imgfilename', type = str, default = '/home/viet/SSLMemes/data/memotion_dataset_7k/images/',
+    help="Path of img madality data")
+    parser.add_argument('--labelfilename', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/label_train.npy",
+    help="Path of data label")
+    parser.add_argument('--labelfilename_unlabel', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/label_train_unlabel.npy",help="Path of data label")
+    parser.add_argument('--textfilename_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/text_binary_feature_val.npy",help="Path of text madality feature data")
+    parser.add_argument('--imgfilenamerecord_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/list_name_image_val.pkl",help="Path of name list of img madality data")
+    parser.add_argument('--imgfilename_val', type = str, default = '/home/viet/SSLMemes/data/memotion_test_data/test_data/2000_data/2000_data/',
+    help="Path of img madality data")
+    parser.add_argument('--labelfilename_val', default = "/home/viet/SSLMemes/data/memotion_dataset_7k/label_val.npy",help="Path of data label")
+    parser.add_argument('--savepath', type = str, default = '/home/viet/SSLMemes/saved_model')
+    parser.add_argument('--textbatchsize', type = int, default = 32)
+    parser.add_argument('--imgbatchsize', type = int, default = 32)
+    parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")
+    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 128',
+    help="architecture of text feature network")
+    parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
+    parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
+    parser.add_argument('--Predictpara', type = str, default = '128, 4',help="architecture of attention predict network")
+    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 1',
+    help="architecture of attention network")
+    parser.add_argument('--img-supervise-epochs', type = int, default = 1)
+    parser.add_argument('--text-supervise-epochs', type = int, default = 1)
+    parser.add_argument('--img-lr-supervise', type = float, default = 0.001)
+    parser.add_argument('--text-lr-supervise', type = float, default = 0.001)
+    parser.add_argument('--lr-supervise', type = float, default = 0.0001,help="train Learning rate")
+    parser.add_argument('--traintestproportion', type = float, default = 0.667,help="ratio of train data to test data") 
+    parser.add_argument('--lambda1', type = float, default = 0.01,help="ratio of train data to test data")
+    parser.add_argument('--lambda2', type = float, default = 1,help="ratio of train data to test data")
+    parser.add_argument("--mlp-expand-dim", default="768-768",help='Size and number of layers of the MLP expander head')
+    parser.add_argument("--output-backbone-dim", type=int, default=128,help='')
+    parser.add_argument("--std-coeff", type=float, default=25.0,help='Variance regularization loss coefficient')
+    parser.add_argument("--cov-coeff", type=float, default=1.0,help='Covariance regularization loss coefficient')
     #VLM 
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     # parser.add_argument('--learning_rate', type=float, default=5e-5)

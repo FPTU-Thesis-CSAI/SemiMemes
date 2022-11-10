@@ -4,12 +4,15 @@ from model.unsupervised import UnsupervisedModel
 import torch 
 from data.dataClass import get_supervision_dataset_hateful,get_supervision_dataset_harmeme,get_supervision_dataset_memotion
 from model.classifier import MultiModalClassifier 
-from unsupervisedUtils import save_config_file,save_checkpoint
+from utils.unsupervisedUtils import save_config_file,save_checkpoint
 import os  
 from torch.cuda.amp import GradScaler, autocast
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score, roc_auc_score
 from tqdm import tqdm 
-from supervisedUtils import plot_confusion_matrix 
+from utils.supervisedUtils import plot_confusion_matrix 
+from torchmetrics.classification import MultilabelPrecisionRecallCurve
+import numpy as np  
+from evaluation_metric.f1_metric import macro_f1_multilabel 
 
 def train_on_one_epoch(args,model,classifier,train_loader,optimizer,trainloss,total_preds,total_true):
     for train_loader_idx, (img1, text, mask, labels) in enumerate(train_loader):
@@ -46,6 +49,7 @@ def train(args,model,classifier,train_loader,val_loader,optimizer):
     corr_train_f1 = 0.0
     best_val_auroc = 0.0
     corr_train_auroc = 0.0
+
     for epoch_counter in tqdm(range(args.epochs), disable=args.no_tqdm):
         trainloss = 0
         correct = 0
@@ -110,10 +114,11 @@ def train(args,model,classifier,train_loader,val_loader,optimizer):
                 total_preds = total_preds.argmax(dim=1)
                 val_cm = confusion_matrix(total_true, total_preds)
             else:
+                # prob_preds = torch.sigmoid(total_preds)
                 total_preds = (torch.sigmoid(total_preds) > 0.5)
-
             val_ac = accuracy_score(total_true, total_preds)
             val_f1 = f1_score(total_true, total_preds, average='macro')
+            val_multi_label_f1 = macro_f1_multilabel(total_preds,total_true)
 
         if args.num_classes == 2:
             if val_auroc > best_val_auroc:
@@ -126,13 +131,34 @@ def train(args,model,classifier,train_loader,val_loader,optimizer):
 
         if args.dryrun:
             break
-        
+        # total_preds_np = prob_preds.numpy()
+        # total_true_np = total_true.numpy()
+        # label1_hist_preds = np.histogram(total_preds_np[:,0])
+        # label2_hist_preds =  np.histogram(total_preds_np[:,1])
+        # label3_hist_preds =  np.histogram(total_preds_np[:,2])
+        # label4_hist_preds =  np.histogram(total_preds_np[:,3])
+        # label1_hist_true = np.histogram(total_true_np[:,0])
+        # label2_hist_true =  np.histogram(total_true_np[:,1])
+        # label3_hist_true =  np.histogram(total_true_np[:,2])
+        # label4_hist_true =  np.histogram(total_true_np[:,3])
         wandb.log({"epoch":epoch_counter})
+        wandb.log({"val_multi_label_f1":val_multi_label_f1})
         wandb.log({'training/loss': trainloss})
         wandb.log({'validation/loss': valloss})
         wandb.log({'learning_rate': scheduler.get_last_lr()[0]})
         wandb.log({'training/f1_score': train_f1})
         wandb.log({'validation/f1_score': val_f1})
+        
+
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_pred1":wandb.Histogram(np_histogram=label1_hist_preds)})
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_pred2":wandb.Histogram(np_histogram=label2_hist_preds)})
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_pred3":wandb.Histogram(np_histogram=label3_hist_preds)})
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_pred4":wandb.Histogram(np_histogram=label4_hist_preds)})
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_true1":wandb.Histogram(np_histogram=label1_hist_true)})
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_true2":wandb.Histogram(np_histogram=label2_hist_true)})
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_true3":wandb.Histogram(np_histogram=label3_hist_true)})
+        # wandb.log({f"histogram/epoch_{epoch_counter}_hist_label_true4":wandb.Histogram(np_histogram=label4_hist_true)})
+
         if args.num_classes == 2:
             wandb.log({'training/auc_roc': train_auroc})
             wandb.log({'validation/auc_roc': val_auroc})
@@ -147,10 +173,11 @@ def train(args,model,classifier,train_loader,val_loader,optimizer):
 
         msg = f"Epoch: {epoch_counter}\tTrain Loss: {trainloss}\tValidation Loss: {valloss}"
         msg += f"\n-----:---\tTrain Accuracy: {train_ac}\tValidation Accuracy: {val_ac}"
-        msg += f"\n-----:---\tTrain F1: {train_f1}\tValidation F1: {val_f1}"
+        msg += f"\n-----:---\tTrain F1: {train_f1}\tValidation F1: {val_f1}\t Validation multilabel F1: {val_multi_label_f1}"
         if args.num_classes == 2:
             msg += f"\n-----:---\tTrain AUROC: {train_auroc}\tValidation AUROC: {val_auroc}"
         print(msg) 
+        # print(f"val_precision: {val_precision},\n val_recall: {val_recall},\n val threshold:{val_thresholds}")
 
         if epoch_counter % 10 == 9:   
             checkpoint_name = '{}_{:04d}.pth.tar'.format(classifier.name, epoch_counter)
@@ -249,7 +276,7 @@ else:
     args.gpu_index = -1
 
 print(args)
-wandb.init(project="meme_experiments", entity="meme-analysts")
+wandb.init(project="meme_experiments", entity="meme-analysts",mode="disabled")
 wandb.run.name = args.experiment
 ckpt_use = args.ckpt != ''
 model = UnsupervisedModel(args.arch, args.txtmodel, args.out_dim, args.dropout, args.projector, not ckpt_use, not ckpt_use)
