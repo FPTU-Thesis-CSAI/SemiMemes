@@ -8,14 +8,16 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 class TextfeatureNet(nn.Module):
     
-    def __init__(self, neure_num):
+    def __init__(self, args, neure_num):
         super(TextfeatureNet, self).__init__()
         self.mlp = make_layers(neure_num[:-1])
         self.feature = nn.Linear(neure_num[-2], neure_num[-1])
+        self.args = args  
 
-    def forward(self, x,bert_emb):
+    def forward(self, x,bert_emb=None):
         temp_x = self.mlp(x)
-        temp_x = temp_x + bert_emb
+        if self.args.use_bert_embedding:
+            temp_x = temp_x + bert_emb
         x = self.feature(temp_x)
         return x
 
@@ -126,10 +128,10 @@ class VICReg(nn.Module):
             self.num_features
         ) + off_diagonal(cov_y).pow_(2).sum().div(self.num_features)
 
-        loss = (
-            + self.args.std_coeff * std_loss
-            + self.args.cov_coeff * cov_loss
-        )
+        loss = [
+            self.args.std_coeff * std_loss,
+            self.args.cov_coeff * cov_loss
+        ]
         return loss
 
 class CmmlModel(nn.Module):
@@ -148,11 +150,14 @@ class CmmlModel(nn.Module):
         self.Attentionparam = list(map(int, param))
         self.generate_model()
     def generate_model(self):
-        self.Textfeaturemodel = TextfeatureNet(self.Textfeatureparam)
+        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam)
         self.Imgpredictmodel = PredictNet(self.Imgpredictparam)
         self.Textpredictmodel = PredictNet(self.Textpredictparam)
         self.Predictmodel = PredictNet(self.Predictparam)
         self.Imgmodel = ImgNet(self.args)
         self.Attentionmodel = AttentionNet(self.Attentionparam)
-        self.Projectormodel = VICReg(self.args)
+        if self.args.use_vcreg_loss:
+            self.Projectormodel = VICReg(self.args)
+        else:
+            self.Projectormodel = None
 

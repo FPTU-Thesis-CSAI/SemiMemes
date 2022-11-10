@@ -89,6 +89,8 @@ def get_args():
     parser.add_argument('--max_violation', action='store_true', default=False,
                         help="Consider only the max violation in MMContrLoss")
     
+    parser.add_argument('--use-bert-embedding',action='store_true',default=False)
+    parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
     parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
@@ -142,7 +144,7 @@ def get_args():
     parser.add_argument('--traintestproportion', type = float, default = 0.667,help="ratio of train data to test data") 
     parser.add_argument('--lambda1', type = float, default = 0.01,help="ratio of train data to test data")
     parser.add_argument('--lambda2', type = float, default = 1,help="ratio of train data to test data")
-    parser.add_argument("--mlp-expand-dim", default="768-768",help='Size and number of layers of the MLP expander head')
+    parser.add_argument("--mlp-expand-dim", default="768",help='Size and number of layers of the MLP expander head')
     parser.add_argument("--output-backbone-dim", type=int, default=128,help='')
     parser.add_argument("--std-coeff", type=float, default=25.0,help='Variance regularization loss coefficient')
     parser.add_argument("--cov-coeff", type=float, default=1.0,help='Covariance regularization loss coefficient')

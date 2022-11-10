@@ -208,7 +208,7 @@ class ImageTextClassificationForVLMDataset(Dataset):
             return int(len(self.unlabeled_ids)/self.pro[1])
 
 class MemotionDatasetForCmml(Dataset):
-    def __init__(self, imgfilenamerecord,
+    def __init__(self,args, imgfilenamerecord,
                  imgfilenamerecord_unlabel, 
                  imgfilename, 
                  textfilename, 
@@ -229,9 +229,12 @@ class MemotionDatasetForCmml(Dataset):
         self.textfilename = textfilename
         self.labelfilename = labelfilename
         self.labelfilename_unlabel = labelfilename_unlabel
-        self.sbertemb_label = sbertemb_label
-        self.sbertemb_unlabel = sbertemb_unlabel
-        self.sbertemb_val = sbertemb_val
+        self.args = args  
+
+        if args.use_bert_embedding:
+            self.sbertemb_label = sbertemb_label
+            self.sbertemb_unlabel = sbertemb_unlabel
+            self.sbertemb_val = sbertemb_val
 
         self.imgfilename_val = imgfilename_val
         self.textfilename_val = textfilename_val
@@ -255,12 +258,14 @@ class MemotionDatasetForCmml(Dataset):
         self.superviseimgrecordlist = np.array(self.imgrecordlist)
         self.supervisetextlist = np.load(self.textfilename)
         self.superviselabellist = np.load(self.labelfilename)
-        self.sbertemb_label = np.load(self.sbertemb_label)
+        if args.use_bert_embedding:
+            self.sbertemb_label = np.load(self.sbertemb_label)
 
         self.unsuperviseimgrecordlist = np.array(self.imgrecordlist_unlabel)
         self.unsupervisetextlist = np.load(self.textfilename_unlabel)
         self.unsuperviselabellist = np.load(self.labelfilename_unlabel)
-        self.sbertemb_unlabel = np.load(self.sbertemb_unlabel)
+        if args.use_bert_embedding:
+            self.sbertemb_unlabel = np.load(self.sbertemb_unlabel)
 
         self.imgfilenamerecord_val = imgfilenamerecord_val
         fr = open(self.imgfilenamerecord_val,'rb')
@@ -270,7 +275,8 @@ class MemotionDatasetForCmml(Dataset):
         self.testimgrecordlist = np.array(self.imgrecordlist_val)
         self.testtextlist = np.load(textfilename_val)
         self.testlabellist = np.load(labelfilename_val)
-        self.sbertemb_val = np.load(self.sbertemb_val)
+        if args.use_bert_embedding:
+            self.sbertemb_val = np.load(self.sbertemb_val)
 
         self.pro2 = [1,3]
 
@@ -292,16 +298,19 @@ class MemotionDatasetForCmml(Dataset):
         if self.train == True and self.supervise == True:
             img = Image.open(self.superviseimgrecordlist[index]).convert('RGB').resize((256, 256))
             text = self.supervisetextlist[index]
-            bert_emb = self.sbertemb_label[index]
+            if self.args.use_bert_embedding:
+                bert_emb = self.sbertemb_label[index]
             label = self.superviselabellist[index]
             img = transforms.ToTensor()(img)
             text = torch.FloatTensor(text)
-            bert_emb = torch.FloatTensor(bert_emb)
+            if self.args.use_bert_embedding:
+                bert_emb = torch.FloatTensor(bert_emb)
             label = torch.FloatTensor(label)
             feature = []
             feature.append(img)
             feature.append(text)
-            feature.append(bert_emb)
+            if self.args.use_bert_embedding:
+                feature.append(bert_emb)
             return feature, label
         elif self.train == True and self.supervise == False:
             supervise_img = []
@@ -312,53 +321,65 @@ class MemotionDatasetForCmml(Dataset):
                 temp_img = Image.open(self.superviseimgrecordlist[i]).convert('RGB').resize((256, 256))
                 temp_text = self.supervisetextlist[i]
                 temp_label = self.superviselabellist[i]
-                temp_bert = self.sbertemb_label[index]
+                if self.args.use_bert_embedding:
+                    temp_bert = self.sbertemb_label[index]
                 temp_img = transforms.ToTensor()(temp_img)
                 temp_text = torch.FloatTensor(temp_text)
-                temp_bert = torch.FloatTensor(temp_bert)
+                if self.args.use_bert_embedding:
+                    temp_bert = torch.FloatTensor(temp_bert)
                 temp_label = torch.FloatTensor(temp_label)
                 supervise_img.append(temp_img)
                 supervise_text.append(temp_text)
-                supervise_bert.append(temp_bert)
+                if self.args.use_bert_embedding:
+                    supervise_bert.append(temp_bert)
                 supervise_label.append(temp_label)
             unsupervise_img = []
             unsupervise_text = []
-            unsupervise_bert = []
+            if self.args.use_bert_embedding:
+                unsupervise_bert = []
             unsupervise_label = []
             for i in range(index*self.pro2[1],(index+1)*self.pro2[1]):
                 temp_img = Image.open(self.unsuperviseimgrecordlist[i]).convert('RGB').resize((256, 256))
                 temp_text = self.unsupervisetextlist[i]
-                temp_bert = self.sbertemb_unlabel[index]
+                if self.args.use_bert_embedding:
+                    temp_bert = self.sbertemb_unlabel[index]
                 temp_label = self.unsuperviselabellist[i]               
                 temp_img = transforms.ToTensor()(temp_img)
                 temp_text = torch.FloatTensor(temp_text)
-                temp_bert = torch.FloatTensor(temp_bert)
+                if self.args.use_bert_embedding:
+                    temp_bert = torch.FloatTensor(temp_bert)
                 temp_label = torch.FloatTensor(temp_label)
                 unsupervise_img.append(temp_img)
                 unsupervise_text.append(temp_text)
-                unsupervise_bert.append(temp_bert)
+                if self.args.use_bert_embedding:
+                    unsupervise_bert.append(temp_bert)
                 unsupervise_label.append(temp_label)
             feature = []
             feature.append(supervise_img)
             feature.append(supervise_text)
-            feature.append(supervise_bert)
+            if self.args.use_bert_embedding:
+                feature.append(supervise_bert)
             feature.append(unsupervise_img)
             feature.append(unsupervise_text)
-            feature.append(unsupervise_bert)
+            if self.args.use_bert_embedding:
+                feature.append(unsupervise_bert)
             return feature, supervise_label
         elif self.train == False:
             img = Image.open(self.testimgrecordlist[index]).convert('RGB').resize((256, 256))
             text = self.testtextlist[index]
-            bert_emb = self.sbertemb_val[index]
+            if self.args.use_bert_embedding:
+                bert_emb = self.sbertemb_val[index]
             label = self.testlabellist[index]
             img = transforms.ToTensor()(img)
             text = torch.FloatTensor(text)
-            bert_emb = torch.FloatTensor(bert_emb)
+            if self.args.use_bert_embedding:
+                bert_emb = torch.FloatTensor(bert_emb)
             label = torch.FloatTensor(label)
             feature = []
             feature.append(img)
             feature.append(text)
-            feature.append(bert_emb)
+            if self.args.use_bert_embedding:
+                feature.append(bert_emb)
             return feature, label
 
     def __len__(self):
