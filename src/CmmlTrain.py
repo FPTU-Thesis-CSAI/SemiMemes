@@ -22,6 +22,7 @@ import wandb
 from tqdm import tqdm
 
 def test(Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
+    print()
     if cuda:
         Textfeaturemodel.cuda()
         Imgpredictmodel.cuda()
