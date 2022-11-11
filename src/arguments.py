@@ -89,8 +89,6 @@ def get_args():
     parser.add_argument('--max_violation', action='store_true', default=False,
                         help="Consider only the max violation in MMContrLoss")
     
-    parser.add_argument('--use-bert-embedding',action='store_true',default=False)
-    parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
     parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
     parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
@@ -102,6 +100,14 @@ def get_args():
     parser.add_argument('--w-f2t', type=float, default=0.2, help="Fuse2Text Loss Weight")
     parser.add_argument('--w-f2f', type=float, default=0.6, help="Fuse2Fuse Loss Weight")
     #CMML
+    #experiment ideas
+    parser.add_argument('--use-bert-embedding',action='store_true',default=True)
+    parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=True)
+    parser.add_argument('--use-vcreg-loss',action='store_true',default=True)
+    parser.add_argument('--use-sim-loss',action='store_true',default=True)
+    parser.add_argument('--use-auto-weight',action='store_true',default=True)
+    parser.add_argument("--use-focal-loss", action='store_true', default=True,help='')
+    #####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
     parser.add_argument('--textfilename', default = "data/memotion_dataset_7k/text_binary_feature_train_label.npy",help="Path of text madality feature data")
@@ -129,7 +135,7 @@ def get_args():
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")
-    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 128',
+    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 256, 128',
     help="architecture of text feature network")
     parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
@@ -148,6 +154,7 @@ def get_args():
     parser.add_argument("--output-backbone-dim", type=int, default=128,help='')
     parser.add_argument("--std-coeff", type=float, default=25.0,help='Variance regularization loss coefficient')
     parser.add_argument("--cov-coeff", type=float, default=1.0,help='Covariance regularization loss coefficient')
+    parser.add_argument("--sim-coeff", type=float, default=25.0,help='Invariance regularization loss coefficient')
     #VLM 
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     # parser.add_argument('--learning_rate', type=float, default=5e-5)

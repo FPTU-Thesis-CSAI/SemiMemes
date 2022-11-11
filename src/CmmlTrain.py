@@ -20,6 +20,8 @@ from evaluation_metric.roc_auc import *
 import torch.nn as nn
 import wandb   
 from tqdm import tqdm
+from loss import focal_binary_cross_entropy 
+import random
 
 def test(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
     if cuda:
@@ -277,7 +279,10 @@ def train(args,model, dataset,
             label = Variable(label).cuda() if cuda else Variable(label)  
             imgxx = model.Imgmodel(img_xx)
             imgyy = model.Imgpredictmodel(imgxx)
-            img_supervise_batch_loss = criterion(imgyy, label)
+            if args.use_focal_loss:
+                img_supervise_batch_loss = focal_binary_cross_entropy(args,imgyy, label)
+            else:
+                img_supervise_batch_loss = criterion(imgyy, label)
             loss += img_supervise_batch_loss.data.item()
             if batch_count >= loss_batch:
                 loss = loss/loss_batch
@@ -334,7 +339,10 @@ def train(args,model, dataset,
             else:
                 textxx = model.Textfeaturemodel(text_xx)
             textyy = model.Textpredictmodel(textxx)
-            text_supervise_batch_loss = criterion(textyy, label)
+            if args.use_focal_loss:
+                text_supervise_batch_loss = focal_binary_cross_entropy(args,textyy, label)
+            else:
+                text_supervise_batch_loss = criterion(textyy, label)
             loss += text_supervise_batch_loss.data.item()
             if batch_count >= loss_batch:
                 loss = loss/loss_batch
@@ -364,9 +372,12 @@ def train(args,model, dataset,
         epoch_div_train = 0 
         epoch_unsupervise_loss_train = 0
         epoch_v_supervise_loss_train = 0 
-        epoch_r_supervise_loss_train = 0
+        epoch_c_supervise_loss_train = 0
         epoch_v_unsupervise_loss_train = 0
-        epoch_r_unsupervise_loss_train = 0
+        epoch_c_unsupervise_loss_train = 0
+        if args.use_sim_loss:
+            epoch_i_supervise_loss_train = 0
+            epoch_i_unsupervise_loss_train = 0            
         num_supervise_sample = 0
         num_unsupervise_sample = 0
         data_loader = DataLoader(dataset = dataset.unsupervise_(), batch_size = batchsize, shuffle = True, num_workers = 0)
@@ -423,10 +434,14 @@ def train(args,model, dataset,
                 text_attention = text_attention.cuda()
             supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden
             supervise_predict = model.Predictmodel(supervise_feature_hidden)         
-            
-            totalloss = criterion(supervise_predict, label)
-            imgloss = criterion(supervise_imgpredict, label)
-            textloss = criterion(supervise_textpredict, label)
+            if args.use_focal_loss:
+                totalloss = focal_binary_cross_entropy(args,supervise_predict, label)
+                imgloss = focal_binary_cross_entropy(args,supervise_imgpredict, label)
+                textloss = focal_binary_cross_entropy(args,supervise_textpredict, label)
+            else:
+                totalloss = criterion(supervise_predict, label)
+                imgloss = criterion(supervise_imgpredict, label)
+                textloss = criterion(supervise_textpredict, label)
             '''
             Diversity Measure code.
             '''         
@@ -435,7 +450,7 @@ def train(args,model, dataset,
             norm_matrix_text = torch.norm(supervise_textpredict, 2, dim = 1)
             div = torch.mean(similar/(norm_matrix_img * norm_matrix_text))
             
-            if model.Projectormodel != None:
+            if args.use_auto_weight:
                 supervise_loss = 1/(2*model.Predictmodel.sigma[0]**2)*imgloss + 1/(2*model.Predictmodel.sigma[1]**2)*textloss \
                 + 1/(2*model.Predictmodel.sigma[2]**2)*totalloss + torch.log(model.Predictmodel.sigma).sum()
             else:
@@ -486,22 +501,27 @@ def train(args,model, dataset,
             unsupervise_loss = (tensor1loss + tensor2loss)/unsupervise_img_xx.size()[0]        
             if model.Projectormodel != None:
                 total_loss = supervise_loss + 0.01* div +  unsupervise_loss + sum(vcreg_loss_unsupervise) + sum(vcreg_loss_supervise)
-                epoch_v_supervise_loss_train += vcreg_loss_supervise[0].item()
-                epoch_r_supervise_loss_train += vcreg_loss_supervise[1].item()
-                epoch_v_unsupervise_loss_train += vcreg_loss_unsupervise[0].item()
-                epoch_r_unsupervise_loss_train += vcreg_loss_unsupervise[1].item()
+                if args.use_sim_loss:
+                    epoch_v_supervise_loss_train += vcreg_loss_supervise[0].item()
+                    epoch_c_supervise_loss_train += vcreg_loss_supervise[2].item()
+                    epoch_v_unsupervise_loss_train += vcreg_loss_unsupervise[0].item()
+                    epoch_c_unsupervise_loss_train += vcreg_loss_unsupervise[2].item()
+                    epoch_i_supervise_loss_train += vcreg_loss_unsupervise[1].item()
+                    epoch_i_unsupervise_loss_train += vcreg_loss_supervise[1].item()     
+                else:
+                    epoch_v_supervise_loss_train += vcreg_loss_supervise[0].item()
+                    epoch_c_supervise_loss_train += vcreg_loss_supervise[1].item()
+                    epoch_v_unsupervise_loss_train += vcreg_loss_unsupervise[0].item()
+                    epoch_c_unsupervise_loss_train += vcreg_loss_unsupervise[1].item()
             else:
                 total_loss = supervise_loss + 0.01* div +  unsupervise_loss
             epoch_supervise_loss_train += supervise_loss.item()
             epoch_div_train += div.item() 
             epoch_unsupervise_loss_train += unsupervise_loss.item()
             loss += total_loss.item()
-            num_supervise_sample += x[0].size()[0]
-            num_unsupervise_sample += x[-1].size()[0]
             optimizer.zero_grad()
             total_loss.backward()
             optimizer.step()
-
         if epoch % 10 == 0:
             torch.save(model.Imgmodel, savepath + 'supervise' + filename +'img.pkl')
             torch.save(model.Textfeaturemodel, savepath + 'supervise' + filename + 'Textfeaturemodel.pkl')
@@ -521,31 +541,41 @@ def train(args,model, dataset,
         model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
         model.Predictmodel, model.Attentionmodel, dataset.test_(), batchsize = batchsize, cuda = cuda)
         
-        epoch_supervise_loss_train = epoch_supervise_loss_train/num_supervise_sample
-        epoch_div_train = epoch_div_train/num_supervise_sample
-        epoch_unsupervise_loss_train = epoch_unsupervise_loss_train/num_unsupervise_sample
+        total_step = len(data_loader)
+        epoch_supervise_loss_train = epoch_supervise_loss_train/total_step
+        epoch_div_train = epoch_div_train/total_step
+        epoch_unsupervise_loss_train = epoch_unsupervise_loss_train/total_step
 
         wandb.log({"train_loss/epoch_supervise_loss_train":epoch_supervise_loss_train})
         wandb.log({"train_loss/epoch_div_train":epoch_div_train})
         wandb.log({"train_loss/epoch_unsupervise_loss_train":epoch_unsupervise_loss_train})
 
         if model.Projectormodel != None:
-            epoch_v_supervise_loss_train = epoch_v_supervise_loss_train/num_supervise_sample
-            epoch_r_supervise_loss_train = epoch_r_supervise_loss_train/num_supervise_sample
-            epoch_v_unsupervise_loss_train = epoch_v_unsupervise_loss_train/num_unsupervise_sample
-            epoch_r_unsupervise_loss_train = epoch_r_unsupervise_loss_train/num_unsupervise_sample
+            epoch_v_supervise_loss_train = epoch_v_supervise_loss_train/total_step
+            epoch_c_supervise_loss_train = epoch_c_supervise_loss_train/total_step
+            epoch_v_unsupervise_loss_train = epoch_v_unsupervise_loss_train/total_step
+            epoch_c_unsupervise_loss_train = epoch_c_unsupervise_loss_train/total_step
             wandb.log({"train_loss/epoch_v_supervise_loss_train":epoch_v_supervise_loss_train})
-            wandb.log({"train_loss/epoch_c_supervise_loss_train":epoch_r_supervise_loss_train})
+            wandb.log({"train_loss/epoch_c_supervise_loss_train":epoch_c_supervise_loss_train})
             wandb.log({"train_loss/epoch_v_unsupervise_loss_train":epoch_v_unsupervise_loss_train})
-            wandb.log({"train_loss/epoch_c_unsupervise_loss_train":epoch_r_unsupervise_loss_train})
+            wandb.log({"train_loss/epoch_c_unsupervise_loss_train":epoch_c_unsupervise_loss_train})
+            if args.use_sim_loss:
+                epoch_i_supervise_loss_train = epoch_i_supervise_loss_train/total_step
+                epoch_i_unsupervise_loss_train = epoch_i_unsupervise_loss_train/total_step
+                wandb.log({"train_loss/epoch_i_supervise_loss_train":epoch_i_supervise_loss_train})
+                wandb.log({"train_loss/epoch_i_unsupervise_loss_train":epoch_i_unsupervise_loss_train})
         
-        print("epoch_supervise_loss_train:",epoch_supervise_loss_train/num_supervise_sample,
+        print("epoch_supervise_loss_train:",epoch_supervise_loss_train,
         '\t epoch_div_train:',epoch_div_train,'\t epoch_unsupervise_loss_train',epoch_unsupervise_loss_train)
         if model.Projectormodel != None:
             print("epoch_v_supervise_loss_train:",epoch_v_supervise_loss_train,
-            "\t epoch_c_supervise_loss_train:",epoch_r_supervise_loss_train,
-            "\t epoch_v_unsupervise_loss_train:",epoch_v_unsupervise_loss_train,
-            "\t epoch_c_unsupervise_loss_train:",epoch_r_unsupervise_loss_train)
+            "\t epoch_c_supervise_loss_train:",epoch_c_supervise_loss_train)
+
+            print("epoch_v_unsupervise_loss_train:",epoch_v_unsupervise_loss_train,
+            "\t epoch_c_unsupervise_loss_train:",epoch_c_unsupervise_loss_train)
+            if args.use_sim_loss:
+                print("epoch_i_supervise_loss_train:",epoch_i_supervise_loss_train,
+                "\t epoch_i_unsupervise_loss_train:",epoch_i_unsupervise_loss_train)
 
         wandb.log({"learning rate/lr":scheduler.get_last_lr()[0]})
         wandb.log({"f1_macro_multi_1":f1_macro_multi_1})
@@ -616,6 +646,16 @@ def train(args,model, dataset,
     return 
 
 if __name__ == '__main__':
+    seed = 42
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    # Torch RNG
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # Python RNG
+    np.random.seed(seed)
+    random.seed(seed)
+
     args = get_args()
     wandb.init(project="meme_experiments", entity="meme-analysts",mode="disabled")
     wandb.run.name = args.experiment

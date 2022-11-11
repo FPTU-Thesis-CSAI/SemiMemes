@@ -13,10 +13,14 @@ class TextfeatureNet(nn.Module):
         self.mlp = make_layers(neure_num[:-1])
         self.feature = nn.Linear(neure_num[-2], neure_num[-1])
         self.args = args  
+        if args.add_block_linear_bert_embed:
+            self.linear = make_layers([384,neure_num[-2]])
 
     def forward(self, x,bert_emb=None):
         temp_x = self.mlp(x)
         if self.args.use_bert_embedding:
+            if self.args.add_block_linear_bert_embed:
+                bert_emb = self.linear(bert_emb)
             temp_x = temp_x + bert_emb
         x = self.feature(temp_x)
         return x
@@ -113,6 +117,8 @@ class VICReg(nn.Module):
         x = self.projector(x)
         y = self.projector(y)
 
+        if self.args.use_sim_loss:
+            repr_loss = F.mse_loss(x, y)
         # x = torch.cat(FullGatherLayer.apply(x), dim=0)
         # y = torch.cat(FullGatherLayer.apply(y), dim=0)
         x = x - x.mean(dim=0)
@@ -128,10 +134,17 @@ class VICReg(nn.Module):
             self.num_features
         ) + off_diagonal(cov_y).pow_(2).sum().div(self.num_features)
 
-        loss = [
-            self.args.std_coeff * std_loss,
-            self.args.cov_coeff * cov_loss
-        ]
+        if self.args.use_sim_loss:
+            loss = [
+                self.args.std_coeff * std_loss,
+                self.args.sim_coeff * repr_loss,
+                self.args.cov_coeff * cov_loss
+            ]
+        else:
+            loss = [
+                self.args.std_coeff * std_loss,
+                self.args.cov_coeff * cov_loss
+            ]   
         return loss
 
 class CmmlModel(nn.Module):
