@@ -375,6 +375,9 @@ def train(args,model, dataset,
         epoch_c_supervise_loss_train = 0
         epoch_v_unsupervise_loss_train = 0
         epoch_c_unsupervise_loss_train = 0
+        epoch_img_loss_train = 0
+        epoch_text_loss_train = 0
+        epoch_total_loss_train = 0
         if args.use_sim_loss:
             epoch_i_supervise_loss_train = 0
             epoch_i_unsupervise_loss_train = 0            
@@ -455,6 +458,9 @@ def train(args,model, dataset,
                 + 1/(2*model.Predictmodel.sigma[2]**2)*totalloss + torch.log(model.Predictmodel.sigma).sum()
             else:
                 supervise_loss = imgloss + textloss + 2.0*totalloss
+            epoch_img_loss_train += imgloss.item()
+            epoch_text_loss_train += textloss.item() 
+            epoch_total_loss_train += totalloss.item()
             '''
             Robust Consistency Measure code.
             '''
@@ -545,10 +551,16 @@ def train(args,model, dataset,
         epoch_supervise_loss_train = epoch_supervise_loss_train/total_step
         epoch_div_train = epoch_div_train/total_step
         epoch_unsupervise_loss_train = epoch_unsupervise_loss_train/total_step
+        epoch_img_loss_train = epoch_img_loss_train/total_step
+        epoch_text_loss_train = epoch_text_loss_train/total_step 
+        epoch_total_loss_train = epoch_total_loss_train/total_step
 
         wandb.log({"train_loss/epoch_supervise_loss_train":epoch_supervise_loss_train})
         wandb.log({"train_loss/epoch_div_train":epoch_div_train})
         wandb.log({"train_loss/epoch_unsupervise_loss_train":epoch_unsupervise_loss_train})
+        wandb.log({"train_loss/epoch_img_loss_train":epoch_img_loss_train})
+        wandb.log({"train_loss/epoch_text_loss_train":epoch_text_loss_train})
+        wandb.log({"train_loss/epoch_total_loss_train":epoch_total_loss_train})
 
         if model.Projectormodel != None:
             epoch_v_supervise_loss_train = epoch_v_supervise_loss_train/total_step
@@ -564,6 +576,10 @@ def train(args,model, dataset,
                 epoch_i_unsupervise_loss_train = epoch_i_unsupervise_loss_train/total_step
                 wandb.log({"train_loss/epoch_i_supervise_loss_train":epoch_i_supervise_loss_train})
                 wandb.log({"train_loss/epoch_i_unsupervise_loss_train":epoch_i_unsupervise_loss_train})
+
+        print("epoch_img_loss_train",epoch_img_loss_train,
+        "\t epoch_text_loss_train:",epoch_text_loss_train,
+        "\t epoch_total_loss_train:",epoch_total_loss_train)
         
         print("epoch_supervise_loss_train:",epoch_supervise_loss_train,
         '\t epoch_div_train:',epoch_div_train,'\t epoch_unsupervise_loss_train',epoch_unsupervise_loss_train)
