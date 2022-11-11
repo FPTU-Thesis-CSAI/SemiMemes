@@ -92,7 +92,7 @@ transformers == 4.17.0
 utils == 1.0.1
 
 # visual-spatial-reasoning/src/train.py: 4
-wandb == 0.12.11
+wandb
 
 # visual-spatial-reasoning/feature_extraction/lxmert/demo.ipynb: 14
 # visual-spatial-reasoning/feature_extraction/lxmert/extract_img_features.py: 16
@@ -101,7 +101,7 @@ wget == 3.2
 torchmetrics == 0.10.0
 
 sklearn 
-boto3
+# boto3
 # requests
 nlpaug
 
