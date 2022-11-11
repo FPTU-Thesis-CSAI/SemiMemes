@@ -51,7 +51,7 @@ def divide_data(df_train):
     return train_label , train_un_label
 
 # id - name of file image
-def name_of_image (list_id_image_train,number):
+def name_of_image(list_id_image_train,number):
     """
     Create file csv: list name image (file .pkl)
     :param df_data: dataframe that need to create file list name image
@@ -241,7 +241,7 @@ def create_foder(path):
   else:
     os.mkdir(path)
 
-def pipeline(train_path,val_path,val_label_path):
+def pipeline(data_name,train_path,val_path,val_label_path):
   '''
   pipeline for all function pre-processing
   '''
@@ -250,9 +250,14 @@ def pipeline(train_path,val_path,val_label_path):
 #   val_label_path = input("Enter val_label_csv_path path: ")
 
   #input file data
-  df_train = pd.read_csv(train_path,index_col = 0)
-  val = pd.read_csv(val_path)
-  val_label = pd.read_csv(val_label_path)
+  if data_name == "misoginy":
+    df_train = pd.read_csv(train_path)
+    val = pd.read_csv(val_path)
+    val_label = pd.read_csv(val_label_path)
+  else:
+    df_train = pd.read_csv(train_path,index_col = 0)
+    val = pd.read_csv(val_path)
+    val_label = pd.read_csv(val_label_path)
 
   #create folder (output)
 #   path_folder = "/content/ouput_csv"
@@ -284,6 +289,13 @@ def pipeline(train_path,val_path,val_label_path):
   preprocessing_text(val["text_corrected"],3)
 
 if __name__ == '__main__':
-    pipeline('data/memotion_dataset_7k/labels.csv',
+  memotion = False  
+  misoginy = True
+  if memotion:
+    pipeline( 'memotion','data/memotion_dataset_7k/labels.csv',
     'data/memotion_test_data/test_data/2000_testdata.csv',
     'data/memotion_test_data/test_data/Meme_groundTruth .csv')
+  elif misoginy:
+    pipeline('misoginy','/home/fptu/viet/SSLMemes/data/MAMI/training/training.csv',
+    '/home/fptu/viet/SSLMemes/data/MAMI/Test.csv',
+    '/home/fptu/viet/SSLMemes/data/MAMI/test_labels.txt') 

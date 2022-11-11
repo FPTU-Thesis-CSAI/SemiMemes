@@ -3,6 +3,7 @@ import torch
 import torchvision.models as Models
 import warnings
 import torch.nn.functional as F 
+from transformers import RobertaModel, DistilBertModel
 
 warnings.filterwarnings("ignore", category=UserWarning) 
 
@@ -10,19 +11,29 @@ class TextfeatureNet(nn.Module):
     
     def __init__(self, args, neure_num):
         super(TextfeatureNet, self).__init__()
-        self.mlp = make_layers(neure_num[:-1])
-        self.feature = nn.Linear(neure_num[-2], neure_num[-1])
         self.args = args  
-        if args.add_block_linear_bert_embed:
-            self.linear = make_layers([384,neure_num[-2]])
-
-    def forward(self, x,bert_emb=None):
-        temp_x = self.mlp(x)
-        if self.args.use_bert_embedding:
-            if self.args.add_block_linear_bert_embed:
-                bert_emb = self.linear(bert_emb)
-            temp_x = temp_x + bert_emb
-        x = self.feature(temp_x)
+        if self.args.use_bert_model:
+            self.encoder = DistilBertModel.from_pretrained(args.pretrain_bert_model)
+            self.linear = make_layers([768,neure_num[-1]])
+            self.target_token_idx = 0
+        else:
+            self.mlp = make_layers(neure_num[:-1])
+            self.feature = nn.Linear(neure_num[-2], neure_num[-1])
+            if args.add_block_linear_bert_embed:
+                self.linear = make_layers([384,neure_num[-2]])
+    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None):
+        if self.args.use_bert_model:
+            output = self.encoder(input_ids,attn_mask)
+            last_hidden_state = output.last_hidden_state
+            x = last_hidden_state[:, self.target_token_idx, :]
+            x = self.linear(x)
+        else:
+            temp_x = self.mlp(x)
+            if self.args.use_bert_embedding:
+                if self.args.add_block_linear_bert_embed:
+                    bert_emb = self.linear(bert_emb)
+                temp_x = temp_x + bert_emb
+            x = self.feature(temp_x)
         return x
 
 class PredictNet(nn.Module):
@@ -57,16 +68,26 @@ class AttentionNet(nn.Module):
 class ImgNet(nn.Module):
     def __init__(self,args):
         super(ImgNet, self).__init__()
-        self.feature = Models.resnet18('ResNet18_Weights.DEFAULT')
-        self.feature = nn.Sequential(*list(self.feature.children())[:-1])
-        self.fc1 = nn.Sequential(       
+        if args.resnet_model == 'resnet50':
+            self.feature = Models.resnet50('ResNet50_Weights.DEFAULT')
+            self.fc1 = nn.Sequential(       
+            nn.Linear(2048, args.output_backbone_dim)
+            )
+        elif args.resnet_model == 'resnet18':
+            self.feature = Models.resnet18('ResNet18_Weights.DEFAULT')
+            self.fc1 = nn.Sequential(       
             nn.Linear(512, args.output_backbone_dim)
-        )
+            )
+        self.feature = nn.Sequential(*list(self.feature.children())[:-1])
+        self.args = args 
 
     def forward(self, x):
         N = x.size()[0]
         x = self.feature(x.view(N, 3, 256, 256))
-        x = x.view(N, 512)
+        if self.args.resnet_model == 'resnet18':
+            x = x.view(N, 512)
+        elif self.args.resnet_model == 'resnet50':
+            x = x.view(N, 2048)
         x = self.fc1(x)
         return x
 
