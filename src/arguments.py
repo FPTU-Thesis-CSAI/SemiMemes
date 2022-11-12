@@ -43,7 +43,7 @@ def get_args():
 
     parser.add_argument('-j', '--workers', default=20, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
-    parser.add_argument('--epochs', default=100, type=int, metavar='N',
+    parser.add_argument('--epochs', default=10, type=int, metavar='N',
                     help='number of total epochs to run')
     parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N',
@@ -101,12 +101,12 @@ def get_args():
     parser.add_argument('--w-f2f', type=float, default=0.6, help="Fuse2Fuse Loss Weight")
     #CMML
     #experiment ideas
-    parser.add_argument('--use-bert-embedding',action='store_true',default=True)
-    parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=True)
-    parser.add_argument('--use-vcreg-loss',action='store_true',default=True)
-    parser.add_argument('--use-sim-loss',action='store_true',default=True)
+    parser.add_argument('--use-bert-embedding',action='store_true',default=False)
+    parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
+    parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
+    parser.add_argument('--use-sim-loss',action='store_true',default=False)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
-    parser.add_argument("--use-focal-loss", action='store_true', default=True,help='')
+    parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
     #####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
