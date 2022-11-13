@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='supervised-memotion', type=str,
+    parser.add_argument('--experiment', default='test new dataloader', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -43,7 +43,7 @@ def get_args():
 
     parser.add_argument('-j', '--workers', default=20, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
-    parser.add_argument('--epochs', default=10, type=int, metavar='N',
+    parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
     parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N',
@@ -107,6 +107,7 @@ def get_args():
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
+    parser.add_argument("--use_augmentation", action='store_true', default=True,help='')
     #####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
@@ -131,15 +132,17 @@ def get_args():
     parser.add_argument('--imgfilename_val', type = str, default = 'data/memotion_test_data/test_data/2000_data/2000_data/',
     help="Path of img madality data")
     parser.add_argument('--labelfilename_val', default = "data/memotion_dataset_7k/label_val.npy",help="Path of data label")
+    parser.add_argument('--text_col', default = "Text Transcription", help="Column of meme text in csv")
+
     parser.add_argument('--savepath', type = str, default = 'models')
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")
     parser.add_argument('--Textfeaturepara', type = str, default = '3000, 256, 128',
     help="architecture of text feature network")
-    parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
-    parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '128, 4',help="architecture of attention predict network")
+    parser.add_argument('--Imgpredictpara', type = str, default = '128, 1',help="architecture of img predict network")
+    parser.add_argument('--Textpredictpara', type = str, default = '128, 1',help="architecture of text predict network")
+    parser.add_argument('--Predictpara', type = str, default = '128, 1',help="architecture of attention predict network")
     parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 1',
     help="architecture of attention network")
     parser.add_argument('--img-supervise-epochs', type = int, default = 1)
@@ -155,10 +158,11 @@ def get_args():
     parser.add_argument("--std-coeff", type=float, default=25.0,help='Variance regularization loss coefficient')
     parser.add_argument("--cov-coeff", type=float, default=1.0,help='Covariance regularization loss coefficient')
     parser.add_argument("--sim-coeff", type=float, default=25.0,help='Invariance regularization loss coefficient')
+    
     #VLM 
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     # parser.add_argument('--learning_rate', type=float, default=5e-5)
-    parser.add_argument('--epoch', type=int, default=10)
+    parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
     parser.add_argument('--amp',type=bool,default=True, \
                 help="automatic mixed precision training")

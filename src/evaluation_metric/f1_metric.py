@@ -51,3 +51,33 @@ def macro_f1_multilabel(preds, target, num_labels=4, threshold = 0.5, reduce = T
         return torch.tensor(macro_f1_multilabel).mean().item()
     else:
         return torch.tensor(macro_f1_multilabel).numpy()
+
+
+def macro_f1(preds, target, threshold = 0.5):
+    """
+    Args:
+        preds (array-like, shape (bs, ) or (bs, 1)):
+        target (array-like, shape (bs, ) or (bs, 1)):
+
+    Returns:
+    """
+
+    preds = torch.tensor(preds)
+    target = torch.tensor(target)
+
+    preds = (preds > threshold).to(torch.long)
+    target = target.to(torch.long)
+
+    macro_f1 = F1Score(num_classes=2, average='macro')
+
+    return macro_f1(preds, target).item()
+
+from torchmetrics import AUROC
+
+def roc_auc_binary(preds, target):
+    preds = torch.tensor(preds)
+    target = torch.tensor(target).to(torch.long)
+    auroc = AUROC(pos_label=1)
+    score = auroc(preds, target)
+
+    return score.item()
