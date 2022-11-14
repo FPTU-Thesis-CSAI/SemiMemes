@@ -99,12 +99,12 @@ data/features/*
 data/*
 !data/features/README.md
 saved_model/*
-tmp/
+
 logs/
 wandb/
 __pycache__
 .ipython_checkpoints/
-tmp/
+tmp/*
 build/
 src.egg-info/
 
@@ -114,3 +114,5 @@ models/*
 !data/features/visualgenome/
 data/features/visualgenome/*
 !data/features/visualgenome/objects_vocab.txt
+
+!tmp/.gitkeep

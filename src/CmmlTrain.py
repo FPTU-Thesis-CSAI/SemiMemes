@@ -18,7 +18,7 @@ import random
 
 from test import test_singlelabel
 from data.semi_supervised_data import *
-
+from utils.npy_save import npy_save_txt
 
 
 def train(args,model, dataset,
@@ -243,6 +243,18 @@ def train(args,model, dataset,
                 + 1/(2*model.Predictmodel.sigma[2]**2)*totalloss + torch.log(model.Predictmodel.sigma).sum()
             else:
                 supervise_loss = imgloss + textloss + 2.0*totalloss
+
+            # can not log by wandb
+            # wandb.log({"supervise_predict":supervise_predict.detach().cpu().numpy(),
+            #             "supervise_imgpredict":supervise_imgpredict.detach().cpu().numpy(),
+            #             "supervise_textpredict":supervise_textpredict.detach().cpu().numpy(),
+            #             "label":label.detach().cpu().numpy()})
+
+            npy_save_txt(f"supervise_predict/epoch{epoch:02d}/batch{batch_index:03d}", supervise_predict.detach().cpu().numpy())
+            npy_save_txt(f"supervise_imgpredict/epoch{epoch:02d}/batch{batch_index:03d}", supervise_imgpredict.detach().cpu().numpy())
+            npy_save_txt(f"supervise_textpredict/epoch{epoch:02d}/batch{batch_index:03d}", supervise_textpredict.detach().cpu().numpy())
+            npy_save_txt(f"label/epoch{epoch:02d}/batch{batch_index:03d}", label.detach().cpu().numpy())
+
             epoch_img_loss_train += imgloss.item()
             epoch_text_loss_train += textloss.item() 
             epoch_total_loss_train += totalloss.item()
@@ -527,10 +539,13 @@ if __name__ == '__main__':
     random.seed(seed)
 
     args = get_args()
+
     # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    wandb.init(project="meme_experiments", entity="meme-analysts")
+    # wandb.init(project="meme_experiments", entity="meme-analysts")
+    wandb.init()
 
     wandb.run.name = args.experiment
+    print(f"Experiement: {wandb.run.name}")
 
     if args.use_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
@@ -556,8 +571,8 @@ if __name__ == '__main__':
                                             train_img_dir='data/MAMI_processed/images/train',
                                             train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.3.csv',
                                             train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
-                                            val_img_dir = 'data/MAMI_processed/images/val',
-                                            val_csv='data/MAMI_processed/val.csv',
+                                            val_img_dir = 'data/MAMI_processed/images/test',
+                                            val_csv='data/MAMI_processed/test.csv',
                                             batch_size=args.batchsize, image_size=256)
 
     dataset = {'train_sup': train_supervised_loader,

@@ -188,14 +188,23 @@ def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, I
 
         img_xx = sup_img
         text_xx = sup_text['sentence_vectors']
+        if args.use_bert_embedding:
+            bert_xx = sup_text['sbert_embedding']
         y = sup_label.numpy()
 
         img_xx = img_xx.float()
         text_xx = text_xx.float()
+        if args.use_bert_embedding:
+            bert_xx = bert_xx.float()
         img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)
         text_xx = Variable(text_xx).cuda() if cuda else Variable(text_xx)
+        if args.use_bert_embedding:
+            bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx)
         imghidden = Imgmodel(img_xx)
-        texthidden = Textfeaturemodel(text_xx)
+        if args.use_bert_embedding:
+            texthidden = Textfeaturemodel(text_xx,bert_xx)
+        else:
+            texthidden = Textfeaturemodel(text_xx)
 
         imgk = Attentionmodel(imghidden)
         textk = Attentionmodel(texthidden)

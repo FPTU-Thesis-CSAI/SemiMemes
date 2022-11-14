@@ -214,8 +214,8 @@ def preprocessing_text(text,number):
     print(number)
     print(most_freq)
 
-    # model = SentenceTransformer('all-MiniLM-L6-v2')
-    # sbert_embedding = model.encode(df_text_train)
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    sbert_embedding = model.encode(df_text_train)
 
     if number == 1:
       with open('data/memotion_dataset_7k/text_binary_feature_train_label.npy', 'wb') as f:
@@ -227,15 +227,15 @@ def preprocessing_text(text,number):
       with open('data/memotion_dataset_7k/text_binary_feature_val.npy', 'wb') as f:
           np.save(f, sentence_vectors_train)
 
-    # if number == 1:
-    #   with open('data/memotion_dataset_7k/text_sbert_feature_train_label.npy', 'wb') as f:
-    #     np.save(f, sbert_embedding)
-    # elif number == 2: 
-    #   with open('data/memotion_dataset_7k/text_sbert_feature_train_unlabel.npy', 'wb') as f:
-    #     np.save(f, sbert_embedding)
-    # elif number == 3:
-    #   with open('data/memotion_dataset_7k/text_sbert_feature_val.npy', 'wb') as f:
-    #       np.save(f, sbert_embedding)
+    if number == 1:
+      with open('data/memotion_dataset_7k/text_sbert_feature_train_label.npy', 'wb') as f:
+        np.save(f, sbert_embedding)
+    elif number == 2: 
+      with open('data/memotion_dataset_7k/text_sbert_feature_train_unlabel.npy', 'wb') as f:
+        np.save(f, sbert_embedding)
+    elif number == 3:
+      with open('data/memotion_dataset_7k/text_sbert_feature_val.npy', 'wb') as f:
+          np.save(f, sbert_embedding)
 
 
 def create_foder(path):

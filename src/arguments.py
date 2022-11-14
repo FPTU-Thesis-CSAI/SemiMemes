@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='new loader - simple augment', type=str,
+    parser.add_argument('--experiment', default='sbert-baseline', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -101,13 +101,13 @@ def get_args():
     parser.add_argument('--w-f2f', type=float, default=0.6, help="Fuse2Fuse Loss Weight")
     #CMML
     #experiment ideas
-    parser.add_argument('--use-bert-embedding',action='store_true',default=False)
+    parser.add_argument('--use-bert-embedding',action='store_true',default=True)
     parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
     parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
-    parser.add_argument("--use_augmentation", action='store_true', default=True,help='')
+    parser.add_argument("--use_augmentation", action='store_true', default=False,help='')
     #####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
