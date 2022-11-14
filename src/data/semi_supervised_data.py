@@ -26,6 +26,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 from . import data_utils
 import os
+# import data_utils
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -44,9 +45,10 @@ class ImgAugment:
 
         self.train_transform = T.Compose(
             [
-            T.RandomResizedCrop(size=img_size, scale=(0.8, 1.0), ratio=(0.8, 1.2)),
-            # T.RandomHorizontalFlip(p=0.5),  # with 0.5 probability
-            T.RandomApply([color_jitter], p=0.8),
+            # T.RandomResizedCrop(size=img_size, scale=(0.8, 1.0), ratio=(0.8, 1.2)),
+            T.Resize((img_size, img_size)),
+            T.RandomHorizontalFlip(p=0.5),  # with 0.5 probability
+            T.RandomApply([color_jitter], p=0.5),
             T.RandomApply([blur], p=0.5),
             # T.RandomGrayscale(p=0.2),
             T.ToTensor(),
@@ -213,24 +215,24 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     else:
         return train_supervised_loader, train_unsupervised_loader, val_loader, im_transforms, txt_transforms
 
-from src.arguments import get_args
+# from ..arguments import get_args
 
-def main():
-    args = get_args()
+# def main():
+#     args = get_args()
 
-    train_supervised_loader, train_unsupervised_loader, val_loader = create_semi_supervised_dataloaders(args,
-                                                                                                        train_img_dir='data/MAMI_processed/images/train',
-                                                                                                        train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.3.csv',
-                                                                                                        train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
-                                                                                                        val_img_dir = 'data/MAMI_processed/images/val',
-                                                                                                        val_csv='data/MAMI_processed/val.csv',
-                                                                                                        batch_size=64, image_size=384)
+#     train_supervised_loader, train_unsupervised_loader, val_loader = create_semi_supervised_dataloaders(args,
+#                                                                                                         train_img_dir='data/MAMI_processed/images/train',
+#                                                                                                         train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.3.csv',
+#                                                                                                         train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
+#                                                                                                         val_img_dir = 'data/MAMI_processed/images/val',
+#                                                                                                         val_csv='data/MAMI_processed/val.csv',
+#                                                                                                         batch_size=64, image_size=384)
 
-    next(iter(train_supervised_loader))
-    next(iter(train_unsupervised_loader))
-    next(iter(val_loader))
+#     next(iter(train_supervised_loader))
+#     next(iter(train_unsupervised_loader))
+#     next(iter(val_loader))
 
-    return 0
+#     return 0
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='test new dataloader', type=str,
+    parser.add_argument('--experiment', default='new loader - simple augment', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -175,3 +175,7 @@ def get_args():
     parser.add_argument('--hyper_yaml_path', type=str, default="config/hyper1.yml") 
     args = parser.parse_args()
     return args
+
+if __name__ == "__main__":
+    args = get_args()
+    print(args)

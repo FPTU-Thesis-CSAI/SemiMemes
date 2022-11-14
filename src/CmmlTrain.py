@@ -28,17 +28,17 @@ def train(args,model, dataset,
            imgbatchsize = 32, cuda = False, savepath = ''): 
     model.train()
     print("train")
-    par = []
-    par.append({'params': model.Imgmodel.parameters()})
-    par.append({'params': model.Imgpredictmodel.parameters()})
-    optimizer = optim.Adam(par, lr = img_lr_supervise, weight_decay = weight_decay)
-    scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9) 
-    criterion = torch.nn.BCELoss()
-    train_img_supervise_loss = []
-    batch_count = 0
+    # par = []
+    # par.append({'params': model.Imgmodel.parameters()})
+    # par.append({'params': model.Imgpredictmodel.parameters()})
+    # optimizer = optim.Adam(par, lr = img_lr_supervise, weight_decay = weight_decay)
+    # scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9) 
+    # criterion = torch.nn.BCELoss()
+    # train_img_supervise_loss = []
+    # batch_count = 0
     loss = 0
     cita = 1.003
-    loss_batch = 50
+    # loss_batch = 50
     # print("Pretrain img supervise data :")  
     # for epoch in range(1, img_supervise_epochs + 1):
     #     data_loader = DataLoader(dataset = dataset.supervise_(), batch_size = imgbatchsize, shuffle = True, num_workers = 0)
@@ -169,7 +169,7 @@ def train(args,model, dataset,
 
             sup_label = sup_label.unsqueeze(-1) if len(sup_label.shape) == 1 else sup_label # expand last dim for single label only
 
-            # scheduler.step()
+            scheduler.step()
             # x[0] = torch.cat(x[0], 0)
             # x[1] = torch.cat(x[1], 0)
             # if args.use_bert_embedding:
