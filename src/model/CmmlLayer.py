@@ -38,18 +38,29 @@ class TextfeatureNet(nn.Module):
 
 class PredictNet(nn.Module):
     
-    def __init__(self, neure_num):
+    def __init__(self, neure_num, use_softmax=False):
         #print("---------PredictNet-----")
         super(PredictNet, self).__init__()
         self.mlp = make_predict_layers(neure_num)
         # print("---------mlp----------",self.mlp)
-        self.sigmoid = torch.nn.Sigmoid()
+        
+        if use_softmax:
+            self.softmax = torch.nn.Softmax()
+            self.sigmoid = None
+        else:
+            self.softmax = None
+            self.sigmoid = torch.nn.Sigmoid()
+
+
         #print("------------sigmoid-------------",self.sigmoid)
         self.sigma = nn.Parameter(torch.FloatTensor([1.,1.,1./2]))
 
     def forward(self, x):
         y = self.mlp(x)
-        y = self.sigmoid(y)
+        if not self.sigmoid is None:
+            y = self.sigmoid(y)
+        else:
+            y = self.softmax(y)
         #print("---------y------------", y)
         #print("--------------------")
         return y

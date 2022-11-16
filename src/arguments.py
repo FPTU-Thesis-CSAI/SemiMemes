@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='supervised-memotion', type=str,
+    parser.add_argument('--experiment', default='augment_n_sbert', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -110,6 +110,7 @@ def get_args():
     parser.add_argument("--use-bert-model", action='store_true', default=True,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
+    parser.add_argument("--use_augmentation", action='store_true', default=True,help='')
     ####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
@@ -134,16 +135,18 @@ def get_args():
     parser.add_argument('--imgfilename_val', type = str, default = 'data/memotion_test_data/test_data/2000_data/2000_data/',
     help="Path of img madality data")
     parser.add_argument('--labelfilename_val', default = "data/memotion_dataset_7k/label_val.npy",help="Path of data label")
+    parser.add_argument('--text_col', default = "Text Transcription", help="Column of meme text in csv")
+
     parser.add_argument('--savepath', type = str, default = 'models')
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")
-    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 256, 128',
+    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 128',
     help="architecture of text feature network")
     parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
     parser.add_argument('--Predictpara', type = str, default = '128, 4',help="architecture of attention predict network")
-    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 1',
+    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 4',
     help="architecture of attention network")
     parser.add_argument('--img-supervise-epochs', type = int, default = 0)
     parser.add_argument('--text-supervise-epochs', type = int, default = 1)
@@ -162,7 +165,7 @@ def get_args():
     #VLM 
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     # parser.add_argument('--learning_rate', type=float, default=5e-5)
-    parser.add_argument('--epoch', type=int, default=10)
+    parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
     parser.add_argument('--amp',type=bool,default=True, \
                 help="automatic mixed precision training")
@@ -175,3 +178,7 @@ def get_args():
     parser.add_argument('--hyper_yaml_path', type=str, default="config/hyper1.yml") 
     args = parser.parse_args()
     return args
+
+if __name__ == "__main__":
+    args = get_args()
+    print(args)

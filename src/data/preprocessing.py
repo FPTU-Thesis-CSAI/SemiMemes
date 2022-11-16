@@ -210,6 +210,10 @@ def preprocessing_text(text,number):
         sentence_vectors_train.append(sent_vec)
     sentence_vectors_train = np.asarray(sentence_vectors_train)
 
+    print("========================")
+    print(number)
+    print(most_freq)
+
     model = SentenceTransformer('all-MiniLM-L6-v2')
     sbert_embedding = model.encode(df_text_train)
 
