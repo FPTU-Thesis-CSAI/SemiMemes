@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='sbert-baseline', type=str,
+    parser.add_argument('--experiment', default='augment_n_sbert', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -107,7 +107,7 @@ def get_args():
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
-    parser.add_argument("--use_augmentation", action='store_true', default=False,help='')
+    parser.add_argument("--use_augmentation", action='store_true', default=True,help='')
     #####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
@@ -138,12 +138,12 @@ def get_args():
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")
-    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 256, 128',
+    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 128',
     help="architecture of text feature network")
-    parser.add_argument('--Imgpredictpara', type = str, default = '128, 1',help="architecture of img predict network")
-    parser.add_argument('--Textpredictpara', type = str, default = '128, 1',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '128, 1',help="architecture of attention predict network")
-    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 1',
+    parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
+    parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
+    parser.add_argument('--Predictpara', type = str, default = '128, 4',help="architecture of attention predict network")
+    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 4',
     help="architecture of attention network")
     parser.add_argument('--img-supervise-epochs', type = int, default = 1)
     parser.add_argument('--text-supervise-epochs', type = int, default = 1)

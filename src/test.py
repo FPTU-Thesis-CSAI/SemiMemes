@@ -13,7 +13,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 
 
-def test(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
+def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
     if cuda:
         Textfeaturemodel.cuda()
         Imgpredictmodel.cuda()
@@ -27,18 +27,29 @@ def test(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Pre
     Imgmodel.eval()
     Predictmodel.eval()
     Attentionmodel.eval()
+
     print('----------------- Test data:------------')
-    data_loader = DataLoader(dataset = testdataset, batch_size = batchsize, shuffle = False)
+    
     total_predict = []
     img_predict = []
     text_predict = []
     truth = []
-    for batch_index, (x, y) in enumerate(data_loader, 1):
-        img_xx = x[0]
-        text_xx = x[1]
+    # data_loader = DataLoader(dataset = testdataset, batch_size = batchsize, shuffle = False)
+    # for batch_index, (x, y) in enumerate(data_loader, 1):
+    for batch_index, supbatch in tqdm(enumerate(testdataset), total=len(testdataset)):
+        (sup_img, sup_text), sup_label = supbatch
+
+        # for single label only
+        # sup_label = sup_label.unsqueeze(-1) if len(sup_label.shape) == 1 else sup_label # expand last dim for single label only
+        # sup_label = torch.stack([1-sup_label, sup_label], axis=-1)
+
+        img_xx = sup_img
+        text_xx = sup_text['sentence_vectors']
         if args.use_bert_embedding:
-            bert_xx = x[2]
-        label = y.numpy()
+            bert_xx = sup_text['sbert_embedding']
+        y = sup_label.numpy()
+
+        # label = y.numpy()
         img_xx = img_xx.float()
         text_xx = text_xx.float()
         if args.use_bert_embedding:
@@ -78,7 +89,7 @@ def test(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Pre
         total_predict.append(predict)
         img_predict.append(img_)
         text_predict.append(text_)
-        truth.append(label)
+        truth.append(y)
 
     total_predict = np.array(total_predict)
     img_predict = np.array(img_predict)
@@ -184,7 +195,9 @@ def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, I
     # for batch_index, (x, y) in enumerate(data_loader, 1):
     for batch_index, supbatch in tqdm(enumerate(testdataset), total=len(testdataset)):
         (sup_img, sup_text), sup_label = supbatch
-        sup_label = sup_label.unsqueeze(-1) if len(sup_label.shape) == 1 else sup_label # expand last dim for single label only
+
+        # sup_label = sup_label.unsqueeze(-1) if len(sup_label.shape) == 1 else sup_label # expand last dim for single label only
+        sup_label = torch.stack([1-sup_label, sup_label], axis=-1)
 
         img_xx = sup_img
         text_xx = sup_text['sentence_vectors']
@@ -281,9 +294,9 @@ def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, I
     # auc_pm3 = auroc_score_pytorch(text_predict, truth)
     
 
-    macro_f1_all = macro_f1(total_predict, truth, threshold = 0.5)
-    macro_f1_image = macro_f1(img_predict, truth, threshold = 0.5)
-    macro_f1_text = macro_f1(text_predict, truth, threshold = 0.5)
+    macro_f1_all = macro_f1(total_predict[:, 1], truth[:, 1], threshold = 0.5)
+    macro_f1_image = macro_f1(img_predict[:, 1], truth[:, 1], threshold = 0.5)
+    macro_f1_text = macro_f1(text_predict[:, 1], truth[:, 1], threshold = 0.5)
 
     # average_precison1 = average_precision(total_predict, truth)
     # average_precison2 = average_precision(img_predict, truth)
@@ -297,9 +310,9 @@ def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, I
     # example_auc2 = example_auc(img_predict, truth)
     # example_auc3 = example_auc(text_predict, truth)
 
-    macro_roc_auc1 = roc_auc_binary(total_predict, truth)
-    macro_roc_auc2 = roc_auc_binary(img_predict, truth)
-    macro_roc_auc3 = roc_auc_binary(text_predict, truth)
+    macro_roc_auc1 = roc_auc_binary(total_predict[:, 1], truth[:, 1])
+    macro_roc_auc2 = roc_auc_binary(img_predict[:, 1], truth[:, 1])
+    macro_roc_auc3 = roc_auc_binary(text_predict[:, 1], truth[:, 1])
 
     # micro_auc1 = micro_auc(total_predict, truth)
     # micro_auc2 = micro_auc(img_predict, truth)

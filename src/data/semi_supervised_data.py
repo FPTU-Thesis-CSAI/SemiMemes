@@ -87,8 +87,13 @@ class DefaultImgTransform:
         )
 
 class TextTransform():
-    def __init__(self, txt_bert_model=None, txt_bert_max_length=128, use_sbert=False):
-        self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True)
+    def __init__(self, txt_bert_model=None, txt_bert_max_length=128, use_sbert=False, vocab_path=None):
+        self.vocab_path = vocab_path
+        if vocab_path is None:
+            self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True)
+        else:
+            self.vocab = json.load(open(vocab_path))
+            self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True, vocabulary=self.vocab)
 
         self.use_sbert = use_sbert
         if use_sbert:
@@ -101,9 +106,16 @@ class TextTransform():
             else:
                 self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_bert_max_length)
 
-    def precompute_stats(self, texts):
+    def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
         self.sentence_vectors_extractor.fit(texts)
-        print(f"Compute vocabulary for {len(texts)} sentences.")
+
+        # save vocabulary
+        self.vocab = self.sentence_vectors_extractor.vocabulary_
+        self.vocab_path = path_save_vocab
+
+        # value from vectorizer is numpy type, convert to int to serialize in json
+        json.dump({key: int(value) for (key, value) in self.vocab.items()}, open(path_save_vocab, 'w'))
+        print(f"Compute vocabulary for {len(texts)} sentences. Save to {path_save_vocab}")
 
     def __call__(self, texts):
         outputs = dict()
@@ -128,7 +140,7 @@ class ImageText(Dataset):
         self.is_labeled = is_labeled
         if self.is_labeled:
             assert not label_cols is None, "supervised data needs labels"
-            self.labels = self.metadata[label_cols].to_list()
+            self.labels = self.metadata[label_cols].values # can extract from both series and DataFrame
 
         self.img_names = self.metadata[img_col].to_list()
         self.img_folder = img_folder
@@ -177,6 +189,9 @@ class ImageText(Dataset):
 
 def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, train_unlabeled_csv, 
                                                 val_img_dir, val_csv, batch_size, image_size, inbatch_label_ratio=None, debug=False):
+    # args.use_augmentation = False
+    label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+
     if args.use_augmentation:
         im_transforms = ImgAugment(img_size=image_size)
     else:
@@ -189,13 +204,13 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     txt_transforms.precompute_stats(data_utils.get_texts(train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
 
     train_sup = ImageText(train_img_dir, metadata_csv=train_labeled_csv, is_labeled=True,
-                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms)
+                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
-                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms)
+                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     val = ImageText(val_img_dir, metadata_csv=val_csv, is_labeled=True,
-                            im_transforms=im_transforms.test_transform, txt_transform=txt_transforms)
+                            im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     # collate_fn_batch = ...
     # dataloader = DataLoader(dataset=data, collate_fn = collate_fn_batch, batch_size=batch_size, num_workers=cpu_count()//2, drop_last=True, shuffle=True)
@@ -214,6 +229,24 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
         return train_supervised_loader, train_unsupervised_loader, val_loader
     else:
         return train_supervised_loader, train_unsupervised_loader, val_loader, im_transforms, txt_transforms
+
+def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_size, image_size, debug=False):
+    label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+
+    im_transforms = DefaultImgTransform(img_size=image_size)
+    txt_transforms = TextTransform(use_sbert=True, txt_bert_model='distilbert-base-uncased', vocab_path='data/vocab.json')
+    target_transforms = None
+
+    test = ImageText(test_img_dir, metadata_csv=test_csv, is_labeled=True,
+                            im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
+
+    test_loader = DataLoader(dataset=test, batch_size=batch_size, num_workers=cpu_count()*3//4, drop_last=False, shuffle=False)
+
+    if not debug:
+        return test_loader
+    else:
+        return test_loader, im_transforms, txt_transforms
+
 
 # from ..arguments import get_args
 
