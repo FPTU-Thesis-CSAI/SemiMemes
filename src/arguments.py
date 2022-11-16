@@ -103,10 +103,10 @@ def get_args():
     #experiment ideas
     parser.add_argument('--use-bert-embedding',action='store_true',default=False)
     parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
-    parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
-    parser.add_argument('--use-sim-loss',action='store_true',default=False)
+    parser.add_argument('--use-vcreg-loss',action='store_true',default=True)
+    parser.add_argument('--use-sim-loss',action='store_true',default=True)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
-    parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
+    parser.add_argument("--use-focal-loss", action='store_true', default=True,help='')
     parser.add_argument("--use-bert-model", action='store_true', default=True,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
@@ -158,6 +158,7 @@ def get_args():
     parser.add_argument("--std-coeff", type=float, default=25.0,help='Variance regularization loss coefficient')
     parser.add_argument("--cov-coeff", type=float, default=1.0,help='Covariance regularization loss coefficient')
     parser.add_argument("--sim-coeff", type=float, default=25.0,help='Invariance regularization loss coefficient')
+    parser.add_argument("--freeze-bert-layer-count", type=int, default=0,help='')
     #VLM 
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     # parser.add_argument('--learning_rate', type=float, default=5e-5)

@@ -265,6 +265,9 @@ def Imgtest(Imgmodel, Imgpredictmodel, testdataset, batchsize = 32, cuda = False
     for i in range(1, len(truth)):
         temp = np.vstack((temp, truth[i]))
     truth = temp
+    hard_pred_img = img_predict > 0.5
+    #f1_skl2 = f1_score_sklearn(hard_pred_img, truth)
+    #print("f1 score img:",f1_skl2)
     average_precison = average_precision(img_predict, truth)
     return average_precison
 
@@ -286,9 +289,9 @@ def train(args,model, dataset,
     batch_count = 0
     loss = 0
     cita = 1.003
-    loss_batch = 50
     print("Pretrain img supervise data :")  
     for epoch in range(1, img_supervise_epochs + 1):
+        loss = 0
         data_loader = DataLoader(dataset = dataset.supervise_(), batch_size = imgbatchsize, shuffle = True, num_workers = 0)
         for batch_index, (x, y) in enumerate(data_loader, 1):
             batch_count += 1
@@ -306,16 +309,11 @@ def train(args,model, dataset,
             else:
                 img_supervise_batch_loss = criterion(imgyy, label)
             loss += img_supervise_batch_loss.data.item()
-            if batch_count >= loss_batch:
-                loss = loss/loss_batch
-                train_img_supervise_loss.append(loss)
-                loss = 0
-                batch_count = 0
             optimizer.zero_grad()
             img_supervise_batch_loss.backward()
             optimizer.step()
-         
-        if epoch % img_supervise_epochs == 0:
+        print("epoch img loss:",loss/len(data_loader))
+        if epoch % 1 == 0:
             filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
             torch.save(model.Imgmodel, savepath + filename + 'pretrainimgfeature.pkl')
             torch.save(model.Imgpredictmodel, savepath + filename + 'pretrainimgpredict.pkl')
@@ -324,7 +322,7 @@ def train(args,model, dataset,
             print('Image supervise - acc :', acc)
             print()
             # log_image().info(f'----------Img supervise - Accuracy: {acc} --------------------------')  
-            np.save(savepath + filename + "imgsuperviseacc.npy", [acc])
+            # np.save(savepath + filename + "imgsuperviseacc.npy", [acc])
     '''
     pretrain TextNet.
     ''' 
@@ -336,9 +334,24 @@ def train(args,model, dataset,
     criterion = torch.nn.BCELoss()
     train_text_supervise_loss = []
     batch_count = 0
-    loss = 0
+    if args.use_bert_model:
+        if args.freeze_bert_layer_count:
+            for _, pp in model.Textfeaturemodel.encoder.named_parameters():
+                pp.requires_grad = False
+
+        if args.freeze_bert_layer_count >= 0:
+            num_hidden_layers = model.Textfeaturemodel.encoder.config.num_hidden_layers
+        
+            layer_idx = [num_hidden_layers-1-i for i in range(args.freeze_bert_layer_count)]
+            layer_names = ['encoder.layer.{}'.format(j) for j in layer_idx]
+            for pn, pp in model.Textfeaturemodel.encoder.named_parameters():
+                if any([ln in pn for ln in layer_names]) or 'pooler.' in pn:
+                    pp.data = torch.randn(pp.shape)*0.02
+                    pp.requires_grad = True
+
     print('Pretrain text supervise data:')
     for epoch in range(1, text_supervise_epochs + 1):
+        loss = 0
         data_loader = DataLoader(dataset = dataset.supervise_(), batch_size = textbatchsize, shuffle = True, num_workers = 0)
         for batch_index, (x, y) in enumerate(data_loader, 1):
             batch_count += 1
@@ -373,14 +386,10 @@ def train(args,model, dataset,
             else:
                 text_supervise_batch_loss = criterion(textyy, label)
             loss += text_supervise_batch_loss.data.item()
-            if batch_count >= loss_batch:
-                loss = loss/loss_batch
-                train_text_supervise_loss.append(loss)
-                loss = 0
-                batch_count = 0
             optimizer.zero_grad()
             text_supervise_batch_loss.backward()
             optimizer.step()
+        print("epoch txt loss:",loss/len(data_loader))
         if epoch % text_supervise_epochs == 0:
             filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
             torch.save(model.Textfeaturemodel, savepath + filename + 'pretraintextfeature.pkl')
@@ -389,7 +398,7 @@ def train(args,model, dataset,
             acc = texttest(args,model.Textfeaturemodel,model.Textpredictmodel, dataset.test_(), batchsize = textbatchsize, cuda = cuda)
             print('Text supervise - acc :', acc)
             print()
-            np.save(savepath + filename + "textsuperviseacc.npy", [acc])
+            # np.save(savepath + filename + "textsuperviseacc.npy", [acc])
 
     optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
     scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9)  
@@ -648,6 +657,9 @@ def train(args,model, dataset,
             if args.use_sim_loss:
                 print("epoch_i_supervise_loss_train:",epoch_i_supervise_loss_train,
                 "\t epoch_i_unsupervise_loss_train:",epoch_i_unsupervise_loss_train)
+        print("f1_macro_multi_1:",f1_macro_multi_1,
+        "\t f1_macro_multi_2",f1_macro_multi_2,
+        "\t f1_macro_multi_3:",f1_macro_multi_3)
 
         wandb.log({"learning rate/lr":scheduler.get_last_lr()[0]})
         wandb.log({"f1_macro_multi_1":f1_macro_multi_1})
@@ -753,7 +765,7 @@ if __name__ == '__main__':
 
     model = CmmlModel(args).cuda()
 
-    savepath_folder = args.savepath+"/"+args.experiment 
+    savepath_folder = args.savepath+"/"+args.experiment+"/"
     if not os.path.exists(args.savepath):
         os.mkdir(args.savepath)
     if not os.path.exists(savepath_folder):
