@@ -54,15 +54,29 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
         text_xx = text_xx.float()
         if args.use_bert_embedding:
             bert_xx = bert_xx.float()
+        
+        if args.use_bert_model:
+            token_xx = sup_text['input_ids']
+            attn_mask_xx = sup_text['attention_mask']
+            token_xx = token_xx.long()
+            attn_mask_xx = attn_mask_xx.long()
+            token_xx = Variable(token_xx).cuda() if cuda else Variable(token_xx)
+            attn_mask_xx = Variable(attn_mask_xx).cuda() if cuda else Variable(attn_mask_xx)
+
+
         img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)
         text_xx = Variable(text_xx).cuda() if cuda else Variable(text_xx)
         if args.use_bert_embedding:
             bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx)
         imghidden = Imgmodel(img_xx)
+
         if args.use_bert_embedding:
-            texthidden = Textfeaturemodel(text_xx,bert_xx)
+            texthidden = Textfeaturemodel(x = text_xx, bert_emb = bert_xx)
+        elif args.use_bert_model:
+            texthidden = Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
         else:
-            texthidden = Textfeaturemodel(text_xx)
+            texthidden = Textfeaturemodel(x = text_xx)
+
         imgk = Attentionmodel(imghidden)
         textk = Attentionmodel(texthidden)
         modality_attention = []

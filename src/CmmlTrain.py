@@ -44,9 +44,9 @@ def train(args,model, dataset,
     # batch_count = 0
     loss = 0
     cita = 1.003
-    # loss_batch = 50
     # print("Pretrain img supervise data :")  
     # for epoch in range(1, img_supervise_epochs + 1):
+    #     loss = 0
     #     data_loader = DataLoader(dataset = dataset.supervise_(), batch_size = imgbatchsize, shuffle = True, num_workers = 0)
     #     for batch_index, (x, y) in enumerate(data_loader, 1):
     #         batch_count += 1
@@ -64,16 +64,11 @@ def train(args,model, dataset,
     #         else:
     #             img_supervise_batch_loss = criterion(imgyy, label)
     #         loss += img_supervise_batch_loss.data.item()
-    #         if batch_count >= loss_batch:
-    #             loss = loss/loss_batch
-    #             train_img_supervise_loss.append(loss)
-    #             loss = 0
-    #             batch_count = 0
     #         optimizer.zero_grad()
     #         img_supervise_batch_loss.backward()
     #         optimizer.step()
-         
-    #     if epoch % img_supervise_epochs == 0:
+    #     print("epoch img loss:",loss/len(data_loader))
+    #     if epoch % 1 == 0:
     #         filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
     #         torch.save(model.Imgmodel, savepath + filename + 'pretrainimgfeature.pkl')
     #         torch.save(model.Imgpredictmodel, savepath + filename + 'pretrainimgpredict.pkl')
@@ -82,7 +77,7 @@ def train(args,model, dataset,
     #         print('Image supervise - acc :', acc)
     #         print()
     #         # log_image().info(f'----------Img supervise - Accuracy: {acc} --------------------------')  
-    #         np.save(savepath + filename + "imgsuperviseacc.npy", [acc])
+    #         # np.save(savepath + filename + "imgsuperviseacc.npy", [acc])
     # '''
     # pretrain TextNet.
     # ''' 
@@ -94,44 +89,62 @@ def train(args,model, dataset,
     # criterion = torch.nn.BCELoss()
     # train_text_supervise_loss = []
     # batch_count = 0
-    # loss = 0
-    # text_supervise_epochs = 1
+    # if args.use_bert_model:
+    #     if args.freeze_bert_layer_count:
+    #         for _, pp in model.Textfeaturemodel.encoder.named_parameters():
+    #             pp.requires_grad = False
+
+    #     if args.freeze_bert_layer_count >= 0:
+    #         num_hidden_layers = model.Textfeaturemodel.encoder.config.num_hidden_layers
+        
+    #         layer_idx = [num_hidden_layers-1-i for i in range(args.freeze_bert_layer_count)]
+    #         layer_names = ['encoder.layer.{}'.format(j) for j in layer_idx]
+    #         for pn, pp in model.Textfeaturemodel.encoder.named_parameters():
+    #             if any([ln in pn for ln in layer_names]) or 'pooler.' in pn:
+    #                 pp.data = torch.randn(pp.shape)*0.02
+    #                 pp.requires_grad = True
+
     # print('Pretrain text supervise data:')
     # for epoch in range(1, text_supervise_epochs + 1):
+    #     loss = 0
     #     data_loader = DataLoader(dataset = dataset.supervise_(), batch_size = textbatchsize, shuffle = True, num_workers = 0)
     #     for batch_index, (x, y) in enumerate(data_loader, 1):
     #         batch_count += 1
     #         scheduler.step()
-    #         text_xx = x[1]
-    #         if args.use_bert_embedding:
-    #             bert_xx = x[2]
+    #         if args.use_bert_model:
+    #             token_xx = x[1]
+    #             attn_mask_xx = x[2]
+    #             token_xx = token_xx.long()
+    #             attn_mask_xx = attn_mask_xx.long()
+    #             token_xx = Variable(token_xx).cuda() if cuda else Variable(token_xx) 
+    #             attn_mask_xx = Variable(attn_mask_xx).cuda() if cuda else Variable(attn_mask_xx) 
+    #         else:
+    #             text_xx = x[1]
+    #             text_xx = text_xx.float()
+    #             text_xx = Variable(text_xx).cuda() if cuda else Variable(text_xx)  
+    #             if args.use_bert_embedding:
+    #                 bert_xx = x[2]
+    #                 bert_xx = bert_xx.float()
+    #                 bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx) 
     #         label = y
-    #         text_xx = text_xx.float()
-    #         if args.use_bert_embedding:
-    #             bert_xx = bert_xx.float()
-    #         label = label.float()
-    #         text_xx = Variable(text_xx).cuda() if cuda else Variable(text_xx)  
-    #         if args.use_bert_embedding:
-    #             bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx)  
+    #         label = label.float()                 
     #         label = Variable(label).cuda() if cuda else Variable(label)  
     #         if args.use_bert_embedding:
-    #             textxx = model.Textfeaturemodel(text_xx,bert_xx)
+    #             textxx = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
+    #         elif args.use_bert_model:
+    #             textxx = model.Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
     #         else:
-    #             textxx = model.Textfeaturemodel(text_xx)
+    #             textxx = model.Textfeaturemodel(x = text_xx)
     #         textyy = model.Textpredictmodel(textxx)
     #         if args.use_focal_loss:
     #             text_supervise_batch_loss = focal_binary_cross_entropy(args,textyy, label)
     #         else:
     #             text_supervise_batch_loss = criterion(textyy, label)
     #         loss += text_supervise_batch_loss.data.item()
-    #         if batch_count >= loss_batch:
-    #             loss = loss/loss_batch
-    #             train_text_supervise_loss.append(loss)
-    #             loss = 0
-    #             batch_count = 0
     #         optimizer.zero_grad()
     #         text_supervise_batch_loss.backward()
     #         optimizer.step()
+    #     print("epoch txt loss:",loss/len(data_loader))
     #     if epoch % text_supervise_epochs == 0:
     #         filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
     #         torch.save(model.Textfeaturemodel, savepath + filename + 'pretraintextfeature.pkl')
@@ -140,7 +153,7 @@ def train(args,model, dataset,
     #         acc = texttest(args,model.Textfeaturemodel,model.Textpredictmodel, dataset.test_(), batchsize = textbatchsize, cuda = cuda)
     #         print('Text supervise - acc :', acc)
     #         print()
-    #         np.save(savepath + filename + "textsuperviseacc.npy", [acc])
+    #         # np.save(savepath + filename + "textsuperviseacc.npy", [acc])
 
     optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
     scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9)  
@@ -205,21 +218,28 @@ def train(args,model, dataset,
                 supervise_bert_xx = sup_text['sbert_embedding']
             label = sup_label
 
+            if args.use_bert_model:
+                supervise_input_ids = sup_text['input_ids']
+                supervise_attn_mask = sup_text['attention_mask']
+                supervise_input_ids = supervise_input_ids.long()
+                supervise_attn_mask = supervise_attn_mask.long()
+                supervise_input_ids = Variable(supervise_input_ids).cuda() if cuda else Variable(supervise_input_ids)
+                supervise_attn_mask = Variable(supervise_attn_mask).cuda() if cuda else Variable(supervise_attn_mask)
+
+
             supervise_img_xx = supervise_img_xx.float()
-            supervise_text_xx = supervise_text_xx.float()
-            if args.use_bert_embedding:
-                supervise_bert_xx = supervise_bert_xx.float()
             label = label.float()
-            supervise_img_xx = Variable(supervise_img_xx).cuda() if cuda else Variable(supervise_img_xx)  
-            supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
-            if args.use_bert_embedding:
-                supervise_bert_xx = Variable(supervise_bert_xx).cuda() if cuda else Variable(supervise_bert_xx)  
+            supervise_img_xx = Variable(supervise_img_xx).cuda() if cuda else Variable(supervise_img_xx)                  
             label = Variable(label).cuda() if cuda else Variable(label)  
             supervise_imghidden = model.Imgmodel(supervise_img_xx)
+            
             if args.use_bert_embedding:
-                supervise_texthidden = model.Textfeaturemodel(supervise_text_xx,supervise_bert_xx)
+                supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
+            elif args.use_bert_model:
+                supervise_texthidden = model.Textfeaturemodel(input_ids = supervise_input_ids,attn_mask = supervise_attn_mask)
             else:
-                supervise_texthidden = model.Textfeaturemodel(supervise_text_xx)
+                supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx)
+            
             if model.Projectormodel != None:
                 vcreg_loss_supervise = model.Projectormodel(supervise_imghidden,supervise_texthidden)
             supervise_imgpredict = model.Imgpredictmodel(supervise_imghidden)
@@ -308,20 +328,24 @@ def train(args,model, dataset,
             #     x[3] = torch.cat(x[3], 0)
             #     unsupervise_img_xx = x[2]
             #     unsupervise_text_xx = x[3]
+            if args.use_bert_model:
+                unsupervise_token_xx = unsup_text['input_ids']
+                unsupervise_attn_mask_xx = unsup_text['attention_mask']
+                unsupervise_token_xx = unsupervise_token_xx.long()
+                unsupervise_attn_mask_xx = unsupervise_attn_mask_xx.long()
+                unsupervise_token_xx = Variable(unsupervise_token_xx).cuda() if cuda else Variable(unsupervise_token_xx) 
+                unsupervise_attn_mask_xx = Variable(unsupervise_attn_mask_xx).cuda() if cuda else Variable(unsupervise_attn_mask_xx) 
 
             unsupervise_img_xx = unsupervise_img_xx.float()
-            unsupervise_text_xx = unsupervise_text_xx.float()
-            if args.use_bert_embedding:
-                unsupervise_bert_xx = unsupervise_bert_xx.float()
-            unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)  
-            unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
-            if args.use_bert_embedding:
-                unsupervise_bert_xx = Variable(unsupervise_bert_xx).cuda() if cuda else Variable(unsupervise_bert_xx)    
+            unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)     
+
             unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
-            if args.use_bert_embedding:      
-                unsupervise_texthidden = model.Textfeaturemodel(unsupervise_text_xx,unsupervise_bert_xx)
+            if args.use_bert_embedding:
+                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+            elif args.use_bert_model:
+                unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
             else:
-                unsupervise_texthidden = model.Textfeaturemodel(unsupervise_text_xx)
+                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
 
             if model.Projectormodel != None:
                 vcreg_loss_unsupervise = model.Projectormodel(unsupervise_imghidden,unsupervise_texthidden)
@@ -455,6 +479,9 @@ def train(args,model, dataset,
             if args.use_sim_loss:
                 print("epoch_i_supervise_loss_train:",epoch_i_supervise_loss_train,
                 "\t epoch_i_unsupervise_loss_train:",epoch_i_unsupervise_loss_train)
+        print("f1_macro_multi_1:",f1_macro_multi_total,
+        "\t f1_macro_multi_2",f1_macro_multi_img,
+        "\t f1_macro_multi_3:",f1_macro_multi_text)
 
         wandb.log({"learning rate/lr":scheduler.get_last_lr()[0]})
         wandb.log({"f1_macro_multi_total":f1_macro_multi_total})
@@ -689,7 +716,7 @@ if __name__ == '__main__':
     if cuda:
         model = model.cuda()
 
-    savepath_folder = args.savepath+"/"+args.experiment 
+    savepath_folder = args.savepath+"/"+args.experiment+"/"
     if not os.path.exists(args.savepath):
         os.mkdir(args.savepath)
     if not os.path.exists(savepath_folder):

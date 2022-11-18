@@ -207,78 +207,17 @@ class ImageTextClassificationForVLMDataset(Dataset):
         elif self.train==True and self.supervise==False:
             return int(len(self.unlabeled_ids)/self.pro[1])
 
-class MemotionDatasetForCmml(Dataset):
-    def __init__(self,args, imgfilenamerecord,
-                 imgfilenamerecord_unlabel, 
-                 imgfilename, 
-                 textfilename, 
-                 textfilename_unlabel, 
-                 labelfilename, 
-                 labelfilename_unlabel,
-                 imgfilenamerecord_val, 
-                 imgfilename_val, 
-                 textfilename_val, 
-                 labelfilename_val, 
-                 sbertemb_label,
-                 sbertemb_unlabel,
-                 sbertemb_val,
-                 train = True,
-                 supervise = True):        
-        self.imgfilename = imgfilename
-        self.textfilename_unlabel = textfilename_unlabel
-        self.textfilename = textfilename
-        self.labelfilename = labelfilename
-        self.labelfilename_unlabel = labelfilename_unlabel
-        self.args = args  
+class CmmlDataset(Dataset):
+    def __init__(self):
+        pass
 
-        if args.use_bert_embedding:
-            self.sbertemb_label = sbertemb_label
-            self.sbertemb_unlabel = sbertemb_unlabel
-            self.sbertemb_val = sbertemb_val
-
-        self.imgfilename_val = imgfilename_val
-        self.textfilename_val = textfilename_val
-        self.labelfilename_val = labelfilename_val
-
-        self.train = train
-        self.supervise = supervise
-
-        self.imgfilenamerecord = imgfilenamerecord
-        fr = open(self.imgfilenamerecord,'rb')
-        self.imgrecordlist = pickle.load(fr)
-        for i in range(len(self.imgrecordlist)):
-            self.imgrecordlist[i] = self.imgfilename + self.imgrecordlist[i] 
-
-        self.imgfilenamerecord_unlabel = imgfilenamerecord_unlabel
-        fr = open(self.imgfilenamerecord_unlabel,'rb')
-        self.imgrecordlist_unlabel = pickle.load(fr)
-        for i in range(len(self.imgrecordlist_unlabel)):
-            self.imgrecordlist_unlabel[i] = self.imgfilename + self.imgrecordlist_unlabel[i] 
-    
-        self.superviseimgrecordlist = np.array(self.imgrecordlist)
-        self.supervisetextlist = np.load(self.textfilename)
-        self.superviselabellist = np.load(self.labelfilename)
-        if args.use_bert_embedding:
-            self.sbertemb_label = np.load(self.sbertemb_label)
-
-        self.unsuperviseimgrecordlist = np.array(self.imgrecordlist_unlabel)
-        self.unsupervisetextlist = np.load(self.textfilename_unlabel)
-        self.unsuperviselabellist = np.load(self.labelfilename_unlabel)
-        if args.use_bert_embedding:
-            self.sbertemb_unlabel = np.load(self.sbertemb_unlabel)
-
-        self.imgfilenamerecord_val = imgfilenamerecord_val
-        fr = open(self.imgfilenamerecord_val,'rb')
-        self.imgrecordlist_val = pickle.load(fr)
-        for i in range(len(self.imgrecordlist_val)):
-            self.imgrecordlist_val[i] = self.imgfilename_val + self.imgrecordlist_val[i] 
-        self.testimgrecordlist = np.array(self.imgrecordlist_val)
-        self.testtextlist = np.load(textfilename_val)
-        self.testlabellist = np.load(labelfilename_val)
-        if args.use_bert_embedding:
-            self.sbertemb_val = np.load(self.sbertemb_val)
-
-        self.pro2 = [1,3]
+    def __len__(self):
+        if self.train == True and self.supervise == True:
+            return len(self.superviselabellist)
+        elif self.train == True and self.supervise == False:
+            return int(len(self.unsuperviselabellist)/self.pro2[1])
+        elif self.train == False:
+            return len(self.testlabellist)
 
     def supervise_(self):
         self.train = True
@@ -297,98 +236,278 @@ class MemotionDatasetForCmml(Dataset):
     def __getitem__(self, index):
         if self.train == True and self.supervise == True:
             img = Image.open(self.superviseimgrecordlist[index]).convert('RGB').resize((256, 256))
-            text = self.supervisetextlist[index]
+            if self.args.use_bert_model:
+                supervisetextlist = {
+                    key: torch.tensor(values[index])
+                    for key, values in self.supervisetextlist.items()
+                }
+                supervise_tokens, supervise_att_mask = supervisetextlist['input_ids'], supervisetextlist['attention_mask']
+            else:
+                text = self.supervisetextlist[index]
             if self.args.use_bert_embedding:
                 bert_emb = self.sbertemb_label[index]
             label = self.superviselabellist[index]
             img = transforms.ToTensor()(img)
-            text = torch.FloatTensor(text)
+            if not self.args.use_bert_model:
+                text = torch.FloatTensor(text)
             if self.args.use_bert_embedding:
                 bert_emb = torch.FloatTensor(bert_emb)
             label = torch.FloatTensor(label)
             feature = []
             feature.append(img)
-            feature.append(text)
+            if self.args.use_bert_model:
+                feature.append(supervise_tokens)
+                feature.append(supervise_att_mask)
+            else:
+                feature.append(text)
             if self.args.use_bert_embedding:
                 feature.append(bert_emb)
             return feature, label
         elif self.train == True and self.supervise == False:
             supervise_img = []
-            supervise_text = []
-            supervise_bert = []
+            if self.args.use_bert_model:
+                supervise_tokens = []
+                supervise_att_mask = []
+            else:
+                supervise_text = []
+                if self.args.use_bert_embedding:
+                    supervise_bert = []
             supervise_label = []
             for i in range(index*self.pro2[0],(index+1)*self.pro2[0]):
                 temp_img = Image.open(self.superviseimgrecordlist[i]).convert('RGB').resize((256, 256))
-                temp_text = self.supervisetextlist[i]
+                if self.args.use_bert_model:
+                    supervisetext_item = {
+                        key: torch.tensor(values[index])
+                        for key, values in self.supervisetextlist.items()
+                    }
+                    temp_tokens = supervisetext_item['input_ids']
+                    temp_att_mask = supervisetext_item['attention_mask']
+                else:
+                    temp_text = self.supervisetextlist[i]
                 temp_label = self.superviselabellist[i]
                 if self.args.use_bert_embedding:
                     temp_bert = self.sbertemb_label[index]
                 temp_img = transforms.ToTensor()(temp_img)
-                temp_text = torch.FloatTensor(temp_text)
+                if not self.args.use_bert_model:
+                    temp_text = torch.FloatTensor(temp_text)
                 if self.args.use_bert_embedding:
                     temp_bert = torch.FloatTensor(temp_bert)
                 temp_label = torch.FloatTensor(temp_label)
                 supervise_img.append(temp_img)
-                supervise_text.append(temp_text)
+                if self.args.use_bert_model:
+                    supervise_tokens.append(temp_tokens)
+                    supervise_att_mask.append(temp_att_mask)
+                else:
+                    supervise_text.append(temp_text)
                 if self.args.use_bert_embedding:
                     supervise_bert.append(temp_bert)
                 supervise_label.append(temp_label)
             unsupervise_img = []
-            unsupervise_text = []
+            if self.args.use_bert_model:
+                unsupervise_tokens = []
+                unsupervise_att_mask = []
+            else:
+                unsupervise_text = []
             if self.args.use_bert_embedding:
                 unsupervise_bert = []
             unsupervise_label = []
             for i in range(index*self.pro2[1],(index+1)*self.pro2[1]):
                 temp_img = Image.open(self.unsuperviseimgrecordlist[i]).convert('RGB').resize((256, 256))
-                temp_text = self.unsupervisetextlist[i]
+                if self.args.use_bert_model:
+                    unsupervisetext_item = {
+                        key: torch.tensor(values[index])
+                        for key, values in self.unsupervisetextlist.items()
+                    }
+                    temp_tokens = unsupervisetext_item['input_ids']
+                    temp_att_mask = unsupervisetext_item['attention_mask']
+                else:
+                    temp_text = self.unsupervisetextlist[i]
                 if self.args.use_bert_embedding:
                     temp_bert = self.sbertemb_unlabel[index]
                 temp_label = self.unsuperviselabellist[i]               
                 temp_img = transforms.ToTensor()(temp_img)
-                temp_text = torch.FloatTensor(temp_text)
+                if not self.args.use_bert_model:
+                    temp_text = torch.FloatTensor(temp_text)
                 if self.args.use_bert_embedding:
                     temp_bert = torch.FloatTensor(temp_bert)
                 temp_label = torch.FloatTensor(temp_label)
                 unsupervise_img.append(temp_img)
-                unsupervise_text.append(temp_text)
+                if self.args.use_bert_model:
+                    unsupervise_tokens.append(temp_tokens)
+                    unsupervise_att_mask.append(temp_att_mask)
+                else:
+                    unsupervise_text.append(temp_text)
                 if self.args.use_bert_embedding:
                     unsupervise_bert.append(temp_bert)
                 unsupervise_label.append(temp_label)
             feature = []
             feature.append(supervise_img)
-            feature.append(supervise_text)
+            if self.args.use_bert_model:
+                feature.append(supervise_tokens)
+                feature.append(supervise_att_mask)
+            else:
+                feature.append(supervise_text)
             if self.args.use_bert_embedding:
                 feature.append(supervise_bert)
             feature.append(unsupervise_img)
-            feature.append(unsupervise_text)
+            if self.args.use_bert_model:
+                feature.append(unsupervise_tokens)
+                feature.append(unsupervise_att_mask)
+            else:
+                feature.append(unsupervise_text)
             if self.args.use_bert_embedding:
                 feature.append(unsupervise_bert)
             return feature, supervise_label
         elif self.train == False:
             img = Image.open(self.testimgrecordlist[index]).convert('RGB').resize((256, 256))
-            text = self.testtextlist[index]
+            if self.args.use_bert_model:
+                valtextlist = {
+                    key: torch.tensor(values[index])
+                    for key, values in self.testtextlist.items()
+                }
+                val_tokens, val_att_mask = valtextlist['input_ids'], valtextlist['attention_mask'] 
+            else:
+                text = self.testtextlist[index]
             if self.args.use_bert_embedding:
                 bert_emb = self.sbertemb_val[index]
             label = self.testlabellist[index]
             img = transforms.ToTensor()(img)
-            text = torch.FloatTensor(text)
+            if not self.args.use_bert_model:
+                text = torch.FloatTensor(text)
             if self.args.use_bert_embedding:
                 bert_emb = torch.FloatTensor(bert_emb)
             label = torch.FloatTensor(label)
             feature = []
             feature.append(img)
-            feature.append(text)
+            if self.args.use_bert_model:
+                feature.append(val_tokens)
+                feature.append(val_att_mask)
+            else:
+                feature.append(text)
             if self.args.use_bert_embedding:
                 feature.append(bert_emb)
             return feature, label
 
-    def __len__(self):
-        if self.train == True and self.supervise == True:
-            return len(self.superviselabellist)
-        elif self.train == True and self.supervise == False:
-            return int(len(self.unsuperviselabellist)/self.pro2[1])
-        elif self.train == False:
-            return len(self.testlabellist)
+class MemotionDatasetForCmml(CmmlDataset,Dataset):
+    def __init__(self,args=None, imgfilenamerecord=None,
+                 imgfilenamerecord_unlabel=None, 
+                 imgfilename=None, 
+                 textfilename=None, 
+                 textfilename_unlabel=None, 
+                 labelfilename=None, 
+                 labelfilename_unlabel=None,
+                 imgfilenamerecord_val=None, 
+                 imgfilename_val=None, 
+                 textfilename_val=None, 
+                 labelfilename_val=None, 
+                 sbertemb_label=None,
+                 sbertemb_unlabel=None,
+                 sbertemb_val=None,
+                 train = True,
+                 supervise = True,
+                 txt_bert_model="distilbert-base-uncased",
+                 txt_bert_max_length=128): 
+
+        self.imgfilename = imgfilename
+        self.textfilename_unlabel = textfilename_unlabel
+        self.textfilename = textfilename
+        self.labelfilename = labelfilename
+        self.labelfilename_unlabel = labelfilename_unlabel
+        self.args = args  
+        
+        if args.use_bert_embedding:
+            self.sbertemb_label = sbertemb_label
+            self.sbertemb_unlabel = sbertemb_unlabel
+            self.sbertemb_val = sbertemb_val
+
+        self.imgfilename_val = imgfilename_val
+        self.textfilename_val = textfilename_val
+        self.labelfilename_val = labelfilename_val
+
+        self.train = train
+        self.supervise = supervise
+
+        self.imgfilenamerecord = imgfilenamerecord
+        fr = open(self.imgfilenamerecord,'rb')
+        self.imgrecordlist_prime = pickle.load(fr)
+        self.imgrecordlist = []
+        for i in range(len(self.imgrecordlist_prime)):
+            self.imgrecordlist.append(self.imgfilename + self.imgrecordlist_prime[i])
+        self.superviseimgrecordlist = np.array(self.imgrecordlist)
+
+        self.imgfilenamerecord_unlabel = imgfilenamerecord_unlabel
+        fr = open(self.imgfilenamerecord_unlabel,'rb')
+        self.imgrecordlist_unlabel_prime = pickle.load(fr)
+        self.imgrecordlist_unlabel = []
+        for i in range(len(self.imgrecordlist_unlabel_prime)):
+            self.imgrecordlist_unlabel.append(self.imgfilename + self.imgrecordlist_unlabel_prime[i])
+        self.unsuperviseimgrecordlist = np.array(self.imgrecordlist_unlabel)
+
+        self.imgfilenamerecord_val = imgfilenamerecord_val
+        fr = open(self.imgfilenamerecord_val,'rb')
+        self.imgrecordlist_val_prime = pickle.load(fr)
+        self.imgrecordlist_val = []
+        for i in range(len(self.imgrecordlist_val_prime)):
+            self.imgrecordlist_val.append(self.imgfilename_val + self.imgrecordlist_val_prime[i])
+        self.testimgrecordlist = np.array(self.imgrecordlist_val)
+        
+        if not self.args.use_bert_model:
+            self.supervisetextlist = np.load(self.textfilename)
+            self.unsupervisetextlist = np.load(self.textfilename_unlabel)
+            self.testtextlist = np.load(textfilename_val)
+        else: 
+            train_df_path = "/home/fptu/viet/SSLMemes/data/memotion_dataset_7k/labels.csv"
+            traindata = pd.read_csv(train_df_path)
+            traindata["image_name"] = traindata["image_name"].apply(lambda x: x.split(".")[0]+".jpg")
+            val_df_path = "/home/fptu/viet/SSLMemes/data/memotion_test_data/test_data/2000_testdata.csv" 
+            valdata = pd.read_csv(val_df_path)
+            valdata["Image_name"] = valdata["Image_name"].apply(lambda x: x.split(".")[0]+".jpg")
+            if 'corrected_text' in traindata:
+                traindata['text_corrected'] = traindata['corrected_text']
+            traindf = traindata
+            traindf['text_corrected'].fillna('None', inplace=True)
+            if 'corrected_text' in valdata:
+                valdata['text_corrected'] = valdata['corrected_text']
+            valdf = valdata
+            valdf['text_corrected'].fillna('None', inplace=True)
+            if txt_bert_model == 'roberta-base':
+                self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+            else:
+                self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_bert_max_length)            
+            
+            self.supervisetextlist = []
+            self.unsupervisetextlist = []
+            self.testtextlist = []
+            for i in range(len(self.imgrecordlist_prime)):
+                text = traindata[traindata['image_name'] == self.imgrecordlist_prime[0]]['text_corrected'].item()
+                self.supervisetextlist.append(text)
+            
+            for i in range(len(self.imgrecordlist_unlabel_prime)):
+                text = traindata[traindata['image_name'] == self.imgrecordlist_unlabel_prime[0]]['text_corrected'].item()
+                self.unsupervisetextlist.append(text)
+            
+            for i in range(len(self.imgrecordlist_val_prime)):
+                text = valdata[valdata['Image_name'] == self.imgrecordlist_val_prime[0]]['text_corrected'].item()
+                self.testtextlist.append(text)           
+
+            self.supervisetextlist = self.tokenizer(list(self.supervisetextlist), padding='max_length', truncation=True)
+            self.unsupervisetextlist = self.tokenizer(list(self.unsupervisetextlist), padding='max_length', truncation=True)
+            self.testtextlist = self.tokenizer(list(self.testtextlist), padding='max_length', truncation=True)
+
+        if args.use_bert_embedding:
+            self.sbertemb_label = np.load(self.sbertemb_label)
+
+        self.superviselabellist = np.load(self.labelfilename)
+        self.unsuperviselabellist = np.load(self.labelfilename_unlabel)
+        if args.use_bert_embedding:
+            self.sbertemb_unlabel = np.load(self.sbertemb_unlabel)
+
+        self.testlabellist = np.load(labelfilename_val)
+        if args.use_bert_embedding:
+            self.sbertemb_val = np.load(self.sbertemb_val)
+
+        self.pro2 = [1,3]
+
 
 def np_random_sample(arr, size=1):
         return arr[np.random.choice(len(arr), size=size, replace=False)]
@@ -759,7 +878,8 @@ class MemotionDatasetB4(Dataset):
         return self.num_samples
 
 class MemotionDataset(Dataset):
-    def __init__(self, folder_path, phase, task, txt_model, height=224, width=224, im_transforms=None, num_samples=0, txt_max_length=100,pretrain=False):
+    def __init__(self, folder_path, phase, task, txt_model, height=224,
+     width=224, im_transforms=None, num_samples=0, txt_max_length=100,pretrain=False):
         self.phase = phase
         self.pretrain = pretrain
         if self.phase == 'train':
