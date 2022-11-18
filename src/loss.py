@@ -68,3 +68,19 @@ def focal_binary_cross_entropy(args,p, targets, gamma=2):
     loss = logp*((1-p)**gamma)
     loss = args.num_classes*loss.mean()
     return loss
+
+def diversity_measurement(supervise_imgpredict, supervise_textpredict, reduce=True):
+    div = nn.CosineSimilarity(dim=1)(supervise_imgpredict, supervise_textpredict).mean(axis=0)
+    return div
+
+def consistency_measurement(unsupervise_imgpredict, unsupervise_textpredict, cita, reduce=True):
+
+    dis = 2 - nn.CosineSimilarity(dim=1)(unsupervise_imgpredict, unsupervise_textpredict)          
+
+    tensor1 = dis[torch.abs(dis) < cita]
+    tensor2 = dis[torch.abs(dis) >= cita]
+    tensor1loss = torch.sum(tensor1 * tensor1/2)
+    tensor2loss = torch.sum(cita * (torch.abs(tensor2) - 1/2 * cita))
+
+    unsupervise_loss = (tensor1loss + tensor2loss)/unsupervise_imgpredict.size()[0]      
+    return unsupervise_loss

@@ -197,7 +197,7 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     else:
         im_transforms = DefaultImgTransform(img_size=image_size)
 
-    txt_transforms = TextTransform(use_sbert=False, txt_bert_model=None)
+    txt_transforms = TextTransform(use_sbert=True, txt_bert_model='distilbert-base-uncased')
     target_transforms = None
 
     # need compute vocab before transform text

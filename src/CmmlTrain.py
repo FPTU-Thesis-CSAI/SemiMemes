@@ -11,7 +11,7 @@ import datetime
 import numpy as np  
 from test import test_multilabel
 from tqdm import tqdm
-from loss import focal_binary_cross_entropy 
+from loss import focal_binary_cross_entropy, diversity_measurement, consistency_measurement
 import torch.nn as nn
 import wandb
 import random
@@ -34,126 +34,8 @@ def train(args,model, dataset,
     # wandb.watch(model, log="all", log_freq=100)
     model.train()
     print("train")
-    # par = []
-    # par.append({'params': model.Imgmodel.parameters()})
-    # par.append({'params': model.Imgpredictmodel.parameters()})
-    # optimizer = optim.Adam(par, lr = img_lr_supervise, weight_decay = weight_decay)
-    # scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9) 
-    # criterion = torch.nn.BCELoss()
-    # train_img_supervise_loss = []
-    # batch_count = 0
     loss = 0
     cita = 1.003
-    # print("Pretrain img supervise data :")  
-    # for epoch in range(1, img_supervise_epochs + 1):
-    #     loss = 0
-    #     data_loader = DataLoader(dataset = dataset.supervise_(), batch_size = imgbatchsize, shuffle = True, num_workers = 0)
-    #     for batch_index, (x, y) in enumerate(data_loader, 1):
-    #         batch_count += 1
-    #         scheduler.step()
-    #         img_xx = x[0]
-    #         label = y
-    #         img_xx = img_xx.float()
-    #         label = label.float()
-    #         img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)  
-    #         label = Variable(label).cuda() if cuda else Variable(label)  
-    #         imgxx = model.Imgmodel(img_xx)
-    #         imgyy = model.Imgpredictmodel(imgxx)
-    #         if args.use_focal_loss:
-    #             img_supervise_batch_loss = focal_binary_cross_entropy(args,imgyy, label)
-    #         else:
-    #             img_supervise_batch_loss = criterion(imgyy, label)
-    #         loss += img_supervise_batch_loss.data.item()
-    #         optimizer.zero_grad()
-    #         img_supervise_batch_loss.backward()
-    #         optimizer.step()
-    #     print("epoch img loss:",loss/len(data_loader))
-    #     if epoch % 1 == 0:
-    #         filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
-    #         torch.save(model.Imgmodel, savepath + filename + 'pretrainimgfeature.pkl')
-    #         torch.save(model.Imgpredictmodel, savepath + filename + 'pretrainimgpredict.pkl')
-    #         np.save(savepath + filename + "imgsuperviseloss.npy", train_img_supervise_loss)
-    #         acc = Imgtest(model.Imgmodel, model.Imgpredictmodel, dataset.test_(), batchsize = imgbatchsize, cuda = cuda)
-    #         print('Image supervise - acc :', acc)
-    #         print()
-    #         # log_image().info(f'----------Img supervise - Accuracy: {acc} --------------------------')  
-    #         # np.save(savepath + filename + "imgsuperviseacc.npy", [acc])
-    # '''
-    # pretrain TextNet.
-    # ''' 
-    # par = []
-    # par.append({'params': model.Textfeaturemodel.parameters()})
-    # par.append({'params': model.Textpredictmodel.parameters()})
-    # optimizer = optim.Adam(par, lr = text_lr_supervise, weight_decay = weight_decay)
-    # scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9) 
-    # criterion = torch.nn.BCELoss()
-    # train_text_supervise_loss = []
-    # batch_count = 0
-    # if args.use_bert_model:
-    #     if args.freeze_bert_layer_count:
-    #         for _, pp in model.Textfeaturemodel.encoder.named_parameters():
-    #             pp.requires_grad = False
-
-    #     if args.freeze_bert_layer_count >= 0:
-    #         num_hidden_layers = model.Textfeaturemodel.encoder.config.num_hidden_layers
-        
-    #         layer_idx = [num_hidden_layers-1-i for i in range(args.freeze_bert_layer_count)]
-    #         layer_names = ['encoder.layer.{}'.format(j) for j in layer_idx]
-    #         for pn, pp in model.Textfeaturemodel.encoder.named_parameters():
-    #             if any([ln in pn for ln in layer_names]) or 'pooler.' in pn:
-    #                 pp.data = torch.randn(pp.shape)*0.02
-    #                 pp.requires_grad = True
-
-    # print('Pretrain text supervise data:')
-    # for epoch in range(1, text_supervise_epochs + 1):
-    #     loss = 0
-    #     data_loader = DataLoader(dataset = dataset.supervise_(), batch_size = textbatchsize, shuffle = True, num_workers = 0)
-    #     for batch_index, (x, y) in enumerate(data_loader, 1):
-    #         batch_count += 1
-    #         scheduler.step()
-    #         if args.use_bert_model:
-    #             token_xx = x[1]
-    #             attn_mask_xx = x[2]
-    #             token_xx = token_xx.long()
-    #             attn_mask_xx = attn_mask_xx.long()
-    #             token_xx = Variable(token_xx).cuda() if cuda else Variable(token_xx) 
-    #             attn_mask_xx = Variable(attn_mask_xx).cuda() if cuda else Variable(attn_mask_xx) 
-    #         else:
-    #             text_xx = x[1]
-    #             text_xx = text_xx.float()
-    #             text_xx = Variable(text_xx).cuda() if cuda else Variable(text_xx)  
-    #             if args.use_bert_embedding:
-    #                 bert_xx = x[2]
-    #                 bert_xx = bert_xx.float()
-    #                 bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx) 
-    #         label = y
-    #         label = label.float()                 
-    #         label = Variable(label).cuda() if cuda else Variable(label)  
-    #         if args.use_bert_embedding:
-    #             textxx = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
-    #         elif args.use_bert_model:
-    #             textxx = model.Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
-    #         else:
-    #             textxx = model.Textfeaturemodel(x = text_xx)
-    #         textyy = model.Textpredictmodel(textxx)
-    #         if args.use_focal_loss:
-    #             text_supervise_batch_loss = focal_binary_cross_entropy(args,textyy, label)
-    #         else:
-    #             text_supervise_batch_loss = criterion(textyy, label)
-    #         loss += text_supervise_batch_loss.data.item()
-    #         optimizer.zero_grad()
-    #         text_supervise_batch_loss.backward()
-    #         optimizer.step()
-    #     print("epoch txt loss:",loss/len(data_loader))
-    #     if epoch % text_supervise_epochs == 0:
-    #         filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
-    #         torch.save(model.Textfeaturemodel, savepath + filename + 'pretraintextfeature.pkl')
-    #         torch.save(model.Textpredictmodel, savepath + filename + 'pretraintextpredict.pkl')
-    #         np.save(savepath + filename + "textsuperviseloss.npy", train_text_supervise_loss)
-    #         acc = texttest(args,model.Textfeaturemodel,model.Textpredictmodel, dataset.test_(), batchsize = textbatchsize, cuda = cuda)
-    #         print('Text supervise - acc :', acc)
-    #         print()
-    #         # np.save(savepath + filename + "textsuperviseacc.npy", [acc])
 
     optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
     scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9)  
@@ -178,18 +60,8 @@ def train(args,model, dataset,
         num_supervise_sample = 0
         num_unsupervise_sample = 0
 
-        # data_loader = DataLoader(dataset = dataset.unsupervise_(), batch_size = batchsize, shuffle = True, num_workers = 0)
-        # for batch_index, (x, y) in tqdm(enumerate(data_loader, 1)):
 
         num_steps = min(len(dataset['train_sup']), len(dataset['train_unsup']))
-
-        # div_arr = np.zeros(shape=(num_steps))
-        # img_loss_arr = np.zeros(shape=(num_steps))
-        # text_loss_arr = np.zeros(shape=(num_steps))
-        # total_suploss_arr = np.zeros(shape=(num_steps))
-        # total_final_loss_arr = np.zeros(shape=(num_steps))
-
-        # total_dis = np.zeros(shape=(num_steps, 28))
 
         for batch_index, (supbatch, unsupbatch) in tqdm(enumerate(zip(dataset['train_sup'], dataset['train_unsup']), start=1),
                                                 total=min(len(dataset['train_sup']), len(dataset['train_unsup']))):
@@ -204,20 +76,18 @@ def train(args,model, dataset,
             # for single label
 
             scheduler.step()
-            # x[0] = torch.cat(x[0], 0)
-            # x[1] = torch.cat(x[1], 0)
-            # if args.use_bert_embedding:
-            #     x[2] = torch.cat(x[2], 0)
             y = sup_label
             '''
             Attention architecture and use bceloss.
             '''
             supervise_img_xx = sup_img
             supervise_text_xx = sup_text['sentence_vectors']
-            if args.use_bert_embedding:
-                supervise_bert_xx = sup_text['sbert_embedding']
             label = sup_label
 
+            if args.use_bert_embedding:
+                supervise_bert_xx = sup_text['sbert_embedding']
+                supervise_bert_xx = Variable(supervise_bert_xx).cuda() if cuda else Variable(supervise_bert_xx)
+            
             if args.use_bert_model:
                 supervise_input_ids = sup_text['input_ids']
                 supervise_attn_mask = sup_text['attention_mask']
@@ -226,13 +96,15 @@ def train(args,model, dataset,
                 supervise_input_ids = Variable(supervise_input_ids).cuda() if cuda else Variable(supervise_input_ids)
                 supervise_attn_mask = Variable(supervise_attn_mask).cuda() if cuda else Variable(supervise_attn_mask)
 
-
             supervise_img_xx = supervise_img_xx.float()
+            supervise_text_xx = supervise_text_xx.float()            
             label = label.float()
-            supervise_img_xx = Variable(supervise_img_xx).cuda() if cuda else Variable(supervise_img_xx)                  
+            supervise_img_xx = Variable(supervise_img_xx).cuda() if cuda else Variable(supervise_img_xx)  
+            supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
+                
             label = Variable(label).cuda() if cuda else Variable(label)  
-            supervise_imghidden = model.Imgmodel(supervise_img_xx)
             
+            supervise_imghidden = model.Imgmodel(supervise_img_xx)
             if args.use_bert_embedding:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
             elif args.use_bert_model:
@@ -274,39 +146,24 @@ def train(args,model, dataset,
             '''
             Diversity Measure code.
             '''         
-            # similar = torch.bmm(supervise_imgpredict.unsqueeze(1), supervise_textpredict.unsqueeze(2)).view(supervise_imgpredict.size()[0])
-            # norm_matrix_img = torch.norm(supervise_imgpredict, 2, dim = 1)
-            # norm_matrix_text = torch.norm(supervise_textpredict, 2, dim = 1)
-            # div = torch.mean(similar/(norm_matrix_img * norm_matrix_text))
 
-            div = nn.CosineSimilarity(dim=1)(supervise_imgpredict, supervise_textpredict).mean(axis=0)
+            div = diversity_measurement(supervise_imgpredict, supervise_textpredict)
 
             '''
             Diversity Measure code.
             ''' 
-            # print("div: ", div.item(), end='\t')
-            # div_arr[batch_index-1] = div.item()
 
-            if args.use_auto_weight:
-                supervise_loss = 1/(2*model.Predictmodel.sigma[0]**2)*imgloss + 1/(2*model.Predictmodel.sigma[1]**2)*textloss \
-                + 1/(2*model.Predictmodel.sigma[2]**2)*totalloss + torch.log(model.Predictmodel.sigma).sum()
-            else:
-                supervise_loss = imgloss + textloss + 2.0*totalloss
+            # if args.use_auto_weight:
+            #     supervise_loss = 1/(2*model.Predictmodel.sigma[0]**2)*imgloss + 1/(2*model.Predictmodel.sigma[1]**2)*textloss \
+            #     + 1/(2*model.Predictmodel.sigma[2]**2)*totalloss + torch.log(model.Predictmodel.sigma).sum()
+            # else:
+            supervise_loss = imgloss + textloss + 2.0*totalloss
 
             # print('img: ', imgloss.item(), ' text: ', textloss.item(), 'total: ', totalloss.item(), end="\t")
             # img_loss_arr[batch_index-1] = imgloss.item()
             # text_loss_arr[batch_index-1] = textloss.item()
             # total_suploss_arr[batch_index-1] = totalloss.item()
-
-            # can not log by wandb
-            # wandb.log({"supervise_predict":supervise_predict.detach().cpu().numpy(),
-            #             "supervise_imgpredict":supervise_imgpredict.detach().cpu().numpy(),
-            #             "supervise_textpredict":supervise_textpredict.detach().cpu().numpy(),
-            #             "label":label.detach().cpu().numpy()})
             
-            # LOG DATA TO FIX A BUG: /pytorch/aten/src/ATen/native/cuda/Loss.cu:115: operator(): block: [0,0,0], thread: [0,0,0] Assertion `input_val >= zero && input_val <= one` failed.
-
-            #=======================================#
 
             # ================== UNSUPERVISE =================== # 
 
@@ -319,15 +176,8 @@ def train(args,model, dataset,
             unsupervise_text_xx = unsup_text['sentence_vectors']
 
             if args.use_bert_embedding:
-                # x[3] = torch.cat(x[3], 0)
-                # x[4] = torch.cat(x[4], 0)
-                # x[5] = torch.cat(x[5], 0)
                 unsupervise_bert_xx = unsup_text['sbert_embedding']
-            # else:
-            #     x[2] = torch.cat(x[2], 0)
-            #     x[3] = torch.cat(x[3], 0)
-            #     unsupervise_img_xx = x[2]
-            #     unsupervise_text_xx = x[3]
+                unsupervise_bert_xx = Variable(unsupervise_bert_xx).cuda() if cuda else Variable(unsupervise_bert_xx)
             if args.use_bert_model:
                 unsupervise_token_xx = unsup_text['input_ids']
                 unsupervise_attn_mask_xx = unsup_text['attention_mask']
@@ -337,7 +187,9 @@ def train(args,model, dataset,
                 unsupervise_attn_mask_xx = Variable(unsupervise_attn_mask_xx).cuda() if cuda else Variable(unsupervise_attn_mask_xx) 
 
             unsupervise_img_xx = unsupervise_img_xx.float()
+            unsupervise_text_xx = unsupervise_text_xx.float()
             unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)     
+            unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
 
             unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
             if args.use_bert_embedding:
@@ -356,24 +208,8 @@ def train(args,model, dataset,
             '''
             Robust Consistency Measure code.
             '''
-            # unsimilar = torch.bmm(unsupervise_imgpredict.unsqueeze(1), unsupervise_textpredict.unsqueeze(2)).view(unsupervise_imgpredict.size()[0])
-            # unnorm_matrix_img = torch.norm(unsupervise_imgpredict, 2, dim = 1)
-            # unnorm_matrix_text = torch.norm(unsupervise_textpredict, 2, dim = 1)
-            # dis = 2 - unsimilar/(unnorm_matrix_img * unnorm_matrix_text)
-
-            dis = 2 - nn.CosineSimilarity(dim=1)(unsupervise_imgpredict, unsupervise_textpredict)
-
-            # print("dis: ", dis.detach().cpu().numpy())
-
-            # total_dis[batch_index-1] = dis.detach().cpu().numpy()
-            
-
-            tensor1 = dis[torch.abs(dis) < cita]
-            tensor2 = dis[torch.abs(dis) >= cita]
-            tensor1loss = torch.sum(tensor1 * tensor1/2)
-            tensor2loss = torch.sum(cita * (torch.abs(tensor2) - 1/2 * cita))
-
-            unsupervise_loss = (tensor1loss + tensor2loss)/unsupervise_img_xx.size()[0]      
+   
+            unsupervise_loss = consistency_measurement(unsupervise_imgpredict, unsupervise_textpredict, cita=cita)
             '''
             Robust Consistency Measure code.
             '''
@@ -663,8 +499,8 @@ if __name__ == '__main__':
 
     args = get_args()
 
-    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    wandb.init(project="meme_experiments", entity="meme-analysts")
+    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    # wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment
