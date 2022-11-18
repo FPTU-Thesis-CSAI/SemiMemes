@@ -636,8 +636,8 @@ if __name__ == '__main__':
 
     args = get_args()
 
-    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    # wandb.init(project="meme_experiments", entity="meme-analysts")
+    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment
