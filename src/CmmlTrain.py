@@ -213,7 +213,8 @@ def train(args,model, dataset,
             Attention architecture and use bceloss.
             '''
             supervise_img_xx = sup_img
-            supervise_text_xx = sup_text['sentence_vectors']
+            supervise_text_xx = sup_text['sentence_vectors'].float()
+            supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
             if args.use_bert_embedding:
                 supervise_bert_xx = sup_text['sbert_embedding']
             label = sup_label
@@ -316,7 +317,8 @@ def train(args,model, dataset,
 
 
             unsupervise_img_xx = unsup_img
-            unsupervise_text_xx = unsup_text['sentence_vectors']
+            unsupervise_text_xx = unsup_text['sentence_vectors'].float()
+            unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
 
             if args.use_bert_embedding:
                 # x[3] = torch.cat(x[3], 0)
@@ -645,7 +647,8 @@ def train(args,model, dataset,
         wandb.log({"f1_macro_multi_total_test":f1_macro_multi_total})
         wandb.log({"f1_macro_multi_img_test":f1_macro_multi_img})
         wandb.log({"f1_macro_multi_text_test":f1_macro_multi_text})
-
+        
+        print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
 
     return 
 
@@ -663,8 +666,8 @@ if __name__ == '__main__':
 
     args = get_args()
 
-    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    # wandb.init(project="meme_experiments", entity="meme-analysts")
+    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment

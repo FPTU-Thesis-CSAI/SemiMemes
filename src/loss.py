@@ -68,3 +68,12 @@ def focal_binary_cross_entropy(args,p, targets, gamma=2):
     loss = logp*((1-p)**gamma)
     loss = args.num_classes*loss.mean()
     return loss
+
+def zlpr_loss(logits,labels):
+  pos_labels = labels
+  pos_exp_logits = torch.exp(-logits)
+  neg_labels = 1-labels
+  neg_exp_logits = torch.exp(logits)
+  loss = torch.log(1+torch.einsum('bi,bi->b',pos_labels,pos_exp_logits)) 
+  + torch.log(1+torch.einsum('bi,bi->b',neg_labels,neg_exp_logits))
+  return loss.sum()
