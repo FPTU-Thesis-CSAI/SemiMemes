@@ -26,10 +26,10 @@ from utils.npy_save import npy_save_txt
 
 
 def train(args,model, dataset,
-          supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
-          lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
-          weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
-           imgbatchsize = 32, cuda = False, savepath = ''): 
+        supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
+        lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
+        weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
+        imgbatchsize = 32, cuda = False, savepath = ''): 
     
     # wandb.watch(model, log="all", log_freq=100)
     model.train()
@@ -106,11 +106,13 @@ def train(args,model, dataset,
             
             supervise_imghidden = model.Imgmodel(supervise_img_xx)
             if args.use_bert_embedding:
-                supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
+                # supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
+                supervise_texthidden = model.Textfeaturemodel(x = supervise_bert_xx)
             elif args.use_bert_model:
                 supervise_texthidden = model.Textfeaturemodel(input_ids = supervise_input_ids,attn_mask = supervise_attn_mask)
             else:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx)
+                # supervise_texthidden = model.Textfeaturemodel(x=supervise_bert_xx)
             
             if model.Projectormodel != None:
                 vcreg_loss_supervise = model.Projectormodel(supervise_imghidden,supervise_texthidden)
@@ -193,11 +195,13 @@ def train(args,model, dataset,
 
             unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
             if args.use_bert_embedding:
-                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+                # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
             elif args.use_bert_model:
                 unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
             else:
                 unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
+                # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
 
             if model.Projectormodel != None:
                 vcreg_loss_unsupervise = model.Projectormodel(unsupervise_imghidden,unsupervise_texthidden)
@@ -208,7 +212,6 @@ def train(args,model, dataset,
             '''
             Robust Consistency Measure code.
             '''
-   
             unsupervise_loss = consistency_measurement(unsupervise_imgpredict, unsupervise_textpredict, cita=cita)
             '''
             Robust Consistency Measure code.
@@ -257,17 +260,27 @@ def train(args,model, dataset,
         
 
         #===================== Multilabel =================#
-        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, total_predict, truth, f1_skl1,
-        f1_skl2, f1_skl3, f1_pm1, f1_pm2, f1_pm3,
-        auc_pm1,auc_pm2,auc_pm3, acc1, acc2, acc3, 
-        coverage1, coverage2, coverage3, example_auc1,
-        example_auc2, example_auc3, macro_auc1, macro_auc2,
-        macro_auc3, micro_auc1, micro_auc2, micro_auc3,
-        ranking_loss1, ranking_loss2, ranking_loss3,
-        humour,sarcasm,offensive,motivational,humour_truth,
-        sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
+        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, 
+        f1_weighted_multi_total, f1_weighted_multi_img, f1_weighted_multi_text,
+        total_predict, truth, 
+        f1_skl1, f1_skl2, f1_skl3, 
+        f1_pm1, f1_pm2, f1_pm3, 
+        auc_pm_total, auc_pm_img, auc_pm_text, 
+        average_precison1, average_precison2, average_precison3, 
+        coverage1, coverage2, coverage3, 
+        example_auc1, example_auc2, example_auc3, 
+        macro_auc1, macro_auc2, macro_auc3, 
+        micro_auc1, micro_auc2, micro_auc3, 
+        ranking_loss1, ranking_loss2, ranking_loss3, 
+        humour,sarcasm,offensive,motivational,
+        humour_truth,sarcasm_truth,offensive_truth,motivational_truth,
+        ) = test_multilabel(args,model.Textfeaturemodel,
         model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
         model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
+
+        # result = test_multilabel(args,model.Textfeaturemodel,
+        # model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
+        # model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
         
         # total_step = len(data_loader)
         total_step = num_steps
@@ -315,6 +328,7 @@ def train(args,model, dataset,
             if args.use_sim_loss:
                 print("epoch_i_supervise_loss_train:",epoch_i_supervise_loss_train,
                 "\t epoch_i_unsupervise_loss_train:",epoch_i_unsupervise_loss_train)
+                
         print("f1_macro_multi_1:",f1_macro_multi_total,
         "\t f1_macro_multi_2",f1_macro_multi_img,
         "\t f1_macro_multi_3:",f1_macro_multi_text)
@@ -323,6 +337,10 @@ def train(args,model, dataset,
         wandb.log({"f1_macro_multi_total":f1_macro_multi_total})
         wandb.log({"f1_macro_multi_img":f1_macro_multi_img})
         wandb.log({"f1_macro_multi_text":f1_macro_multi_text})
+        
+        wandb.log({"f1_weighted_multi_total":f1_weighted_multi_total})
+        wandb.log({"f1_weighted_multi_img":f1_weighted_multi_img})
+        wandb.log({"f1_weighted_multi_text":f1_weighted_multi_text})
         
         print(f"[F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
 
@@ -395,7 +413,7 @@ def train(args,model, dataset,
         # print('f1_skl:    ', f1_skl1,'\t', f1_skl2,'\t', f1_skl3)
         # print('f1_pm:    ', f1_pm1,'\t', f1_pm2,'\t', f1_pm3)
         # print('coverage:    ', coverage1,'\t', coverage2,'\t', coverage3)
-        print('rocauc_pm:    ', auc_pm1,'\t', auc_pm2,'\t', auc_pm3)
+        print('rocauc_pm: \t', auc_pm_total,'\t', auc_pm_img,'\t', auc_pm_text)
         # print('example_auc: ',  example_auc1,'\t', example_auc2,'\t', example_auc3)
         # print('macro_auc:   ',  macro_auc1,'\t', macro_auc2,'\t', macro_auc3)
         # print('micro_auc:   ',  micro_auc1,'\t', micro_auc2,'\t', micro_auc3)
@@ -466,22 +484,35 @@ def train(args,model, dataset,
         # #np.save(savepath + filename + "superviseacc.npy", [acc1, acc2, acc3])
 
         # ============================= TEST ======================= #
-        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, total_predict, truth, f1_skl1,
-        f1_skl2, f1_skl3, f1_pm1, f1_pm2, f1_pm3,
-        auc_pm1,auc_pm2,auc_pm3, acc1, acc2, acc3, 
-        coverage1, coverage2, coverage3, example_auc1,
-        example_auc2, example_auc3, macro_auc1, macro_auc2,
-        macro_auc3, micro_auc1, micro_auc2, micro_auc3,
-        ranking_loss1, ranking_loss2, ranking_loss3,
-        humour,sarcasm,offensive,motivational,humour_truth,
-        sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
+        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, 
+        f1_weighted_multi_total, f1_weighted_multi_img, f1_weighted_multi_text,
+        total_predict, truth, 
+        f1_skl1, f1_skl2, f1_skl3, 
+        f1_pm1, f1_pm2, f1_pm3, 
+        auc_pm_total, auc_pm_img, auc_pm_text, 
+        average_precison1, average_precison2, average_precison3, 
+        coverage1, coverage2, coverage3, 
+        example_auc1, example_auc2, example_auc3, 
+        macro_auc1, macro_auc2, macro_auc3, 
+        micro_auc1, micro_auc2, micro_auc3, 
+        ranking_loss1, ranking_loss2, ranking_loss3, 
+        humour,sarcasm,offensive,motivational,
+        humour_truth,sarcasm_truth,offensive_truth,motivational_truth,
+        ) = test_multilabel(args,model.Textfeaturemodel,
         model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
         model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
+        
+        # result_test = test_multilabel(args,model.Textfeaturemodel,
+        # model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
+        # model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
 
         wandb.log({"f1_macro_multi_total_test":f1_macro_multi_total})
         wandb.log({"f1_macro_multi_img_test":f1_macro_multi_img})
         wandb.log({"f1_macro_multi_text_test":f1_macro_multi_text})
-
+        
+        wandb.log({"f1_weighted_multi_total_test":f1_weighted_multi_total})
+        wandb.log({"f1_weighted_multi_img_test":f1_weighted_multi_img})
+        wandb.log({"f1_weighted_multi_text_test":f1_weighted_multi_text})
 
     return 
 
@@ -499,8 +530,9 @@ if __name__ == '__main__':
 
     args = get_args()
 
-    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    # wandb.init(project="meme_experiments", entity="meme-analysts")
+    wandb.login(key = 'd87822d5fa951a22676b0985f891c9021b875ae3')
+    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment

@@ -71,11 +71,13 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
         imghidden = Imgmodel(img_xx)
 
         if args.use_bert_embedding:
-            texthidden = Textfeaturemodel(x = text_xx, bert_emb = bert_xx)
+            # texthidden = Textfeaturemodel(x = text_xx, bert_emb = bert_xx)
+            texthidden = Textfeaturemodel(x = bert_xx)
         elif args.use_bert_model:
             texthidden = Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
         else:
             texthidden = Textfeaturemodel(x = text_xx)
+            # texthidden = Textfeaturemodel(x=bert_xx)
 
         imgk = Attentionmodel(imghidden)
         textk = Attentionmodel(texthidden)
@@ -125,10 +127,28 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     for i in range(1, len(truth)):
         temp = np.vstack((temp, truth[i]))
     truth = temp
+    
+    result = {}
 
-    f1_macro_multi_1 = macro_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
-    f1_macro_multi_2 = macro_f1_multilabel(img_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
-    f1_macro_multi_3 = macro_f1_multilabel(text_predict, truth,  num_labels=4, threshold = 0.5, reduce = True)
+    f1_macro_multi_total = macro_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
+    f1_macro_multi_img = macro_f1_multilabel(img_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
+    f1_macro_multi_text = macro_f1_multilabel(text_predict, truth,  num_labels=4, threshold = 0.5, reduce = True)
+
+    # result.update({
+    #     'f1_macro_multi_total': f1_macro_multi_total,
+    #     'f1_macro_multi_img': f1_macro_multi_img,
+    #     'f1_macro_multi_text': f1_macro_multi_text
+    # })
+
+    f1_weighted_multi_total = weighted_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5)
+    f1_weighted_multi_img = weighted_f1_multilabel(img_predict, truth, num_labels=4, threshold = 0.5)
+    f1_weighted_multi_text = weighted_f1_multilabel(text_predict, truth,  num_labels=4, threshold = 0.5)
+
+    # result.update({
+    #     'f1_weighted_multi_total': f1_weighted_multi_total,
+    #     'f1_weighted_multi_img': f1_weighted_multi_img,
+    #     'f1_weighted_multi_text': f1_weighted_multi_text
+    # })
 
     f1_skl1 = f1_score_sklearn(total_predict, truth)
     f1_skl2 = f1_score_sklearn(img_predict, truth)
@@ -138,9 +158,15 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     f1_pm2 = f1_score_pytorch(img_predict, truth)
     f1_pm3 = f1_score_pytorch(text_predict, truth)
 
-    auc_pm1 = auroc_score_pytorch(total_predict, truth)
-    auc_pm2 = auroc_score_pytorch(img_predict, truth)
-    auc_pm3 = auroc_score_pytorch(text_predict, truth)
+    auc_pm_total = auroc_score_pytorch(total_predict, truth)
+    auc_pm_img = auroc_score_pytorch(img_predict, truth)
+    auc_pm_text = auroc_score_pytorch(text_predict, truth)
+
+    # result.update({
+    #     'auc_pm_total': auc_pm_total,
+    #     'auc_pm_img': auc_pm_img,
+    #     'auc_pm_text': auc_pm_text
+    # })
 
     average_precison1 = average_precision(total_predict, truth)
     average_precison2 = average_precision(img_predict, truth)
@@ -176,14 +202,42 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     offensive_truth = np.histogram(truth[:,2])
     motivational_truth = np.histogram(truth[:,3])
 
-    return (f1_macro_multi_1, f1_macro_multi_2, f1_macro_multi_3, 
-    total_predict, truth, f1_skl1, f1_skl2, f1_skl3, f1_pm1, f1_pm2, 
-    f1_pm3, auc_pm1, auc_pm2, auc_pm3, average_precison1, average_precison2, 
-    average_precison3, coverage1, coverage2, coverage3, example_auc1, 
-    example_auc2, example_auc3, macro_auc1, macro_auc2, macro_auc3, 
-    micro_auc1, micro_auc2, micro_auc3, ranking_loss1, ranking_loss2, 
-    ranking_loss3, humour,sarcasm,offensive,motivational,humour_truth,
-    sarcasm_truth,offensive_truth,motivational_truth)
+    # result.update({
+    #     'hist_pred_1st' : humour,
+    #     'hist_pred_2nd' : sarcasm,
+    #     'hist_pred_3rd' : offensive,
+    #     'hist_pred_4th' : motivational
+    # })
+
+    # result.update({
+    #     'hist_truth_1st' : humour_truth,
+    #     'hist_truth_2nd' : sarcasm_truth,
+    #     'hist_truth_3rd' : offensive_truth,
+    #     'hist_truth_4th' : motivational_truth
+    # })
+
+    # result.update({
+    #     'truth': truth,
+    #     'pred': total_predict
+    # })
+
+    return (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, 
+            f1_weighted_multi_total, f1_weighted_multi_img, f1_weighted_multi_text,
+            total_predict, truth, 
+            f1_skl1, f1_skl2, f1_skl3, 
+            f1_pm1, f1_pm2, f1_pm3, 
+            auc_pm_total, auc_pm_img, auc_pm_text, 
+            average_precison1, average_precison2, average_precison3, 
+            coverage1, coverage2, coverage3, 
+            example_auc1, example_auc2, example_auc3, 
+            macro_auc1, macro_auc2, macro_auc3, 
+            micro_auc1, micro_auc2, micro_auc3, 
+            ranking_loss1, ranking_loss2, ranking_loss3, 
+            humour,sarcasm,offensive,motivational,
+            humour_truth,sarcasm_truth,offensive_truth,motivational_truth,
+            )
+
+    # return result
 
 def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
     if cuda:

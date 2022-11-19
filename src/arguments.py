@@ -3,8 +3,8 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='baseline_cmml_mami', type=str,
-                     help="Optional Name of Experiment (used by tensorboard)")
+    parser.add_argument('--experiment', default='sbert_n_augment', type=str,
+                        help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
                     help='path to dataset')
@@ -43,7 +43,7 @@ def get_args():
 
     parser.add_argument('-j', '--workers', default=20, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
-    parser.add_argument('--epochs', default=200, type=int, metavar='N',
+    parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
     parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N',
@@ -141,7 +141,7 @@ def get_args():
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")
-    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 128',
+    parser.add_argument('--Textfeaturepara', type = str, default = '384, 384, 128',
     help="architecture of text feature network")
     parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
