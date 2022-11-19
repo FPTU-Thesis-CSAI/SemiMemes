@@ -1,4 +1,5 @@
 import pandas as pd
+import torch 
 
 def stratified_sample_df(df, col, n_samples):
     n = min(n_samples, df[col].value_counts().min())

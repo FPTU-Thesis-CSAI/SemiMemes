@@ -5,15 +5,23 @@ import warnings
 import torch.nn.functional as F 
 from transformers import RobertaModel, DistilBertModel
 
+
 warnings.filterwarnings("ignore", category=UserWarning) 
 
 class TextfeatureNet(nn.Module):
     
-    def __init__(self, args, neure_num):
+    def __init__(self, args, neure_num,clip_model=None,clip_dim=None):
         super(TextfeatureNet, self).__init__()
         self.args = args  
-        if self.args.use_bert_model:
-            self.encoder = DistilBertModel.from_pretrained(args.pretrain_bert_model)
+        if self.args.use_clip:
+            self.clip_model = clip_model
+            self.linear = make_layers([clip_dim,neure_num[-1]])
+            # self.bigru = nn.LSTM(clip_dim,neure_num[-1], 1, bidirectional=False, batch_first=True, bias=False)
+        elif self.args.use_bert_model:
+            if args.pretrain_bert_model == "distilbert-base-uncased":
+                self.encoder = DistilBertModel.from_pretrained(args.pretrain_bert_model)
+            if args.pretrain_bert_model == "roberta-base":
+                self.encoder = RobertaModel.from_pretrained(args.pretrain_bert_model)
             self.linear = make_layers([768,neure_num[-1]])
             self.target_token_idx = 0
         else:
@@ -21,8 +29,13 @@ class TextfeatureNet(nn.Module):
             self.feature = nn.Linear(neure_num[-2], neure_num[-1])
             if args.add_block_linear_bert_embed:
                 self.linear = make_layers([384,neure_num[-2]])
-    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None):
-        if self.args.use_bert_model:
+
+    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None):
+        if self.args.use_clip:
+            with torch.no_grad():
+                feats = self.clip_model.encode_text(clip_input_ids)
+            x = self.linear(feats)
+        elif self.args.use_bert_model:
             output = self.encoder(input_ids,attn_mask)
             last_hidden_state = output.last_hidden_state
             x = last_hidden_state[:, self.target_token_idx, :]
@@ -44,23 +57,23 @@ class PredictNet(nn.Module):
         self.mlp = make_predict_layers(neure_num)
         # print("---------mlp----------",self.mlp)
         
-        if use_softmax:
-            self.softmax = torch.nn.Softmax()
-            self.sigmoid = None
-        else:
-            self.softmax = None
-            self.sigmoid = torch.nn.Sigmoid()
+        # if use_softmax:
+        #     self.softmax = torch.nn.Softmax()
+        #     self.sigmoid = None
+        # else:
+        #     self.softmax = None
+        #     self.sigmoid = torch.nn.Sigmoid()
 
 
         #print("------------sigmoid-------------",self.sigmoid)
-        self.sigma = nn.Parameter(torch.FloatTensor([1.,1.,1./2]))
+        # self.sigma = nn.Parameter(torch.FloatTensor([1.,1.,1./2]))
 
     def forward(self, x):
         y = self.mlp(x)
-        if not self.sigmoid is None:
-            y = self.sigmoid(y)
-        else:
-            y = self.softmax(y)
+        # if not self.sigmoid is None:
+        #     y = self.sigmoid(y)
+        # else:
+        #     y = self.softmax(y)
         #print("---------y------------", y)
         #print("--------------------")
         return y
@@ -77,29 +90,40 @@ class AttentionNet(nn.Module):
         return y
 
 class ImgNet(nn.Module):
-    def __init__(self,args):
+    def __init__(self,args,clip_model=None,clip_dim=None):
         super(ImgNet, self).__init__()
-        if args.resnet_model == 'resnet50':
-            self.feature = Models.resnet50('ResNet50_Weights.DEFAULT')
+        if args.use_clip:
+            self.clip_model = clip_model
             self.fc1 = nn.Sequential(       
-            nn.Linear(2048, args.output_backbone_dim)
+            nn.Linear(clip_dim, args.output_backbone_dim)
             )
-        elif args.resnet_model == 'resnet18':
-            self.feature = Models.resnet18('ResNet18_Weights.DEFAULT')
-            self.fc1 = nn.Sequential(       
-            nn.Linear(512, args.output_backbone_dim)
-            )
-        self.feature = nn.Sequential(*list(self.feature.children())[:-1])
+        else:
+            if args.resnet_model == 'resnet50':
+                self.feature = Models.resnet50('ResNet50_Weights.DEFAULT')
+                self.fc1 = nn.Sequential(       
+                nn.Linear(2048, args.output_backbone_dim)
+                )
+            elif args.resnet_model == 'resnet18':
+                self.feature = Models.resnet18('ResNet18_Weights.DEFAULT')
+                self.fc1 = nn.Sequential(       
+                nn.Linear(512, args.output_backbone_dim)
+                )
+            self.feature = nn.Sequential(*list(self.feature.children())[:-1])
         self.args = args 
 
     def forward(self, x):
-        N = x.size()[0]
-        x = self.feature(x.view(N, 3, 256, 256))
-        if self.args.resnet_model == 'resnet18':
-            x = x.view(N, 512)
-        elif self.args.resnet_model == 'resnet50':
-            x = x.view(N, 2048)
-        x = self.fc1(x)
+        if self.args.use_clip:
+            with torch.no_grad():
+                x = self.clip_model.encode_image(x)
+            x = self.fc1(x)
+        else:
+            N = x.size()[0]
+            x = self.feature(x.view(N, 3, 256, 256))
+            if self.args.resnet_model == 'resnet18':
+                x = x.view(N, 512)
+            elif self.args.resnet_model == 'resnet50':
+                x = x.view(N, 2048)
+            x = self.fc1(x)
         return x
 
 def make_layers(cfg):
@@ -180,7 +204,7 @@ class VICReg(nn.Module):
         return loss
 
 class CmmlModel(nn.Module):
-    def __init__(self,args):
+    def __init__(self,args,clip_model=None,cdim=None):
         super(CmmlModel, self).__init__()
         self.args = args 
         param = args.Textfeaturepara.split(',')
@@ -193,13 +217,16 @@ class CmmlModel(nn.Module):
         self.Textpredictparam = list(map(int, param))
         param = args.Attentionparameter.split(',')
         self.Attentionparam = list(map(int, param))
+        self.clip_model = clip_model
+        self.cdim = cdim 
         self.generate_model()
     def generate_model(self):
-        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam)
+        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,
+            clip_model=self.clip_model,clip_dim=self.cdim)
         self.Imgpredictmodel = PredictNet(self.Imgpredictparam)
         self.Textpredictmodel = PredictNet(self.Textpredictparam)
         self.Predictmodel = PredictNet(self.Predictparam)
-        self.Imgmodel = ImgNet(self.args)
+        self.Imgmodel = ImgNet(self.args,clip_model=self.clip_model,clip_dim=self.cdim)
         self.Attentionmodel = AttentionNet(self.Attentionparam)
         if self.args.use_vcreg_loss:
             self.Projectormodel = VICReg(self.args)

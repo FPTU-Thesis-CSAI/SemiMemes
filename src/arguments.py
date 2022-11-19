@@ -3,8 +3,10 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='augment_n_sbert', type=str,
+    parser.add_argument('--experiment', default='clip', type=str,
                      help="Optional Name of Experiment (used by tensorboard)")
+
+
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
                     help='path to dataset')
@@ -43,7 +45,7 @@ def get_args():
 
     parser.add_argument('-j', '--workers', default=20, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
-    parser.add_argument('--epochs', default=200, type=int, metavar='N',
+    parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
     parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N',
@@ -103,15 +105,44 @@ def get_args():
     #experiment ideas
     parser.add_argument('--use-bert-embedding',action='store_true',default=False)
     parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
-    parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
-    parser.add_argument('--use-sim-loss',action='store_true',default=False)
+    parser.add_argument("--use-eman", type = bool, default=False,help='')
+    parser.add_argument("--use-clip", type = bool, default=True,help='')
+    parser.add_argument("--vmodel", type = str, default='vit14',help='')
+
+    parser.add_argument('--use-vcreg-loss',action='store_true',default=True)
+    parser.add_argument('--use-sim-loss',action='store_true',default=True)
+    parser.add_argument('--use-vicreg-in-training',action='store_true',default=True)
+    parser.add_argument('--use-vicreg-pretrain',action='store_true',default=False)
+
+    parser.add_argument('--use-amp',action='store_true',default=True)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
-    parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
-    parser.add_argument("--use_augmentation", action='store_true', default=False,help='')
-    parser.add_argument("--mlp-expand-dim", default="768",help='Size and number of layers of the MLP expander head')
+    parser.add_argument("--use_augmentation", action='store_true', default=True,help='')
+    parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
+
+    parser.add_argument("--use-zlpr-loss", type = bool, default=False,help='')
+    parser.add_argument("--use-asymmetric-loss", type = bool, default=False,help='')
+    parser.add_argument("--use-bce-loss", type = bool, default=False,help='')
+    parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
+
+    parser.add_argument("--use-resample-loss", type = bool, default=True,help='')
+    parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
+    parser.add_argument("--reduction", type = str, default='mean',help='')
+    parser.add_argument("--loss-weight", type = float, default=1.0,help='')
+    parser.add_argument("--focal", type = bool, default=True,help='')
+    parser.add_argument("--balance-param", type = float, default=2.0,help='')
+    parser.add_argument("--gamma", type = int, default=2,help='')
+    parser.add_argument("--neg-scale", type = float, default=5.0,help='')
+    parser.add_argument("--init-bias", type = float, default=0.1,help='')
+    parser.add_argument("--alpha", type = float, default=10.0,help='')
+    parser.add_argument("--beta", type = float, default=0.2,help='')
+    parser.add_argument("--map-param-gamma", type = float, default=0.1,help='')
+    parser.add_argument("--reweight-func", type = str, default='rebalance',help='')
+    parser.add_argument("--freq-file", type = str, default='/home/fptu/viet/SSLMemes/data/class_freq.pkl',help='')
+    parser.add_argument("--use-sentence-vectorizer", type = bool, default=False,help='')
+    ####
     ####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')

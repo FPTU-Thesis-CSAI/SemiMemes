@@ -3,6 +3,7 @@ import os
 import torch 
 from data.dataClass import MemotionDatasetForCmml
 from model.CmmlLayer import CmmlModel
+from model.eman import EMAN 
 import torch.optim as optim 
 from torch.optim.lr_scheduler import StepLR
 from torch.autograd import Variable
@@ -11,25 +12,27 @@ import datetime
 import numpy as np  
 from test import test_multilabel
 from tqdm import tqdm
-from loss import focal_binary_cross_entropy 
+from loss import focal_binary_cross_entropy,zlpr_loss,AsymmetricLoss,ResampleLoss 
 import torch.nn as nn
 import wandb
 import random
 from matplotlib import pyplot as plt
 import torch.nn as nn
-
 from utils.plot_utils import get_confusion_matrix
+from torch.cuda.amp import autocast, GradScaler
+import clip
+from model.clip_info import clip_nms,clip_dim
 
-# from test import test_singlelabel, test
+# from test import test_singlelabel, e
 from data.semi_supervised_data import *
 from utils.npy_save import npy_save_txt
 
 
 def train(args,model, dataset,
-          supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
-          lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
-          weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
-           imgbatchsize = 32, cuda = False, savepath = ''): 
+        supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
+        lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
+        weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
+        imgbatchsize = 32, cuda = False, savepath = '',eman=None): 
     
     # wandb.watch(model, log="all", log_freq=100)
     model.train()
@@ -154,12 +157,109 @@ def train(args,model, dataset,
     #         print('Text supervise - acc :', acc)
     #         print()
     #         # np.save(savepath + filename + "textsuperviseacc.npy", [acc])
+    if args.use_vicreg_pretrain:
+        optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
+        scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9)  
+        pretrain_epoch = supervise_epochs 
+        for epoch in range(1, pretrain_epoch + 1):
+            total_loss = 0
+            num_steps = min(len(dataset['train_sup']), len(dataset['train_unsup']))
+            for batch_index, (supbatch, unsupbatch) in tqdm(enumerate(zip(dataset['train_sup'], dataset['train_unsup']), start=1),
+                                                    total=min(len(dataset['train_sup']), len(dataset['train_unsup']))):
+                (sup_img, sup_text), sup_label = supbatch
+                (unsup_img, unsup_text) = unsupbatch   
+                scheduler.step()
+                supervise_img_xx = sup_img
+                if args.use_sentence_vectorizer:
+                    supervise_text_xx = sup_text['sentence_vectors'].float()
+                    supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
+                if args.use_bert_embedding:
+                    supervise_bert_xx = sup_text['sbert_embedding']
+                label = sup_label
+
+                if args.use_bert_model:
+                    supervise_input_ids = sup_text['input_ids']
+                    supervise_attn_mask = sup_text['attention_mask']
+                    supervise_input_ids = supervise_input_ids.long()
+                    supervise_attn_mask = supervise_attn_mask.long()
+                    supervise_input_ids = Variable(supervise_input_ids).cuda() if cuda else Variable(supervise_input_ids)
+                    supervise_attn_mask = Variable(supervise_attn_mask).cuda() if cuda else Variable(supervise_attn_mask)
+
+                if args.use_clip:
+                    supervise_clip_ids = sup_text['clip_tokens']
+                    supervise_clip_ids = Variable(supervise_clip_ids).cuda() if cuda else Variable(supervise_clip_ids)    
+                
+                supervise_img_xx = supervise_img_xx.float()
+                label = label.float()
+                supervise_img_xx = Variable(supervise_img_xx).cuda() if cuda else Variable(supervise_img_xx)                  
+                label = Variable(label).cuda() if cuda else Variable(label)  
+                supervise_imghidden = model.Imgmodel(supervise_img_xx)
+                
+                if args.use_clip:
+                    supervise_texthidden = model.Textfeaturemodel(clip_input_ids = supervise_clip_ids)
+                elif args.use_bert_embedding:
+                    supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
+                elif args.use_bert_model:
+                    supervise_texthidden = model.Textfeaturemodel(input_ids = supervise_input_ids,attn_mask = supervise_attn_mask)
+                else:
+                    supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx)
+                
+                vcreg_loss_supervise = model.Projectormodel(supervise_imghidden,supervise_texthidden)
+
+                unsupervise_img_xx = unsup_img
+                if args.use_clip:
+                    unsupervise_clip_ids = unsup_text['clip_tokens']
+                    unsupervise_clip_ids = Variable(unsupervise_clip_ids).cuda() if cuda else Variable(unsupervise_clip_ids)    
+
+                if args.use_sentence_vectorizer:
+                    unsupervise_text_xx = unsup_text['sentence_vectors'].float()
+                    unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
+
+                if args.use_bert_embedding:
+                    unsupervise_bert_xx = unsup_text['sbert_embedding']
+
+                if args.use_bert_model:
+                    unsupervise_token_xx = unsup_text['input_ids']
+                    unsupervise_attn_mask_xx = unsup_text['attention_mask']
+                    unsupervise_token_xx = unsupervise_token_xx.long()
+                    unsupervise_attn_mask_xx = unsupervise_attn_mask_xx.long()
+                    unsupervise_token_xx = Variable(unsupervise_token_xx).cuda() if cuda else Variable(unsupervise_token_xx) 
+                    unsupervise_attn_mask_xx = Variable(unsupervise_attn_mask_xx).cuda() if cuda else Variable(unsupervise_attn_mask_xx) 
+
+                unsupervise_img_xx = unsupervise_img_xx.float()
+                unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)     
+
+                unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
+                if args.use_clip:
+                    unsupervise_texthidden = model.Textfeaturemodel(clip_input_ids = unsupervise_clip_ids)
+                elif args.use_bert_embedding:
+                    unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+                elif args.use_bert_model:
+                    unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
+                else:
+                    unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
+                vcreg_loss_unsupervise = model.Projectormodel(unsupervise_imghidden,unsupervise_texthidden)
+                loss = sum(vcreg_loss_supervise)+sum(vcreg_loss_unsupervise)
+                total_loss += loss.item()
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+            print("average pretrain loss epoch:",total_loss/num_steps)
 
     optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
     scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9)  
-    criterion = torch.nn.BCELoss()
+    if args.use_bce_loss:
+        criterion = torch.nn.BCELoss()
+    elif args.use_focal_loss:
+        criterion = partial(focal_binary_cross_entropy,args)
+    elif args.use_zlpr_loss:
+        criterion = zlpr_loss
+    elif args.use_asymmetric_loss:
+        criterion = AsymmetricLoss(gamma_neg=4, gamma_pos=0, clip=0.05, disable_torch_grad_focal_loss=True)
+    elif args.use_resample_loss:
+        criterion = ResampleLoss(args)
     # criterion = torch.nn.CrossEntropyLoss()
-
+    sigmoid = torch.nn.Sigmoid()
     for epoch in range(1, supervise_epochs + 1):
         print('train multimodal data:', epoch)
         epoch_supervise_loss_train = 0
@@ -213,8 +313,9 @@ def train(args,model, dataset,
             Attention architecture and use bceloss.
             '''
             supervise_img_xx = sup_img
-            supervise_text_xx = sup_text['sentence_vectors'].float()
-            supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
+            if args.use_sentence_vectorizer:
+                supervise_text_xx = sup_text['sentence_vectors'].float()
+                supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
             if args.use_bert_embedding:
                 supervise_bert_xx = sup_text['sbert_embedding']
             label = sup_label
@@ -227,6 +328,9 @@ def train(args,model, dataset,
                 supervise_input_ids = Variable(supervise_input_ids).cuda() if cuda else Variable(supervise_input_ids)
                 supervise_attn_mask = Variable(supervise_attn_mask).cuda() if cuda else Variable(supervise_attn_mask)
 
+            if args.use_clip:
+                supervise_clip_ids = sup_text['clip_tokens']
+                supervise_clip_ids = Variable(supervise_clip_ids).cuda() if cuda else Variable(supervise_clip_ids)    
 
             supervise_img_xx = supervise_img_xx.float()
             label = label.float()
@@ -234,14 +338,16 @@ def train(args,model, dataset,
             label = Variable(label).cuda() if cuda else Variable(label)  
             supervise_imghidden = model.Imgmodel(supervise_img_xx)
             
-            if args.use_bert_embedding:
+            if args.use_clip:
+                supervise_texthidden = model.Textfeaturemodel(clip_input_ids = supervise_clip_ids)
+            elif args.use_bert_embedding:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
             elif args.use_bert_model:
                 supervise_texthidden = model.Textfeaturemodel(input_ids = supervise_input_ids,attn_mask = supervise_attn_mask)
             else:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx)
             
-            if model.Projectormodel != None:
+            if args.use_vicreg_in_training:
                 vcreg_loss_supervise = model.Projectormodel(supervise_imghidden,supervise_texthidden)
             supervise_imgpredict = model.Imgpredictmodel(supervise_imghidden)
             supervise_textpredict = model.Textpredictmodel(supervise_texthidden)
@@ -263,12 +369,15 @@ def train(args,model, dataset,
                 img_attention = img_attention.cuda()
                 text_attention = text_attention.cuda()
             supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden
-            supervise_predict = model.Predictmodel(supervise_feature_hidden)         
-            if args.use_focal_loss:
-                totalloss = focal_binary_cross_entropy(args,supervise_predict, label)
-                imgloss = focal_binary_cross_entropy(args,supervise_imgpredict, label)
-                textloss = focal_binary_cross_entropy(args,supervise_textpredict, label)
-            else:
+            supervise_predict = model.Predictmodel(supervise_feature_hidden)       
+            if args.use_focal_loss or  args.use_bce_loss:
+                supervise_textpredict = sigmoid(supervise_textpredict)
+                supervise_imgpredict = sigmoid(supervise_imgpredict)
+                supervise_predict = sigmoid(supervise_predict)
+                totalloss = criterion(supervise_predict, label)
+                imgloss = criterion(supervise_imgpredict, label)
+                textloss = criterion(supervise_textpredict, label)
+            elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
                 totalloss = criterion(supervise_predict, label)
                 imgloss = criterion(supervise_imgpredict, label)
                 textloss = criterion(supervise_textpredict, label)
@@ -317,8 +426,9 @@ def train(args,model, dataset,
 
 
             unsupervise_img_xx = unsup_img
-            unsupervise_text_xx = unsup_text['sentence_vectors'].float()
-            unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
+            if args.use_sentence_vectorizer:
+                unsupervise_text_xx = unsup_text['sentence_vectors'].float()
+                unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
 
             if args.use_bert_embedding:
                 # x[3] = torch.cat(x[3], 0)
@@ -337,23 +447,29 @@ def train(args,model, dataset,
                 unsupervise_attn_mask_xx = unsupervise_attn_mask_xx.long()
                 unsupervise_token_xx = Variable(unsupervise_token_xx).cuda() if cuda else Variable(unsupervise_token_xx) 
                 unsupervise_attn_mask_xx = Variable(unsupervise_attn_mask_xx).cuda() if cuda else Variable(unsupervise_attn_mask_xx) 
+                
+            if args.use_clip:
+                unsupervise_clip_ids = unsup_text['clip_tokens']
+                unsupervise_clip_ids = Variable(unsupervise_clip_ids).cuda() if cuda else Variable(unsupervise_clip_ids)    
 
             unsupervise_img_xx = unsupervise_img_xx.float()
             unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)     
 
             unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
-            if args.use_bert_embedding:
+            if args.use_clip:
+                unsupervise_texthidden = model.Textfeaturemodel(clip_input_ids = unsupervise_clip_ids)
+            elif args.use_bert_embedding:
                 unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
             elif args.use_bert_model:
                 unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
             else:
                 unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
 
-            if model.Projectormodel != None:
+            if  args.use_vicreg_in_training:
                 vcreg_loss_unsupervise = model.Projectormodel(unsupervise_imghidden,unsupervise_texthidden)
 
-            unsupervise_imgpredict = model.Imgpredictmodel(unsupervise_imghidden)
-            unsupervise_textpredict = model.Textpredictmodel(unsupervise_texthidden)
+            unsupervise_imgpredict = sigmoid(model.Imgpredictmodel(unsupervise_imghidden))
+            unsupervise_textpredict = sigmoid(model.Textpredictmodel(unsupervise_texthidden))
 
             '''
             Robust Consistency Measure code.
@@ -382,7 +498,7 @@ def train(args,model, dataset,
 
             # print("unsup loss: ", unsupervise_loss.item())
 
-            if model.Projectormodel != None:
+            if args.use_vicreg_in_training:
                 total_loss = supervise_loss + 0.01* div +  unsupervise_loss + sum(vcreg_loss_unsupervise) + sum(vcreg_loss_supervise)
                 if args.use_sim_loss:
                     epoch_v_supervise_loss_train += vcreg_loss_supervise[0].item()
@@ -412,6 +528,8 @@ def train(args,model, dataset,
             optimizer.zero_grad()
             total_loss.backward()
             optimizer.step()
+            if args.use_eman:
+                eman.update(model)
         
         if epoch % 10 == 0:
             filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
@@ -649,7 +767,36 @@ def train(args,model, dataset,
         wandb.log({"f1_macro_multi_text_test":f1_macro_multi_text})
         
         print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
+        
+        #=====================EMAN Multilabel =================#
+        if args.use_eman:
+            (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, total_predict, truth, f1_skl1,
+            f1_skl2, f1_skl3, f1_pm1, f1_pm2, f1_pm3,
+            auc_pm1,auc_pm2,auc_pm3, acc1, acc2, acc3, 
+            coverage1, coverage2, coverage3, example_auc1,
+            example_auc2, example_auc3, macro_auc1, macro_auc2,
+            macro_auc3, micro_auc1, micro_auc2, micro_auc3,
+            ranking_loss1, ranking_loss2, ranking_loss3,
+            humour,sarcasm,offensive,motivational,humour_truth,
+            sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,eman.module.Textfeaturemodel,
+            eman.module.Imgpredictmodel, eman.module.Textpredictmodel, eman.module.Imgmodel,
+            eman.module.Predictmodel, eman.module.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
+            
+            print(f"Val [F1 Macro multilabel] Total for EMAN: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
+            
+            (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, total_predict, truth, f1_skl1,
+            f1_skl2, f1_skl3, f1_pm1, f1_pm2, f1_pm3,
+            auc_pm1,auc_pm2,auc_pm3, acc1, acc2, acc3, 
+            coverage1, coverage2, coverage3, example_auc1,
+            example_auc2, example_auc3, macro_auc1, macro_auc2,
+            macro_auc3, micro_auc1, micro_auc2, micro_auc3,
+            ranking_loss1, ranking_loss2, ranking_loss3,
+            humour,sarcasm,offensive,motivational,humour_truth,
+            sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,eman.module.Textfeaturemodel,
+            eman.module.Imgpredictmodel, eman.module.Textpredictmodel, eman.module.Imgmodel,
+            eman.module.Predictmodel, eman.module.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
 
+            print(f"Test [F1 Macro multilabel] Total for EMAN: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
     return 
 
 
@@ -694,19 +841,31 @@ if __name__ == '__main__':
     #                     args.sbertemb_val,
     #                     train = True, 
     #                     supervise = True)
+    input_resolution = None
+    clip_model = None
+    cdim = None
+    if args.use_clip:
+        clip_model, _ = clip.load(clip_nms[args.vmodel],jit=False)
+        clip_model = clip_model.float()
+        input_resolution = clip_model.visual.input_resolution
+        cdim = clip_dim[args.vmodel]
+        clip_model.eval()
 
-    train_supervised_loader, train_unsupervised_loader, val_loader = create_semi_supervised_dataloaders(args, 
-                                            train_img_dir='data/MAMI_processed/images/train',
-                                            train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.3.csv',
-                                            train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
-                                            val_img_dir = 'data/MAMI_processed/images/val',
-                                            val_csv='data/MAMI_processed/val.csv',
-                                            batch_size=args.batchsize, image_size=256)
+    train_supervised_loader, train_unsupervised_loader, val_loader  \
+        = create_semi_supervised_dataloaders(args,
+        train_img_dir='data/MAMI_processed/images/train',
+        train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.3.csv',
+        train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
+        val_img_dir = 'data/MAMI_processed/images/val',
+        val_csv='data/MAMI_processed/val.csv',
+        batch_size=args.batchsize, image_size=256,input_resolution=input_resolution)
     
     test_loader = create_semi_supervised_test_dataloaders(args,
                                                         test_img_dir='data/MAMI_processed/images/test',
                                                         test_csv='data/MAMI_processed/test.csv',
-                                                        batch_size=args.batchsize, image_size=256)
+                                                        batch_size=args.batchsize, 
+                                                        image_size=256,
+                                                        input_resolution=input_resolution)
 
     dataset = {'train_sup': train_supervised_loader,
                 'train_unsup': train_unsupervised_loader,
@@ -714,17 +873,22 @@ if __name__ == '__main__':
                 'test': test_loader}
 
 
-    model = CmmlModel(args)
+    model = CmmlModel(args,clip_model = clip_model,cdim = cdim)
+    eman=None 
+    if args.use_eman:
+        eman = EMAN(model, 0.9997)
 
     if cuda:
         model = model.cuda()
+        if args.use_eman:
+            eman = eman.cuda()
 
     savepath_folder = args.savepath+"/"+args.experiment+"/"
     if not os.path.exists(args.savepath):
         os.mkdir(args.savepath)
     if not os.path.exists(savepath_folder):
         os.mkdir(savepath_folder)
-
+    print(model.eval())
     train_supervise_loss = train(args,model, dataset,supervise_epochs = args.epochs,
                                     text_supervise_epochs = args.text_supervise_epochs, 
                                     img_supervise_epochs = args.img_supervise_epochs,
@@ -736,6 +900,6 @@ if __name__ == '__main__':
                                     textbatchsize = args.textbatchsize,
                                     imgbatchsize = args.imgbatchsize,
                                     cuda = cuda, savepath = savepath_folder,
-                                    lambda1=args.lambda1,lambda2=args.lambda2)
+                                    lambda1=args.lambda1,lambda2=args.lambda2,eman=eman)
 
 
