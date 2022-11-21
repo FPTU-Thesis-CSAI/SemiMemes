@@ -8,6 +8,9 @@ from torchvision.models import resnet50
 from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
 
+# from src.arguments import get_args
+from .attention import *
+
 
 warnings.filterwarnings("ignore", category=UserWarning) 
 
@@ -25,6 +28,35 @@ class TextfeatureNet(nn.Module):
             self.feature = nn.Linear(neure_num[-2], neure_num[-1])
             if args.add_block_linear_bert_embed:
                 self.linear = make_layers([384,neure_num[-2]])
+    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None):
+        if self.args.use_bert_model:
+            output = self.encoder(input_ids,attn_mask)
+            last_hidden_state = output.last_hidden_state
+            x = last_hidden_state[:, self.target_token_idx, :]
+            x = self.linear(x)
+        else:
+            temp_x = self.mlp(x)
+            if self.args.use_bert_embedding and bert_emb!=None:
+                if self.args.add_block_linear_bert_embed:
+                    bert_emb = self.linear(bert_emb)
+                temp_x = temp_x + bert_emb
+            x = self.feature(temp_x)
+        return x
+
+class TextfeatureNet_v2(nn.Module):
+    
+    def __init__(self, args, neure_num):
+        super(TextfeatureNet_v2, self).__init__()
+        self.args = args  
+        if self.args.use_bert_model:
+            self.encoder = DistilBertModel.from_pretrained(args.pretrain_bert_model)
+            self.linear = make_layers_dropout([768,neure_num[-1]])
+            self.target_token_idx = 0
+        else:
+            self.mlp = make_layers_dropout(neure_num[:-1])
+            self.feature = nn.Linear(neure_num[-2], neure_num[-1])
+            if args.add_block_linear_bert_embed:
+                self.linear = make_layers_dropout([384,neure_num[-2]])
     def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None):
         if self.args.use_bert_model:
             output = self.encoder(input_ids,attn_mask)
@@ -98,13 +130,24 @@ class ImgNet(nn.Module):
 
     def forward(self, x):
         N = x.size()[0]
-        x = self.feature(x.view(N, 3, 256, 256))
+        assert self.args.img_size == 256, "default is 256"
+        x = self.feature(x.view(N, 3, self.args.img_size, self.args.img_size))
         if self.args.resnet_model == 'resnet18':
             x = x.view(N, 512)
         elif self.args.resnet_model == 'resnet50':
             x = x.view(N, 2048)
         x = self.fc1(x)
         return x
+
+def make_layers_dropout(cfg):
+    layers = []
+    n = len(cfg)
+    input_dim = cfg[0]
+    for i in range(1, n):
+        output_dim = cfg[i]
+        layers += [nn.Linear(input_dim, output_dim), nn.ReLU(inplace = True), nn.Dropout(p=0.3)]
+        input_dim = output_dim
+    return nn.Sequential(*layers)
 
 def make_layers(cfg):
     layers = []
@@ -115,6 +158,7 @@ def make_layers(cfg):
         layers += [nn.Linear(input_dim, output_dim), nn.ReLU(inplace = True)]
         input_dim = output_dim
     return nn.Sequential(*layers)
+
 
 def make_predict_layers(cfg):
     layers = []
@@ -199,16 +243,31 @@ class CmmlModel(nn.Module):
         self.Attentionparam = list(map(int, param))
         self.generate_model()
     def generate_model(self):
-        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam)
+        if self.args.text_dropout:
+            self.Textfeaturemodel = TextfeatureNet_v2(self.args,self.Textfeatureparam)
+        else:
+            self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam)
+            
         self.Imgpredictmodel = PredictNet(self.Imgpredictparam)
         self.Textpredictmodel = PredictNet(self.Textpredictparam)
         self.Predictmodel = PredictNet(self.Predictparam)
-        self.Imgmodel = ImgNet(self.args)
+        
+        if not self.args.multi_scale_fe:
+            self.Imgmodel = ImgNet(self.args)
+        else:
+            self.Imgmodel = MultiScaleFE(base='resnet50', size = 384, layers=['layer2', 'layer3', 'layer4'], strides=[4, 2, 1], last_ouput_depth=128)
+            self.ImgAttention = ScaledDotProductAttention(dim=128)
+        
         self.Attentionmodel = AttentionNet(self.Attentionparam)
         if self.args.use_vcreg_loss:
             self.Projectormodel = VICReg(self.args)
         else:
             self.Projectormodel = None
+            
+    # def forward(self, img_xx, text_xx):
+    #     passrward(self, img_xx, text_xx):
+    #     pa
+        
 
 
 class MultiScaleFE(torch.nn.Module):
@@ -216,7 +275,7 @@ class MultiScaleFE(torch.nn.Module):
         super(MultiScaleFE, self).__init__()
         # Get a resnet50 backbone
         assert base == 'resnet50', "only support resnet50"
-        self.m = resnet50(weights=pretrain)
+        backbone = resnet50(pretrained = True)
         self.size = size
         assert size == 512 or size == 384, "only support input size 512 or 384"
 
@@ -224,16 +283,16 @@ class MultiScaleFE(torch.nn.Module):
         self.strides = strides
         assert len(self.layers.keys()) == 3 and len(self.strides) == 3, "only support 3 scales"
         
-        self.body = create_feature_extractor(self.m, return_nodes=self.layers)
-        self.conv_1x1 = [nn.Conv2d(last_input_depth, last_ouput_depth, 1, stride=last_stride) 
-                            for (last_input_depth, last_stride) in zip ([512, 1024, 2048], self.strides)]
-        self.relu = nn.ReLU()
+        self.body = create_feature_extractor(backbone, return_nodes=self.layers)
+        self.conv_1x1 = nn.ModuleList([nn.Conv2d(last_input_depth, last_ouput_depth, 1, stride=last_stride) 
+                            for (last_input_depth, last_stride) in zip ([512, 1024, 2048], self.strides)])
+        # self.relu = nn.ReLU()
 
     def forward(self, x):
         assert (x.shape[-1] == self.size and x.shape[-2] == self.size), "do not match defined input size"
         self.feature_map = self.body(x)
         output = [self.conv_1x1[i](self.feature_map[layer]) for i, layer in enumerate(self.layers)]
-        output = [self.relu(o) for o in output]
+        # output = [self.relu(o) for o in output]
 
         output = [torch.flatten(o, start_dim=-2) for o in output]
         output = torch.cat(output, dim=-1)
@@ -243,5 +302,5 @@ class MultiScaleFE(torch.nn.Module):
 
         return output
 
-
+# from src.model.attention import *
 

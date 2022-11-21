@@ -9,7 +9,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader 
 import datetime 
 import numpy as np  
-from test import test_multilabel
+from test import test_multilabel_v2
 from tqdm import tqdm
 from loss import focal_binary_cross_entropy, diversity_measurement, consistency_measurement
 import torch.nn as nn
@@ -107,54 +107,49 @@ def train(args,model, dataset,
             label = Variable(label).cuda() if cuda else Variable(label)  
             
             # #=========== DEFAULT FORWARD ===========#
-            supervise_imghidden = model.Imgmodel(supervise_img_xx)
-            if args.use_bert_embedding:
-                # supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
-                supervise_texthidden = model.Textfeaturemodel(x = supervise_bert_xx)
-            elif args.use_bert_model:
-                supervise_texthidden = model.Textfeaturemodel(input_ids = supervise_input_ids,attn_mask = supervise_attn_mask)
-            else:
-                supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx)
-                # supervise_texthidden = model.Textfeaturemodel(x=supervise_bert_xx)
+            # supervise_imghidden = model.Imgmodel(supervise_img_xx)
+            # if args.use_bert_embedding:
+            #     # supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
+            #     supervise_texthidden = model.Textfeaturemodel(x = supervise_bert_xx)
+            # elif args.use_bert_model:
+            #     supervise_texthidden = model.Textfeaturemodel(input_ids = supervise_input_ids,attn_mask = supervise_attn_mask)
+            # else:
+            #     supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx)
+            #     # supervise_texthidden = model.Textfeaturemodel(x=supervise_bert_xx)
             
-            if args.multi_scale_fe:
-                supervise_imghidden, attn_w = model.ImgAttention(query=supervise_texthidden.unsqueeze(1), 
-                                                         key=supervise_imghidden,
-                                                         value=supervise_imghidden)
-                supervise_imghidden = supervise_imghidden.squeeze(1)
+            # if args.multi_scale_fe:
+            #     supervise_imghidden, attn_w = model.ImgAttention(query=supervise_texthidden.unsqueeze(1), 
+            #                                              key=supervise_imghidden,
+            #                                              value=supervise_imghidden)
+            #     supervise_imghidden = supervise_imghidden.squeeze(1)
             # #=========== DEFAULT FORWARD ===========#
             
-            # if args.dual_stream:
-            #     supervise_imghidden, supervise_texthidden = model.DualStream(supervise_img_xx, supervise_input_ids, supervise_attn_mask)
+            if args.dual_stream:
+                supervise_imghidden, supervise_texthidden = model.ImgTextModel(supervise_img_xx, supervise_input_ids, supervise_attn_mask)
                 
             if model.Projectormodel != None:
                 vcreg_loss_supervise = model.Projectormodel(supervise_imghidden,supervise_texthidden)
             supervise_imgpredict = model.Imgpredictmodel(supervise_imghidden)
             supervise_textpredict = model.Textpredictmodel(supervise_texthidden)
             
-            if not args.concat:
-                supervise_imgk = model.Attentionmodel(supervise_imghidden)
-                supervise_textk = model.Attentionmodel(supervise_texthidden)
-                modality_attention = []
-                modality_attention.append(supervise_imgk)
-                modality_attention.append(supervise_textk)
-                modality_attention = torch.cat(modality_attention, 1)
-                modality_attention = nn.functional.softmax(modality_attention, dim = 1)
-                img_attention = torch.zeros(1, len(y))
-                img_attention[0] = modality_attention[:,0]
-                img_attention = img_attention.t()
-                text_attention = torch.zeros(1, len(y))
-                text_attention[0] = modality_attention[:,1]
-                text_attention = text_attention.t()
-                if cuda:
-                    img_attention = img_attention.cuda()
-                    text_attention = text_attention.cuda()
-                supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden
-                supervise_predict = model.Predictmodel(supervise_feature_hidden)     
-            else:
-                supervise_predict = model.Predictmodel(torch.cat([supervise_imghidden, supervise_texthidden], axis=-1))
-            
-                
+            supervise_imgk = model.Attentionmodel(supervise_imghidden)
+            supervise_textk = model.Attentionmodel(supervise_texthidden)
+            modality_attention = []
+            modality_attention.append(supervise_imgk)
+            modality_attention.append(supervise_textk)
+            modality_attention = torch.cat(modality_attention, 1)
+            modality_attention = nn.functional.softmax(modality_attention, dim = 1)
+            img_attention = torch.zeros(1, len(y))
+            img_attention[0] = modality_attention[:,0]
+            img_attention = img_attention.t()
+            text_attention = torch.zeros(1, len(y))
+            text_attention[0] = modality_attention[:,1]
+            text_attention = text_attention.t()
+            if cuda:
+                img_attention = img_attention.cuda()
+                text_attention = text_attention.cuda()
+            supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden
+            supervise_predict = model.Predictmodel(supervise_feature_hidden)         
             if args.use_focal_loss:
                 totalloss = focal_binary_cross_entropy(args,supervise_predict, label)
                 imgloss = focal_binary_cross_entropy(args,supervise_imgpredict, label)
@@ -212,25 +207,25 @@ def train(args,model, dataset,
             unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
 
             # #=========== DEFAULT FORWARD ===========#
-            unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
-            if args.use_bert_embedding:
-                # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
-                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
-            elif args.use_bert_model:
-                unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
-            else:
-                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
-                # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
+            # unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
+            # if args.use_bert_embedding:
+            #     # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+            #     unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
+            # elif args.use_bert_model:
+            #     unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
+            # else:
+            #     unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
+            #     # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
 
-            if args.multi_scale_fe:
-                unsupervise_imghidden, attn_w = model.ImgAttention(query=unsupervise_texthidden.unsqueeze(1), 
-                                                         key=unsupervise_imghidden,
-                                                         value=unsupervise_imghidden)
-                unsupervise_imghidden = unsupervise_imghidden.squeeze(1)
+            # if args.multi_scale_fe:
+            #     unsupervise_imghidden, attn_w = model.ImgAttention(query=unsupervise_texthidden.unsqueeze(1), 
+            #                                              key=unsupervise_imghidden,
+            #                                              value=unsupervise_imghidden)
+            #     unsupervise_imghidden = unsupervise_imghidden.squeeze(1)
             # #=========== DEFAULT FORWARD ===========#
 
-            # if args.dual_stream:
-            #     unsupervise_imghidden, unsupervise_texthidden = model.DualStream(supervise_img_xx, supervise_input_ids, supervise_attn_mask)
+            if args.dual_stream:
+                unsupervise_imghidden, unsupervise_texthidden = model.ImgTextModel(unsupervise_img_xx, unsupervise_token_xx, unsupervise_attn_mask_xx)
             
             if model.Projectormodel != None:
                 vcreg_loss_unsupervise = model.Projectormodel(unsupervise_imghidden,unsupervise_texthidden)
@@ -303,9 +298,9 @@ def train(args,model, dataset,
         ranking_loss1, ranking_loss2, ranking_loss3, 
         humour,sarcasm,offensive,motivational,
         humour_truth,sarcasm_truth,offensive_truth,motivational_truth,
-        ) = test_multilabel(args, model, dataset['val'], batchsize = batchsize, cuda = cuda)
+        ) = test_multilabel_v2(args, model, dataset['val'], batchsize = batchsize, cuda = cuda)
 
-        # result = test_multilabel(args,model.Textfeaturemodel,
+        # result = test_multilabel_v2(args,model.Textfeaturemodel,
         # model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
         # model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
         
@@ -525,9 +520,9 @@ def train(args,model, dataset,
         ranking_loss1, ranking_loss2, ranking_loss3, 
         humour,sarcasm,offensive,motivational,
         humour_truth,sarcasm_truth,offensive_truth,motivational_truth,
-        ) = test_multilabel(args,model, dataset['test'], batchsize = batchsize, cuda = cuda)
+        ) = test_multilabel_v2(args,model, dataset['test'], batchsize = batchsize, cuda = cuda)
         
-        # result_test = test_multilabel(args,model.Textfeaturemodel,
+        # result_test = test_multilabel_v2(args,model.Textfeaturemodel,
         # model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
         # model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
 
@@ -556,8 +551,8 @@ if __name__ == '__main__':
     args = get_args()
 
     wandb.login(key = 'd87822d5fa951a22676b0985f891c9021b875ae3')
-    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    wandb.init(project="meme_experiments", entity="meme-analysts")
+    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    # wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment
@@ -566,8 +561,10 @@ if __name__ == '__main__':
     if args.use_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
         cuda = torch.cuda.is_available() and args.use_gpu
+        # args.cuda = True
     else:
         cuda = False
+        # args.cuda = False
 
     # dataset = MemotionDatasetForCmml(args,args.imgfilenamerecord, 
     #                     args.imgfilenamerecord_unlabel, 

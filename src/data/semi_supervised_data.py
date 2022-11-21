@@ -23,6 +23,8 @@ import heapq
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 
+from transformers import LxmertTokenizer
+
 from . import data_utils
 import os
 # import data_utils
@@ -108,6 +110,8 @@ class TextTransform():
             if txt_bert_model == 'roberta-base':
                 self.tokenizer = RobertaTokenizer.from_pretrained(
                     "roberta-base")
+            elif txt_bert_model == 'lxmert_tokenizer':
+                self.tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased")
             else:
                 self.tokenizer = DistilBertTokenizer.from_pretrained(
                     txt_bert_model, model_max_length=txt_bert_max_length)
@@ -210,8 +214,12 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     else:
         im_transforms = DefaultImgTransform(img_size=image_size)
 
-    txt_transforms = TextTransform(
-        use_sbert=True, txt_bert_model='distilbert-base-uncased')
+    if args.dual_stream:
+        txt_transforms = TextTransform(
+            use_sbert=True, txt_bert_model='lxmert_tokenizer')
+    else:
+        txt_transforms = TextTransform(
+            use_sbert=True, txt_bert_model='distilbert-base-uncased')
     target_transforms = None
 
     # need compute vocab before transform text
@@ -252,8 +260,10 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
     label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
 
     im_transforms = DefaultImgTransform(img_size=image_size)
+    # txt_transforms = TextTransform(
+    #     use_sbert=True, txt_bert_model='distilbert-base-uncased', vocab_path='data/vocab.json')
     txt_transforms = TextTransform(
-        use_sbert=True, txt_bert_model='distilbert-base-uncased', vocab_path='data/vocab.json')
+        use_sbert=True, txt_bert_model='lxmert_tokenizer', vocab_path='data/vocab.json')
     target_transforms = None
 
     test = ImageText(test_img_dir, metadata_csv=test_csv, is_labeled=True,

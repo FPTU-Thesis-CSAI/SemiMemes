@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='sbert_n_augment', type=str,
+    parser.add_argument('--experiment', default='concat_n_augmentation', type=str,
                         help="Optional Name of Experiment (used by tensorboard)")
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -73,27 +73,27 @@ def get_args():
     parser.add_argument('--evaluate_only', action='store_true', default=False,
                     help="Only evaluate the given model at checkpoints")
     # ================================= LOSSES =====================================
-    parser.add_argument('--simclr', action='store_true', help="Use SimCLR for Unsupervised Training on Image Views")
-    parser.add_argument('--n-views', default=1, type=int, metavar='N',
-                        help='Number of views for contrastive learning training. 1 means no views generated Setting')
-    parser.add_argument('--temperature', default=0.07, type=float,
-                        help='softmax temperature (default: 0.07)')
-    parser.add_argument('--moco_size', default=0, type=int,
-                        help="Size of Memory Bank (MoCo, 2020), size=0 is set for SimCLR")
-    # Multimodal Contrastive Learning
-    parser.add_argument('--mmcontr', action='store_true', help="Use MMContrLoss for Unsupervised Training",default=False)
-    parser.add_argument('--measure', default='cosine', type=str,
-                        choices=['cosine', 'order'], help="Similarity measure to be used in MMContrLoss")
-    parser.add_argument('--margin', default=0, type=float,
-                        help="Margin to be used in MMContrLoss")
-    parser.add_argument('--max_violation', action='store_true', default=False,
-                        help="Consider only the max violation in MMContrLoss")
+    # parser.add_argument('--simclr', action='store_true', help="Use SimCLR for Unsupervised Training on Image Views")
+    # parser.add_argument('--n-views', default=1, type=int, metavar='N',
+    #                     help='Number of views for contrastive learning training. 1 means no views generated Setting')
+    # parser.add_argument('--temperature', default=0.07, type=float,
+    #                     help='softmax temperature (default: 0.07)')
+    # parser.add_argument('--moco_size', default=0, type=int,
+    #                     help="Size of Memory Bank (MoCo, 2020), size=0 is set for SimCLR")
+    # # Multimodal Contrastive Learning
+    # parser.add_argument('--mmcontr', action='store_true', help="Use MMContrLoss for Unsupervised Training",default=False)
+    # parser.add_argument('--measure', default='cosine', type=str,
+    #                     choices=['cosine', 'order'], help="Similarity measure to be used in MMContrLoss")
+    # parser.add_argument('--margin', default=0, type=float,
+    #                     help="Margin to be used in MMContrLoss")
+    # parser.add_argument('--max_violation', action='store_true', default=False,
+    #                     help="Consider only the max violation in MMContrLoss")
     
-    parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
-    parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
-    parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
-    parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
-    parser.add_argument('--use_small_model', type=bool, default=True, help="visualbert or lxmert or vilt")
+    # parser.add_argument('--img_feature_path', type=str,default="data/features/visualgenome/")
+    # parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
+    # parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
+    # parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
+    # parser.add_argument('--use_small_model', type=bool, default=True, help="visualbert or lxmert or vilt")
     # MemeMultimodal Loss
     parser.add_argument('--memeloss', action='store_true', help="Use Meme Multimodal Loss for Unsupervised Training",default=True)
     parser.add_argument('--w-f2i', type=float, default=0.2, help="Fuse2Image Loss Weight")
@@ -101,7 +101,7 @@ def get_args():
     parser.add_argument('--w-f2f', type=float, default=0.6, help="Fuse2Fuse Loss Weight")
     #CMML
     #experiment ideas
-    parser.add_argument('--use-bert-embedding',action='store_true',default=True)
+    parser.add_argument('--use-bert-embedding',action='store_true',default=False)
     parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
     parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
@@ -111,6 +111,13 @@ def get_args():
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet18', help='')
     parser.add_argument("--use_augmentation", action='store_true', default=True,help='')
+    parser.add_argument("--multi_scale_fe", action='store_true', default=False,help='')
+    parser.add_argument("--img_size", type=int, default=256,help='')
+    parser.add_argument("--dual_stream", action='store_true', default=False, help='')
+    parser.add_argument("--concat", action='store_true', default=False, help='')
+    parser.add_argument("--text_dropout", action='store_true', default=False, help='')
+
+
     ####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
@@ -141,12 +148,12 @@ def get_args():
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")
-    parser.add_argument('--Textfeaturepara', type = str, default = '384, 384, 128',
+    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 128',
     help="architecture of text feature network")
     parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '128, 4',help="architecture of attention predict network")
-    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 4',
+    parser.add_argument('--Predictpara', type = str, default = '256, 4',help="architecture of attention predict network")
+    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 1',
     help="architecture of attention network")
     parser.add_argument('--img-supervise-epochs', type = int, default = 0)
     parser.add_argument('--text-supervise-epochs', type = int, default = 1)
@@ -165,7 +172,7 @@ def get_args():
     #VLM 
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     # parser.add_argument('--learning_rate', type=float, default=5e-5)
-    parser.add_argument('--epoch', type=int, default=100)
+    # parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--eval_step', type=int, default=100)
     parser.add_argument('--amp',type=bool,default=True, \
                 help="automatic mixed precision training")
