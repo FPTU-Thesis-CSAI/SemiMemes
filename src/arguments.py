@@ -4,7 +4,7 @@ import os
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment', default='clip', type=str,
-                     help="Optional Name of Experiment (used by tensorboard)")
+                    help="Optional Name of Experiment (used by tensorboard)")
 
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
@@ -109,12 +109,12 @@ def get_args():
     parser.add_argument("--use-clip", type = bool, default=True,help='')
     parser.add_argument("--vmodel", type = str, default='vit14',help='')
 
-    parser.add_argument('--use-vcreg-loss',action='store_true',default=True)
-    parser.add_argument('--use-sim-loss',action='store_true',default=True)
-    parser.add_argument('--use-vicreg-in-training',action='store_true',default=True)
+    parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
+    parser.add_argument('--use-sim-loss',action='store_true',default=False)
+    parser.add_argument('--use-vicreg-in-training',action='store_true',default=False)
     parser.add_argument('--use-vicreg-pretrain',action='store_true',default=False)
 
-    parser.add_argument('--use-amp',action='store_true',default=True)
+    parser.add_argument('--use-amp',action='store_true',default=False)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
     parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
@@ -124,14 +124,14 @@ def get_args():
 
     parser.add_argument("--use-zlpr-loss", type = bool, default=False,help='')
     parser.add_argument("--use-asymmetric-loss", type = bool, default=False,help='')
-    parser.add_argument("--use-bce-loss", type = bool, default=False,help='')
+    parser.add_argument("--use-bce-loss", type = bool, default=True,help='')
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
 
     parser.add_argument("--use-resample-loss", type = bool, default=True,help='')
-    parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
+    parser.add_argument("--use-sigmoid", type = bool, default=False,help='')
     parser.add_argument("--reduction", type = str, default='mean',help='')
     parser.add_argument("--loss-weight", type = float, default=1.0,help='')
-    parser.add_argument("--focal", type = bool, default=True,help='')
+    parser.add_argument("--focal", type = bool, default=False,help='')
     parser.add_argument("--balance-param", type = float, default=2.0,help='')
     parser.add_argument("--gamma", type = int, default=2,help='')
     parser.add_argument("--neg-scale", type = float, default=5.0,help='')
@@ -178,7 +178,7 @@ def get_args():
     parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
     parser.add_argument('--Predictpara', type = str, default = '128, 4',help="architecture of attention predict network")
-    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 4',
+    parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 1',
     help="architecture of attention network")
     parser.add_argument('--img-supervise-epochs', type = int, default = 0)
     parser.add_argument('--text-supervise-epochs', type = int, default = 1)

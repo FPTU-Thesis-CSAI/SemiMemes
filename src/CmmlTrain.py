@@ -465,7 +465,7 @@ def train(args,model, dataset,
             else:
                 unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
 
-            if  args.use_vicreg_in_training:
+            if args.use_vicreg_in_training:
                 vcreg_loss_unsupervise = model.Projectormodel(unsupervise_imghidden,unsupervise_texthidden)
 
             unsupervise_imgpredict = sigmoid(model.Imgpredictmodel(unsupervise_imghidden))
@@ -813,8 +813,8 @@ if __name__ == '__main__':
 
     args = get_args()
 
-    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    wandb.init(project="meme_experiments", entity="meme-analysts")
+    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    # wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment
