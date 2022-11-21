@@ -13,6 +13,7 @@ import torch
 from transformers import RobertaTokenizer, DistilBertTokenizer
 import numpy as np
 from tqdm import tqdm
+import clip 
 # import nlpaug.augmenter.char as nac
 # import nlpaug.augmenter.word as naw
 # from random import random, randint
@@ -41,8 +42,8 @@ class ImgAugment:
         # 10% of the image
         blur = T.GaussianBlur((3, 3), (0.1, 2.0))
 
-        self.mean = [0.485, 0.456, 0.406]
-        self.std = [0.229, 0.224, 0.225]
+        self.mean = [0.48145466, 0.4578275, 0.40821073]
+        self.std = [0.26862954, 0.26130258, 0.27577711]
 
         self.train_transform = T.Compose(
             [
@@ -70,8 +71,8 @@ class ImgAugment:
 class DefaultImgTransform:
 
     def __init__(self, img_size):
-        self.mean = [0.485, 0.456, 0.406]
-        self.std = [0.229, 0.224, 0.225]
+        self.mean = [0.48145466, 0.4578275, 0.40821073]
+        self.std = [0.26862954, 0.26130258, 0.27577711]
 
         self.train_transform = T.Compose(
             [
@@ -91,15 +92,16 @@ class DefaultImgTransform:
 
 
 class TextTransform():
-    def __init__(self, txt_bert_model=None, txt_bert_max_length=128, use_sbert=False, vocab_path=None):
+    def __init__(self, txt_bert_model=None, txt_max_length=128, use_sbert=False,
+                use_countvectorizer=False,vocab_path=None,use_clip=None):
         self.vocab_path = vocab_path
-        if vocab_path is None:
-            self.sentence_vectors_extractor = CountVectorizer(
-                max_features=3000, binary=True)
-        else:
-            self.vocab = json.load(open(vocab_path))
-            self.sentence_vectors_extractor = CountVectorizer(
-                max_features=3000, binary=True, vocabulary=self.vocab)
+        self.use_countvectorizer = use_countvectorizer
+        if self.use_countvectorizer:
+            if vocab_path is None:
+                self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True)
+            else:
+                self.vocab = json.load(open(vocab_path))
+                self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True, vocabulary=self.vocab)
 
         self.use_sbert = use_sbert
         if use_sbert:
@@ -113,8 +115,9 @@ class TextTransform():
             elif txt_bert_model == 'lxmert_tokenizer':
                 self.tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased")
             else:
-                self.tokenizer = DistilBertTokenizer.from_pretrained(
-                    txt_bert_model, model_max_length=txt_bert_max_length)
+                self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_max_length)
+        
+        self.use_clip = use_clip
 
     def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
         self.sentence_vectors_extractor.fit(texts)
@@ -131,9 +134,9 @@ class TextTransform():
 
     def __call__(self, texts):
         outputs = dict()
-        sentence_vectors = self.sentence_vectors_extractor.transform(
-            texts).toarray()
-        outputs['sentence_vectors'] = sentence_vectors
+        if self.use_countvectorizer:
+            sentence_vectors = self.sentence_vectors_extractor.transform(texts).toarray()
+            outputs['sentence_vectors'] = sentence_vectors
 
         if self.use_sbert:
             sbert_embedding = self.model.encode(texts)
@@ -144,7 +147,10 @@ class TextTransform():
                 texts, padding='max_length', truncation=True, return_tensors="pt")
             # output of bert tokenizer is a dictionary
             outputs.update(toks)
-
+        
+        if self.use_clip:
+            toks = clip.tokenize(texts,truncate=True)
+            outputs["clip_tokens"] = toks
         return outputs
 
 
@@ -204,27 +210,37 @@ class ImageText(Dataset):
         return self.num_samples
 
 
-def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, train_unlabeled_csv,
-                                       val_img_dir, val_csv, batch_size, image_size, inbatch_label_ratio=None, debug=False):
+def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, train_unlabeled_csv, 
+                                                val_img_dir, val_csv, batch_size, image_size, inbatch_label_ratio=None, debug=False,input_resolution=None):
     # args.use_augmentation = False
     label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+
+    if args.use_clip:
+        image_size = input_resolution
 
     if args.use_augmentation:
         im_transforms = ImgAugment(img_size=image_size)
     else:
         im_transforms = DefaultImgTransform(img_size=image_size)
+    if not args.use_bert_model:
+        args.pretrain_bert_model = None
+    txt_transforms = TextTransform(use_sbert=args.use_bert_embedding,
+        txt_bert_model=args.pretrain_bert_model,
+        use_countvectorizer=args.use_sentence_vectorizer,
+        use_clip=args.use_clip)
 
-    if args.dual_stream:
-        txt_transforms = TextTransform(
-            use_sbert=True, txt_bert_model='lxmert_tokenizer')
-    else:
-        txt_transforms = TextTransform(
-            use_sbert=True, txt_bert_model='distilbert-base-uncased')
+    # if args.dual_stream:
+    #     txt_transforms = TextTransform(
+    #         use_sbert=True, txt_bert_model='lxmert_tokenizer')
+    # else:
+    #     txt_transforms = TextTransform(
+    #         use_sbert=True, txt_bert_model='distilbert-base-uncased')
     target_transforms = None
 
     # need compute vocab before transform text
-    txt_transforms.precompute_stats(data_utils.get_texts(
-        train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
+    if args.use_sentence_vectorizer:
+        txt_transforms.precompute_stats(data_utils.get_texts(
+            train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
 
     train_sup = ImageText(train_img_dir, metadata_csv=train_labeled_csv, is_labeled=True,
                           im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols)
@@ -255,15 +271,22 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     else:
         return train_supervised_loader, train_unsupervised_loader, val_loader, im_transforms, txt_transforms
 
-
-def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_size, image_size, debug=False):
+def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_size, image_size, debug=False,input_resolution=None):
     label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+    
+    if args.use_clip:
+        image_size = input_resolution
 
-    im_transforms = DefaultImgTransform(img_size=image_size)
-    # txt_transforms = TextTransform(
-    #     use_sbert=True, txt_bert_model='distilbert-base-uncased', vocab_path='data/vocab.json')
-    txt_transforms = TextTransform(
-        use_sbert=True, txt_bert_model='lxmert_tokenizer', vocab_path='data/vocab.json')
+    if args.use_augmentation:
+        im_transforms = ImgAugment(img_size=image_size)
+    else:
+        im_transforms = DefaultImgTransform(img_size=image_size)
+        
+    txt_transforms = TextTransform(use_sbert=args.use_bert_embedding,
+        txt_bert_model=args.pretrain_bert_model,
+        use_countvectorizer=args.use_sentence_vectorizer,
+        use_clip=args.use_clip, vocab_path='data/vocab.json')
+        
     target_transforms = None
 
     test = ImageText(test_img_dir, metadata_csv=test_csv, is_labeled=True,

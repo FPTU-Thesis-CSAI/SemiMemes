@@ -3,8 +3,10 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='concat_n_augmentation', type=str,
-                        help="Optional Name of Experiment (used by tensorboard)")
+    parser.add_argument('--experiment', default='clip_n_augmentation', type=str,
+                    help="Optional Name of Experiment (used by tensorboard)")
+
+
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
                     help='path to dataset')
@@ -103,10 +105,17 @@ def get_args():
     #experiment ideas
     parser.add_argument('--use-bert-embedding',action='store_true',default=False)
     parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
+    parser.add_argument("--use-eman", type = bool, default=False,help='')
+    parser.add_argument("--use-clip", type = bool, default=True,help='')
+    parser.add_argument("--vmodel", type = str, default='vit14',help='')
+
     parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
+    parser.add_argument('--use-vicreg-in-training',action='store_true',default=False)
+    parser.add_argument('--use-vicreg-pretrain',action='store_true',default=False)
+
+    parser.add_argument('--use-amp',action='store_true',default=False)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
-    parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet18', help='')
@@ -118,6 +127,29 @@ def get_args():
     parser.add_argument("--text_dropout", action='store_true', default=False, help='')
 
 
+    parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
+
+    parser.add_argument("--use-zlpr-loss", type = bool, default=False,help='')
+    parser.add_argument("--use-asymmetric-loss", type = bool, default=False,help='')
+    parser.add_argument("--use-bce-loss", type = bool, default=True,help='')
+    parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
+
+    parser.add_argument("--use-resample-loss", type = bool, default=True,help='')
+    parser.add_argument("--use-sigmoid", type = bool, default=False,help='')
+    parser.add_argument("--reduction", type = str, default='mean',help='')
+    parser.add_argument("--loss-weight", type = float, default=1.0,help='')
+    parser.add_argument("--focal", type = bool, default=False,help='')
+    parser.add_argument("--balance-param", type = float, default=2.0,help='')
+    parser.add_argument("--gamma", type = int, default=2,help='')
+    parser.add_argument("--neg-scale", type = float, default=5.0,help='')
+    parser.add_argument("--init-bias", type = float, default=0.1,help='')
+    parser.add_argument("--alpha", type = float, default=10.0,help='')
+    parser.add_argument("--beta", type = float, default=0.2,help='')
+    parser.add_argument("--map-param-gamma", type = float, default=0.1,help='')
+    parser.add_argument("--reweight-func", type = str, default='rebalance',help='')
+    parser.add_argument("--freq-file", type = str, default='/home/fptu/viet/SSLMemes/data/class_freq.pkl',help='')
+    parser.add_argument("--use-sentence-vectorizer", type = bool, default=False,help='')
+    ####
     ####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')
@@ -152,7 +184,7 @@ def get_args():
     help="architecture of text feature network")
     parser.add_argument('--Imgpredictpara', type = str, default = '128, 4',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '128, 4',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '256, 4',help="architecture of attention predict network")
+    parser.add_argument('--Predictpara', type = str, default = '128, 4',help="architecture of attention predict network")
     parser.add_argument('--Attentionparameter', type = str, default = '128, 64, 32, 1',
     help="architecture of attention network")
     parser.add_argument('--img-supervise-epochs', type = int, default = 0)
@@ -163,7 +195,6 @@ def get_args():
     parser.add_argument('--traintestproportion', type = float, default = 0.667,help="ratio of train data to test data") 
     parser.add_argument('--lambda1', type = float, default = 0.01,help="ratio of train data to test data")
     parser.add_argument('--lambda2', type = float, default = 1,help="ratio of train data to test data")
-    parser.add_argument("--mlp-expand-dim", default="768",help='Size and number of layers of the MLP expander head')
     parser.add_argument("--output-backbone-dim", type=int, default=128,help='')
     parser.add_argument("--std-coeff", type=float, default=25.0,help='Variance regularization loss coefficient')
     parser.add_argument("--cov-coeff", type=float, default=1.0,help='Covariance regularization loss coefficient')

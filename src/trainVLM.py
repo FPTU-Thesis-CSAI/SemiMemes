@@ -8,7 +8,7 @@ from torch.cuda.amp import autocast, GradScaler
 from VLMeval import evaluate
 from utils.VLMutils import build_optimizer
 from data.dataLoaders import create_loaders
-from model.VLM import create_model 
+from src.data.VLM import create_model 
 from functools import partial
 import yaml 
 from arguments import get_args 

@@ -17,7 +17,7 @@ class CaptionExtractor():
         max_length = 16
         num_beams = 4
         self.gen_kwargs = {"max_length": max_length, "num_beams": num_beams}
-       
+         
     def predict_batch(self, image_paths):
         images = []
         for image_path in image_paths:

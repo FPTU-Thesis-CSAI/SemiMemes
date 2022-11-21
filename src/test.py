@@ -38,6 +38,7 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
     img_predict = []
     text_predict = []
     truth = []
+    # sigmoid = torch.nn.Sigmoid()
     # data_loader = DataLoader(dataset = testdataset, batch_size = batchsize, shuffle = False)
     # for batch_index, (x, y) in enumerate(data_loader, 1):
     for batch_index, supbatch in tqdm(enumerate(testdataset), total=len(testdataset)):
@@ -48,14 +49,22 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
         # sup_label = torch.stack([1-sup_label, sup_label], axis=-1)
 
         img_xx = sup_img
-        text_xx = sup_text['sentence_vectors']
+        if args.use_clip:
+            clip_ids = sup_text['clip_tokens']
+            clip_ids = Variable(clip_ids).cuda() if cuda else Variable(clip_ids)  
+
+        if args.use_sentence_vectorizer:
+            text_xx = sup_text['sentence_vectors']
+            text_xx = text_xx.float()
+            text_xx = Variable(text_xx).cuda() if cuda else Variable(text_xx)
+
         if args.use_bert_embedding:
             bert_xx = sup_text['sbert_embedding']
         y = sup_label.numpy()
 
         # label = y.numpy()
         img_xx = img_xx.float()
-        text_xx = text_xx.float()
+        
         if args.use_bert_embedding:
             bert_xx = bert_xx.float()
         
@@ -69,32 +78,43 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
 
 
         img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)
-        text_xx = Variable(text_xx).cuda() if cuda else Variable(text_xx)
-        if args.use_bert_embedding:
-            bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx)
-        imghidden = model.Imgmodel(img_xx)
+        
+        # if args.use_bert_embedding:
+        #     bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx)
+        # imghidden = model.Imgmodel(img_xx)
 
-        if args.use_bert_embedding:
-            # texthidden = model.Textfeaturemodel(x = text_xx, bert_emb = bert_xx)
-            texthidden = model.Textfeaturemodel(x = bert_xx)
-        elif args.use_bert_model:
-            texthidden = model.Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
-        else:
-            texthidden = model.Textfeaturemodel(x = text_xx)
-            # texthidden = model.Textfeaturemodel(x=bert_xx)
+        # if args.use_bert_embedding:
+        #     # texthidden = model.Textfeaturemodel(x = text_xx, bert_emb = bert_xx)
+        #     texthidden = model.Textfeaturemodel(x = bert_xx)
+        # elif args.use_bert_model:
+        #     texthidden = model.Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
+        # else:
+        #     texthidden = model.Textfeaturemodel(x = text_xx)
+        #     # texthidden = model.Textfeaturemodel(x=bert_xx)
             
+
+
+        with torch.no_grad():
+            imghidden = model.Imgmodel(img_xx)
+            if args.use_clip:
+                texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids)
+            elif args.use_bert_embedding:
+                texthidden = model.Textfeaturemodel(x = text_xx, bert_emb = bert_xx)
+            elif args.use_bert_model:
+                texthidden = model.Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
+            else:
+                texthidden = model.Textfeaturemodel(x = text_xx)
+
         if args.multi_scale_fe:
             imghidden, attn_w = model.ImgAttention(query=texthidden.unsqueeze(1), 
                                                     key=imghidden,
                                                     value=imghidden)
             imghidden = imghidden.squeeze(1)
 
-        imgpredict = model.Imgpredictmodel(imghidden)
-        textpredict = model.Textpredictmodel(texthidden)
-
         if not args.concat:
             imgk = model.Attentionmodel(imghidden)
             textk = model.Attentionmodel(texthidden)
+                
             modality_attention = []
             modality_attention.append(imgk)
             modality_attention.append(textk)
@@ -113,6 +133,9 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
             predict = model.Predictmodel(feature_hidden)
         else:
             predict = model.Predictmodel(torch.cat((imghidden, texthidden), axis=-1))
+        
+        imgpredict = model.Imgpredictmodel(imghidden)
+        textpredict = model.Textpredictmodel(texthidden)
         
         img_ = imgpredict.cpu().data.numpy()
         text_ = textpredict.cpu().data.numpy()
