@@ -154,8 +154,70 @@ class TextTransform():
         return outputs
 
 
+class CaptionTransform():
+    def __init__(self, txt_bert_model=None, txt_max_length=128, use_sbert=False,
+                use_countvectorizer=False,vocab_path=None,use_clip=None):
+        # self.vocab_path = vocab_path
+        # self.use_countvectorizer = use_countvectorizer
+        # if self.use_countvectorizer:
+        #     if vocab_path is None:
+        #         self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True)
+        #     else:
+        #         self.vocab = json.load(open(vocab_path))
+        #         self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True, vocabulary=self.vocab)
+
+        self.use_sbert = use_sbert
+        if use_sbert:
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+
+        self.txt_bert_model = txt_bert_model
+        if not txt_bert_model is None:
+            if txt_bert_model == 'roberta-base':
+                self.tokenizer = RobertaTokenizer.from_pretrained(
+                    "roberta-base")
+            elif txt_bert_model == 'lxmert_tokenizer':
+                self.tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased")
+            else:
+                self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_max_length)
+        
+        self.use_clip = use_clip
+
+    # def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
+    #     self.sentence_vectors_extractor.fit(texts)
+
+    #     # save vocabulary
+    #     self.vocab = self.sentence_vectors_extractor.vocabulary_
+    #     self.vocab_path = path_save_vocab
+
+    #     # value from vectorizer is numpy type, convert to int to serialize in json
+    #     json.dump({key: int(value) for (key, value)
+    #               in self.vocab.items()}, open(path_save_vocab, 'w'))
+    #     print(
+    #         f"Compute vocabulary for {len(texts)} sentences. Save to {path_save_vocab}")
+
+    def __call__(self, texts):
+        outputs = dict()
+        # if self.use_countvectorizer:
+        #     sentence_vectors = self.sentence_vectors_extractor.transform(texts).toarray()
+        #     outputs['sentence_vectors'] = sentence_vectors
+
+        if self.use_sbert:
+            sbert_embedding = self.model.encode(texts)
+            outputs['sbert_embedding'] = sbert_embedding
+
+        if not self.txt_bert_model is None:
+            toks = self.tokenizer(
+                texts, padding='max_length', truncation=True, return_tensors="pt")
+            # output of bert tokenizer is a dictionary
+            outputs.update(toks)
+        
+        if self.use_clip:
+            toks = clip.tokenize(texts,truncate=True)
+            outputs["clip_tokens"] = toks
+        return outputs
+
 class ImageText(Dataset):
-    def __init__(self, img_folder, metadata_csv, is_labeled, img_col='file_name', text_col='Text Transcription', label_cols='misogynous', im_transforms=None, txt_transform=None, target_transform=None):
+    def __init__(self, img_folder, metadata_csv, is_labeled, img_col='file_name', text_col='Text Transcription', label_cols='misogynous', im_transforms=None, txt_transform=None, target_transform=None, second_txt_transform=None):
         self.metadata = pd.read_csv(metadata_csv)
 
         self.is_labeled = is_labeled
@@ -167,7 +229,7 @@ class ImageText(Dataset):
         self.img_names = self.metadata[img_col].to_list()
         self.img_folder = img_folder
         self.img_paths = [os.path.join(img_folder, img_name)
-                          for img_name in self.img_names]
+                        for img_name in self.img_names]
 
         self.texts = self.metadata[text_col].to_list()
 
@@ -185,6 +247,13 @@ class ImageText(Dataset):
         else:
             self.text_transform_outputs = None
 
+        if not second_txt_transform is None:
+            second_text_col = 'generated_caption'
+            self.second_texts = self.metadata[second_text_col]
+            self.second_text_transform_outputs = second_txt_transform(self.second_texts)
+        else:
+            self.second_text_transform_outputs = None
+
         print("Loaded and processed {} Samples in {}".format(
             self.num_samples, metadata_csv))
 
@@ -199,6 +268,11 @@ class ImageText(Dataset):
                     for key, values in self.text_transform_outputs.items()}
         else:
             text = self.texts[index]
+            
+        if not self.second_text_transform_outputs is None:
+            second_text = {'caption_'+key: values[index]
+                    for key, values in self.second_text_transform_outputs.items()}
+            text.update(second_text)
 
         if self.is_labeled:
             label = self.labels[index]
@@ -229,6 +303,11 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip)
 
+    caption_transform = CaptionTransform(use_sbert=args.use_bert_embedding,
+        txt_bert_model=args.pretrain_bert_model,
+        use_countvectorizer=args.use_sentence_vectorizer,
+        use_clip=args.use_clip)
+    
     # if args.dual_stream:
     #     txt_transforms = TextTransform(
     #         use_sbert=True, txt_bert_model='lxmert_tokenizer')
@@ -243,13 +322,13 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
             train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
 
     train_sup = ImageText(train_img_dir, metadata_csv=train_labeled_csv, is_labeled=True,
-                          im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols)
+                        im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
 
     train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
-                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols)
+                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
 
     val = ImageText(val_img_dir, metadata_csv=val_csv, is_labeled=True,
-                    im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
+                    im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
 
     # collate_fn_batch = ...
     # dataloader = DataLoader(dataset=data, collate_fn = collate_fn_batch, batch_size=batch_size, num_workers=cpu_count()//2, drop_last=True, shuffle=True)
@@ -259,9 +338,9 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
             train_labeled_csv, train_unlabeled_csv)
 
     train_supervised_loader = DataLoader(dataset=train_sup, batch_size=int(inbatch_label_ratio*batch_size),
-                                         num_workers=cpu_count()//2, drop_last=True, shuffle=True)
+                                        num_workers=cpu_count()//2, drop_last=True, shuffle=True)
     train_unsupervised_loader = DataLoader(dataset=train_unsup, batch_size=batch_size - int(inbatch_label_ratio*batch_size),
-                                           num_workers=cpu_count()//2, drop_last=True, shuffle=True)
+                                        num_workers=cpu_count()//2, drop_last=True, shuffle=True)
 
     val_loader = DataLoader(dataset=val, batch_size=batch_size,
                             num_workers=cpu_count()*3//4, drop_last=False, shuffle=False)
@@ -286,14 +365,19 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
         txt_bert_model=args.pretrain_bert_model,
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip, vocab_path='data/vocab.json')
+    
+    caption_transform = CaptionTransform(use_sbert=args.use_bert_embedding,
+        txt_bert_model=args.pretrain_bert_model,
+        use_countvectorizer=args.use_sentence_vectorizer,
+        use_clip=args.use_clip)
         
     target_transforms = None
 
     test = ImageText(test_img_dir, metadata_csv=test_csv, is_labeled=True,
-                     im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
+                    im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
 
     test_loader = DataLoader(dataset=test, batch_size=batch_size,
-                             num_workers=cpu_count()*3//4, drop_last=False, shuffle=False)
+                            num_workers=cpu_count()*3//4, drop_last=False, shuffle=False)
 
     if not debug:
         return test_loader

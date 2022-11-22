@@ -76,6 +76,12 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
             token_xx = Variable(token_xx).cuda() if cuda else Variable(token_xx)
             attn_mask_xx = Variable(attn_mask_xx).cuda() if cuda else Variable(attn_mask_xx)
 
+        if args.use_caption:
+            supervise_clip_ids_caption = sup_text['caption_clip_tokens']
+            supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
+            supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
+            supervise_captionk = model.Attentionmodel(supervise_caption_hidden)
+            supervise_captionpredict = model.Imgpredictmodel(supervise_caption_hidden)
 
         img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)
         
@@ -118,8 +124,13 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
             modality_attention = []
             modality_attention.append(imgk)
             modality_attention.append(textk)
+            
+            if args.use_caption:
+                modality_attention.append(supervise_captionk)
+        
             modality_attention = torch.cat(modality_attention, 1)
             modality_attention = nn.functional.softmax(modality_attention, dim = 1)
+            
             img_attention = torch.zeros(1, len(y))
             img_attention[0] = modality_attention[:,0]
             img_attention = img_attention.t()
@@ -129,7 +140,17 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
             if cuda:
                 img_attention = img_attention.cuda()
                 text_attention = text_attention.cuda()
-            feature_hidden = img_attention * imghidden + text_attention * texthidden
+
+            if args.use_caption:
+                caption_attention = torch.zeros(1, len(y))
+                caption_attention[0] = modality_attention[:,2]
+                caption_attention = caption_attention.t()
+                if cuda:
+                    caption_attention = caption_attention.cuda()
+                feature_hidden = img_attention * imghidden + text_attention * texthidden + caption_attention * supervise_caption_hidden
+            else:
+                feature_hidden = img_attention * imghidden + text_attention * texthidden
+
             predict = model.Predictmodel(feature_hidden)
         else:
             predict = model.Predictmodel(torch.cat((imghidden, texthidden), axis=-1))

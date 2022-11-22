@@ -9,7 +9,7 @@ def dump_freq_data():
     co_labels = [[] for _ in range(num_classes)]
     condition_prob = np.zeros([num_classes, num_classes])
     for label in labels:
-        for idx in np.where(np.asarray(label) == 1)[0]:
+        # for idx in np.where(np.asarray(label) == 1)[0]:
             co_labels[idx].append(label)
 
     for cla in range(num_classes):

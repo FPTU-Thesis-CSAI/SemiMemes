@@ -116,7 +116,14 @@ def train(args,model, dataset,
 
             if args.use_clip:
                 supervise_clip_ids = sup_text['clip_tokens']
-                supervise_clip_ids = Variable(supervise_clip_ids).cuda() if cuda else Variable(supervise_clip_ids)    
+                supervise_clip_ids = Variable(supervise_clip_ids).cuda() if cuda else Variable(supervise_clip_ids)   
+            
+            if args.use_caption:
+                supervise_clip_ids_caption = sup_text['caption_clip_tokens']
+                supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
+                supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
+                supervise_captionk = model.Attentionmodel(supervise_caption_hidden)
+                supervise_captionpredict = model.Imgpredictmodel(supervise_caption_hidden)
 
             supervise_img_xx = supervise_img_xx.float()
             label = label.float()
@@ -151,12 +158,17 @@ def train(args,model, dataset,
             supervise_imgpredict = model.Imgpredictmodel(supervise_imghidden)
             supervise_textpredict = model.Textpredictmodel(supervise_texthidden)
             
+            
             if not args.concat:
                 supervise_imgk = model.Attentionmodel(supervise_imghidden)
                 supervise_textk = model.Attentionmodel(supervise_texthidden)
                 modality_attention = []
                 modality_attention.append(supervise_imgk)
                 modality_attention.append(supervise_textk)
+                
+                if args.use_caption:
+                    modality_attention.append(supervise_captionk)
+                
                 modality_attention = torch.cat(modality_attention, 1)
                 modality_attention = nn.functional.softmax(modality_attention, dim = 1)
                 img_attention = torch.zeros(1, len(y))
@@ -165,10 +177,22 @@ def train(args,model, dataset,
                 text_attention = torch.zeros(1, len(y))
                 text_attention[0] = modality_attention[:,1]
                 text_attention = text_attention.t()
+                
                 if cuda:
                     img_attention = img_attention.cuda()
                     text_attention = text_attention.cuda()
-                supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden
+
+                
+                if args.use_caption:
+                    caption_attention = torch.zeros(1, len(y))
+                    caption_attention[0] = modality_attention[:,2]
+                    caption_attention = caption_attention.t()
+                    if cuda:
+                        caption_attention = caption_attention.cuda()
+                    supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden + caption_attention * supervise_caption_hidden
+                else:
+                    supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden
+                                
                 supervise_predict = model.Predictmodel(supervise_feature_hidden)     
             else:
                 supervise_predict = model.Predictmodel(torch.cat([supervise_imghidden, supervise_texthidden], axis=-1))
@@ -182,6 +206,9 @@ def train(args,model, dataset,
                 totalloss = criterion(supervise_predict, label)
                 imgloss = criterion(supervise_imgpredict, label)
                 textloss = criterion(supervise_textpredict, label)
+                
+                if args.use_caption:
+                    captionloss = criterion(supervise_captionpredict, label)
             '''
             Diversity Measure code.
             '''         
@@ -196,7 +223,11 @@ def train(args,model, dataset,
             #     supervise_loss = 1/(2*model.Predictmodel.sigma[0]**2)*imgloss + 1/(2*model.Predictmodel.sigma[1]**2)*textloss \
             #     + 1/(2*model.Predictmodel.sigma[2]**2)*totalloss + torch.log(model.Predictmodel.sigma).sum()
             # else:
-            supervise_loss = imgloss + textloss + 2.0*totalloss
+            
+            if args.use_caption:
+                supervise_loss = imgloss + textloss + 3.0*totalloss + captionloss
+            else:
+                supervise_loss = imgloss + textloss + 2.0*totalloss
 
             # print('img: ', imgloss.item(), ' text: ', textloss.item(), 'total: ', totalloss.item(), end="\t")
             # img_loss_arr[batch_index-1] = imgloss.item()
@@ -307,13 +338,13 @@ def train(args,model, dataset,
             if args.use_eman:
                 eman.update(model)
         
-        if epoch % 10 == 0:
-            filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
-            torch.save(model.Imgmodel, os.path.join(savepath, filename +'img.pkl'))
-            torch.save(model.Textfeaturemodel, os.path.join(savepath, filename + 'Textfeaturemodel.pkl'))
-            torch.save(model.Imgpredictmodel, os.path.join(savepath, filename + 'Imgpredictmodel.pkl'))
-            torch.save(model.Textpredictmodel, os.path.join(savepath, filename + 'Textpredictmodel.pkl'))
-            torch.save(model.Attentionmodel, os.path.join(savepath, filename +'attention.pkl'))
+        # if epoch % 10 == 0:
+        #     filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
+        #     torch.save(model.Imgmodel, os.path.join(savepath, filename +'img.pkl'))
+        #     torch.save(model.Textfeaturemodel, os.path.join(savepath, filename + 'Textfeaturemodel.pkl'))
+        #     torch.save(model.Imgpredictmodel, os.path.join(savepath, filename + 'Imgpredictmodel.pkl'))
+        #     torch.save(model.Textpredictmodel, os.path.join(savepath, filename + 'Textpredictmodel.pkl'))
+        #     torch.save(model.Attentionmodel, os.path.join(savepath, filename +'attention.pkl'))
         
 
         #===================== Multilabel =================#

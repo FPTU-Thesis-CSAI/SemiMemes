@@ -286,8 +286,15 @@ class CmmlModel(nn.Module):
         
         self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,
             clip_model=self.clip_model,clip_dim=self.cdim)
+        
+        self.Captionfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,
+            clip_model=self.clip_model,clip_dim=self.cdim)
+        
         self.Imgpredictmodel = PredictNet(self.Imgpredictparam)
         self.Textpredictmodel = PredictNet(self.Textpredictparam)
+        
+        self.Captionpredictmodel = PredictNet(self.Textpredictparam)
+        
         self.Predictmodel = PredictNet(self.Predictparam)
         self.Imgmodel = ImgNet(self.args,clip_model=self.clip_model,clip_dim=self.cdim)
         self.Attentionmodel = AttentionNet(self.Attentionparam)
@@ -297,8 +304,7 @@ class CmmlModel(nn.Module):
             self.Projectormodel = None
             
     # def forward(self, img_xx, text_xx):
-    #     passrward(self, img_xx, text_xx):
-    #     pa
+    #     pass
         
 
 

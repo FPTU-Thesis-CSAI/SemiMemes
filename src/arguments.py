@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='clip_n_augmentation', type=str,
+    parser.add_argument('--experiment', default='caption', type=str,
                     help="Optional Name of Experiment (used by tensorboard)")
 
 
@@ -125,6 +125,8 @@ def get_args():
     parser.add_argument("--dual_stream", action='store_true', default=False, help='')
     parser.add_argument("--concat", action='store_true', default=False, help='')
     parser.add_argument("--text_dropout", action='store_true', default=False, help='')
+
+    parser.add_argument("--use_caption", action='store_true', default=True, help='')
 
 
     parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
