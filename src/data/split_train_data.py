@@ -4,8 +4,8 @@ import random
 import os 
 
 parser = argparse.ArgumentParser(description='train_split')
-parser.add_argument('--train_csv_path', type=str, default="data/MAMI_processed/train_b.csv")
-parser.add_argument('--label_ratio', type=float, default=0.3)
+parser.add_argument('--train_csv_path', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/train.csv")
+parser.add_argument('--label_ratio', type=float, default=0.1)
 parser.add_argument('--save_dir', type=str, default="data/MAMI_processed")
 parser.add_argument('--seed', type=int, default=42)
 args = parser.parse_args()

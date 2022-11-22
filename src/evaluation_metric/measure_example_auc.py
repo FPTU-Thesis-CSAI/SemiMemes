@@ -13,7 +13,7 @@ def auroc_score_pytorch(x,y):
       # multilabel_auroc(preds, target, num_labels=4, average="macro", thresholds=None)
       target = torch.FloatTensor(y)
       preds = torch.FloatTensor(x)
-      return multilabel_auroc(preds, target, num_labels=4, average="macro", thresholds=None)
+      return multilabel_auroc(preds, target, num_labels=5, average="macro", thresholds=None)
 
 def cal_single_instance(x, y):
     idx = np.argsort(x)  # 升序排列

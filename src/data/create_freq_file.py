@@ -4,8 +4,8 @@ import pandas as pd
 
 def dump_freq_data():
     metadata = pd.read_csv('/home/fptu/viet/SSLMemes/data/MAMI_processed/train_labeled_ratio-0.3.csv')
-    labels = metadata[["shaming","stereotype","objectification","violence"]].values
-    num_classes = 4
+    labels = metadata[["misogynous","shaming","stereotype","objectification","violence"]].values
+    num_classes = 5
     co_labels = [[] for _ in range(num_classes)]
     condition_prob = np.zeros([num_classes, num_classes])
     for label in labels:

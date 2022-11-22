@@ -13,20 +13,25 @@ from torch.autograd import Variable
 import torch.nn as nn
 
 
-def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
+def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset,FusionCoattention = None, batchsize = 32, cuda = False):
     if cuda:
         Textfeaturemodel.cuda()
-        Imgpredictmodel.cuda()
-        Textpredictmodel.cuda()
+        if Imgpredictmodel is not None:
+            Imgpredictmodel.cuda()
+            Textpredictmodel.cuda()
         Imgmodel.cuda()
         Predictmodel.cuda()
         Attentionmodel.cuda()
     Textfeaturemodel.eval()
-    Imgpredictmodel.eval()
-    Textpredictmodel.eval()
+    if Imgpredictmodel is not None:
+        Imgpredictmodel.eval()
+        Textpredictmodel.eval()
     Imgmodel.eval()
     Predictmodel.eval()
     Attentionmodel.eval()
+    if FusionCoattention is not None:
+        FusionCoattention.cuda()
+        FusionCoattention.eval()
 
     print('----------------- Test data:------------')
     
@@ -88,32 +93,38 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
                 texthidden = Textfeaturemodel(input_ids = token_xx,attn_mask = attn_mask_xx)
             else:
                 texthidden = Textfeaturemodel(x = text_xx)
-            imgk = Attentionmodel(imghidden)
-            textk = Attentionmodel(texthidden)
-            modality_attention = []
-            modality_attention.append(imgk)
-            modality_attention.append(textk)
-            modality_attention = torch.cat(modality_attention, 1)
-            modality_attention = nn.functional.softmax(modality_attention, dim = 1)
-            img_attention = torch.zeros(1, len(y))
-            img_attention[0] = modality_attention[:,0]
-            img_attention = img_attention.t()
-            text_attention = torch.zeros(1, len(y))
-            text_attention[0] = modality_attention[:,1]
-            text_attention = text_attention.t()
-            if cuda:
-                img_attention = img_attention.cuda()
-                text_attention = text_attention.cuda()
+            if args.use_deep_weak_attention:
+                imgk = Attentionmodel(imghidden)
+                textk = Attentionmodel(texthidden)
+                modality_attention = []
+                modality_attention.append(imgk)
+                modality_attention.append(textk)
+                modality_attention = torch.cat(modality_attention, 1)
+                modality_attention = nn.functional.softmax(modality_attention, dim = 1)
+                img_attention = torch.zeros(1, len(y))
+                img_attention[0] = modality_attention[:,0]
+                img_attention = img_attention.t()
+                text_attention = torch.zeros(1, len(y))
+                text_attention[0] = modality_attention[:,1]
+                text_attention = text_attention.t()
+                if cuda:
+                    img_attention = img_attention.cuda()
+                    text_attention = text_attention.cuda()
+                feature_hidden = img_attention * imghidden + text_attention * texthidden
+            elif args.use_coattention:
+                feature_hidden = FusionCoattention(imghidden,texthidden)
+            elif args.use_concat_modalities:
+                feature_hidden = torch.cat((imghidden,texthidden), dim=1)
             imgpredict = sigmoid(Imgpredictmodel(imghidden))
             textpredict = sigmoid(Textpredictmodel(texthidden))
-            feature_hidden = img_attention * imghidden + text_attention * texthidden
             predict = sigmoid(Predictmodel(feature_hidden))
         img_ = imgpredict.cpu().data.numpy()
         text_ = textpredict.cpu().data.numpy()
-        predict = predict.cpu().data.numpy()
-        total_predict.append(predict)
         img_predict.append(img_)
         text_predict.append(text_)
+        predict = predict.cpu().data.numpy()
+        total_predict.append(predict)
+
         truth.append(y)
 
     total_predict = np.array(total_predict)
@@ -124,6 +135,7 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     for i in range(1, len(total_predict)):
         temp = np.vstack((temp, total_predict[i]))
     total_predict = temp
+
     temp = img_predict[0]
     for i in range(1, len(img_predict)):
         temp = np.vstack((temp, img_predict[i]))
@@ -132,69 +144,72 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     for i in range(1, len(text_predict)):
         temp = np.vstack((temp, text_predict[i]))
     text_predict = temp
+
     temp = truth[0]
     for i in range(1, len(truth)):
         temp = np.vstack((temp, truth[i]))
     truth = temp
 
-    f1_macro_multi_1 = macro_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
-    f1_macro_multi_2 = macro_f1_multilabel(img_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
-    f1_macro_multi_3 = macro_f1_multilabel(text_predict, truth,  num_labels=4, threshold = 0.5, reduce = True)
+    f1_macro_multi_1 = macro_f1_multilabel(total_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5, reduce = True)
+    f1_macro_multi_2 = macro_f1_multilabel(img_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5, reduce = True)
+    f1_macro_multi_3 = macro_f1_multilabel(text_predict[:,1:], truth[:,1:],  num_labels=4, threshold = 0.5, reduce = True)
 
-    f1_skl1 = f1_score_sklearn(total_predict, truth)
-    f1_skl2 = f1_score_sklearn(img_predict, truth)
-    f1_skl3 = f1_score_sklearn(text_predict, truth)
+    f1_weighted_multi_1  = weighted_f1_multilabel(total_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5)
+    f1_weighted_multi_2  = weighted_f1_multilabel(img_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5)
+    f1_weighted_multi_3  = weighted_f1_multilabel(text_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5)
 
-    f1_pm1 = f1_score_pytorch(total_predict, truth)
-    f1_pm2 = f1_score_pytorch(img_predict, truth)
-    f1_pm3 = f1_score_pytorch(text_predict, truth)
+    # f1_skl1 = f1_score_sklearn(total_predict, truth)
+    # f1_skl2 = f1_score_sklearn(img_predict, truth)
+    # f1_skl3 = f1_score_sklearn(text_predict, truth)
+
+    # f1_pm1 = f1_score_pytorch(total_predict, truth)
+    # f1_pm2 = f1_score_pytorch(img_predict, truth)
+    # f1_pm3 = f1_score_pytorch(text_predict, truth)
 
     auc_pm1 = auroc_score_pytorch(total_predict, truth)
     auc_pm2 = auroc_score_pytorch(img_predict, truth)
     auc_pm3 = auroc_score_pytorch(text_predict, truth)
 
-    average_precison1 = average_precision(total_predict, truth)
-    average_precison2 = average_precision(img_predict, truth)
-    average_precison3 = average_precision(text_predict, truth)
+    # average_precison1 = average_precision(total_predict, truth)
+    # average_precison2 = average_precision(img_predict, truth)
+    # average_precison3 = average_precision(text_predict, truth)
     
-    coverage1 = coverage(total_predict, truth)
-    coverage2 = coverage(img_predict, truth)
-    coverage3 = coverage(text_predict, truth)
+    # coverage1 = coverage(total_predict, truth)
+    # coverage2 = coverage(img_predict, truth)
+    # coverage3 = coverage(text_predict, truth)
     
-    example_auc1 = example_auc(total_predict, truth)
-    example_auc2 = example_auc(img_predict, truth)
-    example_auc3 = example_auc(text_predict, truth)
+    # example_auc1 = example_auc(total_predict, truth)
+    # example_auc2 = example_auc(img_predict, truth)
+    # example_auc3 = example_auc(text_predict, truth)
 
-    macro_auc1 = macro_auc(total_predict, truth)
-    macro_auc2 = macro_auc(img_predict, truth)
-    macro_auc3 = macro_auc(text_predict, truth)
+    # macro_auc1 = macro_auc(total_predict, truth)
+    # macro_auc2 = macro_auc(img_predict, truth)
+    # macro_auc3 = macro_auc(text_predict, truth)
 
-    micro_auc1 = micro_auc(total_predict, truth)
-    micro_auc2 = micro_auc(img_predict, truth)
-    micro_auc3 = micro_auc(text_predict, truth)
+    # micro_auc1 = micro_auc(total_predict, truth)
+    # micro_auc2 = micro_auc(img_predict, truth)
+    # micro_auc3 = micro_auc(text_predict, truth)
 
-    ranking_loss1 = ranking_loss(total_predict, truth)
-    ranking_loss2 = ranking_loss(img_predict, truth)
-    ranking_loss3 = ranking_loss(text_predict, truth)
+    # ranking_loss1 = ranking_loss(total_predict, truth)
+    # ranking_loss2 = ranking_loss(img_predict, truth)
+    # ranking_loss3 = ranking_loss(text_predict, truth)
     
-    humour = np.histogram(total_predict[:,0])
-    sarcasm = np.histogram(total_predict[:,1])
-    offensive = np.histogram(total_predict[:,2])
-    motivational = np.histogram(total_predict[:,3])
+    humour = np.histogram(total_predict[:,1])
+    sarcasm = np.histogram(total_predict[:,2])
+    offensive = np.histogram(total_predict[:,3])
+    motivational = np.histogram(total_predict[:,4])
 
-    humour_truth = np.histogram(truth[:,0])
-    sarcasm_truth = np.histogram(truth[:,1])
-    offensive_truth = np.histogram(truth[:,2])
-    motivational_truth = np.histogram(truth[:,3])
+    humour_truth = np.histogram(truth[:,1])
+    sarcasm_truth = np.histogram(truth[:,2])
+    offensive_truth = np.histogram(truth[:,3])
+    motivational_truth = np.histogram(truth[:,4])
 
-    return (f1_macro_multi_1, f1_macro_multi_2, f1_macro_multi_3, 
-    total_predict, truth, f1_skl1, f1_skl2, f1_skl3, f1_pm1, f1_pm2, 
-    f1_pm3, auc_pm1, auc_pm2, auc_pm3, average_precison1, average_precison2, 
-    average_precison3, coverage1, coverage2, coverage3, example_auc1, 
-    example_auc2, example_auc3, macro_auc1, macro_auc2, macro_auc3, 
-    micro_auc1, micro_auc2, micro_auc3, ranking_loss1, ranking_loss2, 
-    ranking_loss3, humour,sarcasm,offensive,motivational,humour_truth,
-    sarcasm_truth,offensive_truth,motivational_truth)
+
+    return (f1_macro_multi_1, f1_macro_multi_2, f1_macro_multi_3,
+        f1_weighted_multi_1,f1_weighted_multi_2,f1_weighted_multi_3,
+        auc_pm1,auc_pm2,auc_pm3,
+        total_predict, truth, humour,sarcasm,offensive,motivational,humour_truth,
+        sarcasm_truth,offensive_truth,motivational_truth)
 
 def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
     if cuda:
@@ -319,10 +334,9 @@ def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, I
     # auc_pm3 = auroc_score_pytorch(text_predict, truth)
     
 
-    macro_f1_all = macro_f1(total_predict[:, 1], truth[:, 1], threshold = 0.5)
-    macro_f1_image = macro_f1(img_predict[:, 1], truth[:, 1], threshold = 0.5)
-    macro_f1_text = macro_f1(text_predict[:, 1], truth[:, 1], threshold = 0.5)
-
+    macro_f1_all = macro_f1(total_predict[:,1:], truth[:,1:], threshold = 0.5)
+    macro_f1_image = macro_f1(img_predict[:,1:], truth[:,1:], threshold = 0.5)
+    macro_f1_text = macro_f1(text_predict[:,1:], truth[:,1:], threshold = 0.5)
     # average_precison1 = average_precision(total_predict, truth)
     # average_precison2 = average_precision(img_predict, truth)
     # average_precison3 = average_precision(text_predict, truth)
@@ -335,9 +349,9 @@ def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, I
     # example_auc2 = example_auc(img_predict, truth)
     # example_auc3 = example_auc(text_predict, truth)
 
-    macro_roc_auc1 = roc_auc_binary(total_predict[:, 1], truth[:, 1])
-    macro_roc_auc2 = roc_auc_binary(img_predict[:, 1], truth[:, 1])
-    macro_roc_auc3 = roc_auc_binary(text_predict[:, 1], truth[:, 1])
+    macro_roc_auc1 = roc_auc_binary(total_predict[:,1:], truth[:,1:])
+    macro_roc_auc2 = roc_auc_binary(img_predict[:,1:], truth[:,1:])
+    macro_roc_auc3 = roc_auc_binary(text_predict[:,1:], truth[:,1:])
 
     # micro_auc1 = micro_auc(total_predict, truth)
     # micro_auc2 = micro_auc(img_predict, truth)
