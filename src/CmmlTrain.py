@@ -380,37 +380,37 @@ def train(args,model, dataset,
 
         print('rocauc_pm:    ', auc_pm1,'\t', auc_pm2,'\t', auc_pm3)
 
-        # if not args.use_one_head: 
-        #     (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
-        #     f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
-        #     auc_pm1,auc_pm2,auc_pm3,
-        #     total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
-        #     sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
-        #     model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
-        #     model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
-        # else:
-        #     (f1_macro_multi_total,f1_weighted_multi_total,auc_pm1,
-        #     total_predict, truth, humour,sarcasm,offensive,motivational,humour_truth,
-        #     sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
-        #     None,None, model.Imgmodel,
-        #     model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
+        if not args.use_one_head: 
+            (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
+            f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
+            auc_pm1,auc_pm2,auc_pm3,
+            total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
+            sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
+            model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
+            model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
+        else:
+            (f1_macro_multi_total,f1_weighted_multi_total,auc_pm1,
+            total_predict, truth, humour,sarcasm,offensive,motivational,humour_truth,
+            sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
+            None,None, model.Imgmodel,
+            model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
 
-        # wandb.log({"f1_macro_multi_total_test":f1_macro_multi_total})
-        # if not args.use_one_head:
-        #     wandb.log({"f1_macro_multi_img_test":f1_macro_multi_img})
-        #     wandb.log({"f1_macro_multi_text_test":f1_macro_multi_text})
+        wandb.log({"f1_macro_multi_total_test":f1_macro_multi_total})
+        if not args.use_one_head:
+            wandb.log({"f1_macro_multi_img_test":f1_macro_multi_img})
+            wandb.log({"f1_macro_multi_text_test":f1_macro_multi_text})
 
-        # wandb.log({"f1_weighted_multi_total_test":f1_weighted_multi_total})
-        # if not args.use_one_head:
-        #     wandb.log({"f1_weighted_multi_img_test":f1_weighted_multi_img})
-        #     wandb.log({"f1_weighted_multi_text_test":f1_weighted_multi_text})
+        wandb.log({"f1_weighted_multi_total_test":f1_weighted_multi_total})
+        if not args.use_one_head:
+            wandb.log({"f1_weighted_multi_img_test":f1_weighted_multi_img})
+            wandb.log({"f1_weighted_multi_text_test":f1_weighted_multi_text})
         
-        # if args.use_one_head:
-        #     print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total}")
-        #     print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total}")
-        # else:
-        #     print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
-        #     print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
+        if args.use_one_head:
+            print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total}")
+            print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total}")
+        else:
+            print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
+            print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
 
     return 
 
@@ -429,7 +429,7 @@ if __name__ == '__main__':
     args = get_args()
 
     # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    wandb.login(key = '9e4b1fe5c252b557ca7eaceff3a78cf738db115e')
+    wandb.login(key = 'd87822d5fa951a22676b0985f891c9021b875ae3')
     wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
@@ -463,8 +463,8 @@ if __name__ == '__main__':
         train_img_dir='data/MAMI_processed/images/train',
         train_labeled_csv='/home/fptu/viet/SSLMemes/data/MAMI_processed/train_labeled_ratio-0.3.csv',
         train_unlabeled_csv='/home/fptu/viet/SSLMemes/data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
-        val_img_dir = 'data/MAMI_processed/images/test',
-        val_csv='data/MAMI_processed/test.csv',
+        val_img_dir = 'data/MAMI_processed/images/val',
+        val_csv='data/MAMI_processed/val.csv',
         batch_size=args.batchsize, image_size=256,input_resolution=input_resolution)
     
     test_loader = create_semi_supervised_test_dataloaders(args,
