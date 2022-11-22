@@ -12,6 +12,7 @@ from torchvision.models.feature_extraction import create_feature_extractor
 from .attention import *
 
 
+from .unsupervised import FusionNet
 
 warnings.filterwarnings("ignore", category=UserWarning) 
 
@@ -22,7 +23,10 @@ class TextfeatureNet(nn.Module):
         self.args = args  
         if self.args.use_clip:
             self.clip_model = clip_model
-            self.linear = make_layers([clip_dim,neure_num[-1]])
+            self.linear = nn.Linear(clip_dim,args.output_backbone_dim)
+            if self.args.use_drop_out:
+                self.dropout = nn.Dropout(0.2)
+            # self.dropout = nn.Dropout(0.2)
             # self.bigru = nn.LSTM(clip_dim,neure_num[-1], 1, bidirectional=False, batch_first=True, bias=False)
         elif self.args.use_bert_model:
             if args.pretrain_bert_model == "distilbert-base-uncased":
@@ -41,6 +45,8 @@ class TextfeatureNet(nn.Module):
         if self.args.use_clip:
             with torch.no_grad():
                 feats = self.clip_model.encode_text(clip_input_ids)
+            if self.args.use_drop_out:
+                feats = self.dropout(feats)
             x = self.linear(feats)
         elif self.args.use_bert_model:
             output = self.encoder(input_ids,attn_mask)
@@ -87,10 +93,13 @@ class TextfeatureNet_v2(nn.Module):
 
 class PredictNet(nn.Module):
     
-    def __init__(self, neure_num, use_softmax=False):
+    def __init__(self, args,neure_num, use_softmax=False):
         #print("---------PredictNet-----")
         super(PredictNet, self).__init__()
         self.mlp = make_predict_layers(neure_num)
+        self.args = args
+        if self.args.use_act:
+            self.act = nn.ReLU()
         # print("---------mlp----------",self.mlp)
         
         if use_softmax:
@@ -105,14 +114,17 @@ class PredictNet(nn.Module):
         # self.sigma = nn.Parameter(torch.FloatTensor([1.,1.,1./2]))
 
     def forward(self, x):
-        y = self.mlp(x)
-        if not self.sigmoid is None:
-            y = self.sigmoid(y)
+        if self.args.use_act:
+            x = self.act(x)
+            y= self.mlp(x)
         else:
-            y = self.softmax(y)
-        # print("---------y------------", y)
-        # print("--------------------")
-        
+            y = self.mlp(x)
+        # if not self.sigmoid is None:
+        #     y = self.sigmoid(y)
+        # else:
+        #     y = self.softmax(y)
+        #print("---------y------------", y)
+        #print("--------------------")
         return y
 
 
@@ -134,6 +146,8 @@ class ImgNet(nn.Module):
             self.fc1 = nn.Sequential(       
             nn.Linear(clip_dim, args.output_backbone_dim)
             )
+            if args.use_drop_out:
+                self.dropout = nn.Dropout(0.2)
         else:
             if args.resnet_model == 'resnet50':
                 self.feature = Models.resnet50('ResNet50_Weights.DEFAULT')
@@ -152,6 +166,8 @@ class ImgNet(nn.Module):
         if self.args.use_clip:
             with torch.no_grad():
                 x = self.clip_model.encode_image(x)
+            if self.args.use_drop_out:
+                x = self.dropout(x)
             x = self.fc1(x)
         else:
             N = x.size()[0]
@@ -199,8 +215,8 @@ def off_diagonal(x):
     assert n == m
     return x.flatten()[:-1].view(n - 1, n + 1)[:, 1:].flatten()
 
-def Projector(args, embedding):
-    mlp_spec = f"{embedding}-{args.mlp_expand_dim}"
+def Projector(mlp_expand_dim, embedding):
+    mlp_spec = f"{embedding}-{mlp_expand_dim}"
     layers = []
     f = list(map(int, mlp_spec.split("-")))
     for i in range(len(f) - 2):
@@ -215,7 +231,7 @@ class VICReg(nn.Module):
         super().__init__()
         self.args = args
         self.num_features = int(args.mlp_expand_dim.split("-")[-1])
-        self.projector = Projector(args, args.output_backbone_dim)
+        self.projector = Projector(args.mlp_expand_dim, args.output_backbone_dim)
 
     def forward(self, x, y):
         x = self.projector(x)
@@ -273,11 +289,7 @@ class CmmlModel(nn.Module):
         #     self.Textfeaturemodel = TextfeatureNet_v2(self.args,self.Textfeatureparam)
         # else:
         #     self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam)
-            
-        self.Imgpredictmodel = PredictNet(self.Imgpredictparam)
-        self.Textpredictmodel = PredictNet(self.Textpredictparam)
-        self.Predictmodel = PredictNet(self.Predictparam)
-        
+                    
         # if not self.args.multi_scale_fe:
         #     self.Imgmodel = ImgNet(self.args)
         # else:
@@ -289,56 +301,18 @@ class CmmlModel(nn.Module):
         
         self.Captionfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,
             clip_model=self.clip_model,clip_dim=self.cdim)
+        self.Captionpredictmodel = PredictNet(self.args, self.Textpredictparam)
         
-        self.Imgpredictmodel = PredictNet(self.Imgpredictparam)
-        self.Textpredictmodel = PredictNet(self.Textpredictparam)
+        self.Imgpredictmodel = PredictNet(self.args,self.Imgpredictparam)
+        self.Textpredictmodel = PredictNet(self.args,self.Textpredictparam)
+        self.Predictmodel = PredictNet(self.args,self.Predictparam)
         
-        self.Captionpredictmodel = PredictNet(self.Textpredictparam)
-        
-        self.Predictmodel = PredictNet(self.Predictparam)
         self.Imgmodel = ImgNet(self.args,clip_model=self.clip_model,clip_dim=self.cdim)
         self.Attentionmodel = AttentionNet(self.Attentionparam)
+        if self.args.use_coattention:
+            self.FusionCoattention = FusionNet(self.Textfeatureparam[-1],self.Textfeatureparam[-1], 0.2)
         if self.args.use_vcreg_loss:
-            self.Projectormodel = VICReg(self.args)
-        else:
-            self.Projectormodel = None
-            
-    # def forward(self, img_xx, text_xx):
-    #     pass
-        
-
-
-class MultiScaleFE(torch.nn.Module):
-    def __init__(self, base, layers, strides, size, last_ouput_depth=768, pretrain='IMAGENET1K_V2'):
-        super(MultiScaleFE, self).__init__()
-        # Get a resnet50 backbone
-        assert base == 'resnet50', "only support resnet50"
-        backbone = resnet50(pretrained = True)
-        self.size = size
-        assert size == 512 or size == 384, "only support input size 512 or 384"
-
-        self.layers = {k:k for k in layers}
-        self.strides = strides
-        assert len(self.layers.keys()) == 3 and len(self.strides) == 3, "only support 3 scales"
-        
-        self.body = create_feature_extractor(backbone, return_nodes=self.layers)
-        self.conv_1x1 = nn.ModuleList([nn.Conv2d(last_input_depth, last_ouput_depth, 1, stride=last_stride) 
-                            for (last_input_depth, last_stride) in zip ([512, 1024, 2048], self.strides)])
-        # self.relu = nn.ReLU()
-
-    def forward(self, x):
-        assert (x.shape[-1] == self.size and x.shape[-2] == self.size), "do not match defined input size"
-        self.feature_map = self.body(x)
-        output = [self.conv_1x1[i](self.feature_map[layer]) for i, layer in enumerate(self.layers)]
-        # output = [self.relu(o) for o in output]
-
-        output = [torch.flatten(o, start_dim=-2) for o in output]
-        output = torch.cat(output, dim=-1)
-
-        # compatible with attention
-        output = output.permute((0, 2, 1))
-
-        return output
-
-# from src.model.attention import *
+            self.ProjectormodelImgText = VICReg(self.args)
+            self.ProjectormodelImgTotal = VICReg(self.args)
+            self.ProjectormodelTextTotal = VICReg(self.args)
 

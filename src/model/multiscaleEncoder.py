@@ -1,6 +1,11 @@
+from torch import nn
+import torch
+import torchvision.models as Models
+import warnings
+import torch.nn.functional as F 
+from transformers import RobertaModel, DistilBertModel
 from torchvision.models import resnet50
-import torch 
-import torch.nn as nn  
+from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
 
 class MultiScaleFE(torch.nn.Module):
@@ -8,7 +13,7 @@ class MultiScaleFE(torch.nn.Module):
         super(MultiScaleFE, self).__init__()
         # Get a resnet50 backbone
         assert base == 'resnet50', "only support resnet50"
-        self.m = resnet50(weights=pretrain)
+        backbone = resnet50(pretrained = True)
         self.size = size
         assert size == 512 or size == 384, "only support input size 512 or 384"
 
@@ -16,9 +21,9 @@ class MultiScaleFE(torch.nn.Module):
         self.strides = strides
         assert len(self.layers.keys()) == 3 and len(self.strides) == 3, "only support 3 scales"
         
-        self.body = create_feature_extractor(m, return_nodes=self.layers)
-        self.conv_1x1 = [nn.Conv2d(last_input_depth, last_ouput_depth, 1, stride=last_stride) 
-                            for (last_input_depth, last_stride) in zip ([512, 1024, 2048], self.strides)]
+        self.body = create_feature_extractor(backbone, return_nodes=self.layers)
+        self.conv_1x1 = nn.ModuleList([nn.Conv2d(last_input_depth, last_ouput_depth, 1, stride=last_stride) 
+                            for (last_input_depth, last_stride) in zip ([512, 1024, 2048], self.strides)])
         # self.relu = nn.ReLU()
 
     def forward(self, x):

@@ -103,3 +103,20 @@ def roc_auc_binary(preds, target):
     score = auroc(preds, target)
 
     return score.item()
+    
+def weighted_f1_multilabel(preds, target, num_labels=4, threshold = 0.5):
+    preds = torch.tensor(preds)
+    target = torch.tensor(target)
+    preds = (preds > threshold).to(torch.long)
+    target = target.to(torch.long)
+    macro_f1 = F1Score(num_classes=2, average='macro')
+    results = []
+    total_occurences = 0
+    for i in range(num_labels):
+        preds_label_i = preds[:, i]
+        target_label_i = target[:, i]   
+        f1_score_i = macro_f1(preds_label_i, target_label_i)
+        weight = (target_label_i==1).sum()
+        total_occurences += weight
+        results.append(f1_score_i * weight)
+    return sum(results) / total_occurences

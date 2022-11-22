@@ -14,6 +14,8 @@ from transformers import RobertaTokenizer, DistilBertTokenizer
 import numpy as np
 from tqdm import tqdm
 import clip 
+import open_clip
+from .preprocess_text import preprocess
 # import nlpaug.augmenter.char as nac
 # import nlpaug.augmenter.word as naw
 # from random import random, randint
@@ -36,36 +38,36 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 class ImgAugment:
 
     def __init__(self, img_size, s=1):
-        color_jitter = T.ColorJitter(
-            0.2 * s, 0.2 * s, 0.2 * s
-        )
-        # 10% of the image
-        blur = T.GaussianBlur((3, 3), (0.1, 2.0))
 
         self.mean = [0.48145466, 0.4578275, 0.40821073]
         self.std = [0.26862954, 0.26130258, 0.27577711]
+        # color_jitter = T.ColorJitter(
+        #     0.2 * s, 0.2 * s, 0.2 * s
+        # )
+        # # 10% of the image
+        # blur = T.GaussianBlur((3, 3), (0.1, 2.0))
+
 
         self.train_transform = T.Compose(
-            [
-                # T.RandomResizedCrop(size=img_size, scale=(0.8, 1.0), ratio=(0.8, 1.2)),
-                T.RandomResizedCrop(size=img_size),
-                # T.Resize((img_size, img_size)),
-                # transforms.ColorJitter(brightness=0.2, contrast=0.1, saturation=0.1, hue=0.2),
-                T.RandomGrayscale(p=0.1),
-                # T.RandomPerspective(),
-                T.RandomRotation(degrees=10),
-                T.ToTensor(),
-                T.Normalize(mean=self.mean, std=self.std)
-            ]
+          [
+            T.RandomResizedCrop(img_size, interpolation=T.InterpolationMode.BICUBIC),
+            T.RandomHorizontalFlip(),
+            # transforms.ColorJitter(brightness=0.2, contrast=0.1, saturation=0.1, hue=0.2),
+            T.RandomGrayscale(p=0.1),
+            # transforms.RandomPerspective(),
+            T.RandomRotation(degrees=10),
+            T.ToTensor(),
+            T.Normalize(mean=self.mean,std=self.std)
+    ]
         )
 
-        self.test_transform = T.Compose(
-            [
-                T.Resize((img_size, img_size)),
-                T.ToTensor(),
-                T.Normalize(mean=self.mean, std=self.std)
-            ]
-        )
+        self.test_transform = T.Compose([
+            T.Resize((img_size,img_size), interpolation=T.InterpolationMode.BICUBIC),
+            # transforms.CenterCrop(clip_model.visual.input_resolution),
+            T.ToTensor(),
+            T.Normalize(mean=self.mean,std=self.std)
+        ]
+            )
 
 
 class DefaultImgTransform:
@@ -76,7 +78,7 @@ class DefaultImgTransform:
 
         self.train_transform = T.Compose(
             [
-                T.Resize((img_size, img_size)),
+                T.Resize((img_size, img_size), interpolation=T.InterpolationMode.BICUBIC),
                 T.ToTensor(),
                 T.Normalize(mean=self.mean, std=self.std)
             ]
@@ -84,7 +86,7 @@ class DefaultImgTransform:
 
         self.test_transform = T.Compose(
             [
-                T.Resize((img_size, img_size)),
+                T.Resize((img_size, img_size), interpolation=T.InterpolationMode.BICUBIC),
                 T.ToTensor(),
                 T.Normalize(mean=self.mean, std=self.std)
             ]
@@ -92,7 +94,7 @@ class DefaultImgTransform:
 
 
 class TextTransform():
-    def __init__(self, txt_bert_model=None, txt_max_length=128, use_sbert=False,
+    def __init__(self,args, txt_bert_model=None, txt_max_length=128, use_sbert=False,
                 use_countvectorizer=False,vocab_path=None,use_clip=None):
         self.vocab_path = vocab_path
         self.use_countvectorizer = use_countvectorizer
@@ -116,8 +118,10 @@ class TextTransform():
                 self.tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased")
             else:
                 self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_max_length)
-        
         self.use_clip = use_clip
+        self.args = args 
+        if args.use_open_clip:
+            self.tokenizer = open_clip.get_tokenizer('xlm-roberta-large-ViT-H-14')
 
     def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
         self.sentence_vectors_extractor.fit(texts)
@@ -132,7 +136,11 @@ class TextTransform():
         print(
             f"Compute vocabulary for {len(texts)} sentences. Save to {path_save_vocab}")
 
-    def __call__(self, texts):
+    def __call__(self, raw_texts):
+        texts = []
+        for t in raw_texts:
+            texts.append(preprocess(t))
+
         outputs = dict()
         if self.use_countvectorizer:
             sentence_vectors = self.sentence_vectors_extractor.transform(texts).toarray()
@@ -149,13 +157,18 @@ class TextTransform():
             outputs.update(toks)
         
         if self.use_clip:
-            toks = clip.tokenize(texts,truncate=True)
-            outputs["clip_tokens"] = toks
+            if self.args.use_open_clip:
+                toks = self.tokenizer(texts)
+                outputs["clip_tokens"] = toks
+            else:
+                toks = clip.tokenize(texts,truncate=True)
+                outputs["clip_tokens"] = toks
+                
         return outputs
 
 
 class CaptionTransform():
-    def __init__(self, txt_bert_model=None, txt_max_length=128, use_sbert=False,
+    def __init__(self, args, txt_bert_model=None, txt_max_length=128, use_sbert=False,
                 use_countvectorizer=False,vocab_path=None,use_clip=None):
         # self.vocab_path = vocab_path
         # self.use_countvectorizer = use_countvectorizer
@@ -181,6 +194,9 @@ class CaptionTransform():
                 self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_max_length)
         
         self.use_clip = use_clip
+        self.args = args
+        if args.use_open_clip:
+            self.tokenizer = open_clip.get_tokenizer('xlm-roberta-large-ViT-H-14')
 
     # def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
     #     self.sentence_vectors_extractor.fit(texts)
@@ -212,8 +228,12 @@ class CaptionTransform():
             outputs.update(toks)
         
         if self.use_clip:
-            toks = clip.tokenize(texts,truncate=True)
-            outputs["clip_tokens"] = toks
+            if self.args.use_open_clip:
+                toks = self.tokenizer(texts)
+                outputs["clip_tokens"] = toks
+            else:
+                toks = clip.tokenize(texts,truncate=True)
+                outputs["clip_tokens"] = toks
         return outputs
 
 class ImageText(Dataset):
@@ -298,12 +318,12 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
         im_transforms = DefaultImgTransform(img_size=image_size)
     if not args.use_bert_model:
         args.pretrain_bert_model = None
-    txt_transforms = TextTransform(use_sbert=args.use_bert_embedding,
+    txt_transforms = TextTransform(args,use_sbert=args.use_bert_embedding,
         txt_bert_model=args.pretrain_bert_model,
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip)
 
-    caption_transform = CaptionTransform(use_sbert=args.use_bert_embedding,
+    caption_transform = CaptionTransform(args, use_sbert=args.use_bert_embedding,
         txt_bert_model=args.pretrain_bert_model,
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip)
@@ -361,12 +381,12 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
     else:
         im_transforms = DefaultImgTransform(img_size=image_size)
         
-    txt_transforms = TextTransform(use_sbert=args.use_bert_embedding,
+    txt_transforms = TextTransform(args, use_sbert=args.use_bert_embedding,
         txt_bert_model=args.pretrain_bert_model,
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip, vocab_path='data/vocab.json')
     
-    caption_transform = CaptionTransform(use_sbert=args.use_bert_embedding,
+    caption_transform = CaptionTransform(args, use_sbert=args.use_bert_embedding,
         txt_bert_model=args.pretrain_bert_model,
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip)
