@@ -237,6 +237,9 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
         elif epoch==train_epochs:
             N_epoch_img_loss_train = epoch_img_loss_train/num_steps
             N_epoch_img_loss_val = cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,mode='img')
+    print(f"initial_img_loss_train:{initial_img_loss_train}, initial_img_loss_val:{initial_img_loss_val}")
+    print(f"N_epoch_img_loss_train: {N_epoch_img_loss_train}, N_epoch_img_loss_val:{N_epoch_img_loss_val}")
+
     del model
     gc.collect()
 
@@ -307,6 +310,8 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
         elif epoch==train_epochs:
             N_epoch_text_loss_train = epoch_text_loss_train/num_steps
             N_epoch_text_loss_val = cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,mode='text')
+    print(f"initial_img_loss_train:{initial_text_loss_train}, initial_img_loss_val:{initial_text_loss_val}")
+    print(f"N_epoch_img_loss_train: {N_epoch_text_loss_train}, N_epoch_img_loss_val:{N_epoch_text_loss_val}")
     del model 
     gc.collect()
 
@@ -410,6 +415,8 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
         elif epoch==train_epochs:
             N_epoch_total_loss_train = epoch_total_loss_train/num_steps 
             N_epoch_total_loss_val =  cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,mode='total')
+    print(f"initial_img_loss_train:{initial_total_loss_train}, initial_img_loss_val:{initial_total_loss_val}")
+    print(f"N_epoch_img_loss_train: {N_epoch_total_loss_train}, N_epoch_img_loss_val:{N_epoch_total_loss_val}")
     del model 
     gc.collect()
 
