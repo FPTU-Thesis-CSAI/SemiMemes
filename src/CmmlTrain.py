@@ -25,7 +25,8 @@ import open_clip
 from model.clip_info import clip_nms,clip_dim
 from model.utils import LARS,adjust_learning_rate,exclude_bias_and_norm
 from ORG import GB_estimate 
-
+from copy import deepcopy 
+import gc 
 # from test import test_singlelabel, e
 from data.semi_supervised_data import *
 from utils.npy_save import npy_save_txt
@@ -86,7 +87,10 @@ def train(args,model, dataset,
     sigmoid = torch.nn.Sigmoid()
     if args.use_org:
         print("==============use ORG===============")
+        estimate_model = deepcopy(model)
         modality_weights = GB_estimate(args,model,supervise_epochs,dataset,optimizer,scheduler,criterion,cuda,sigmoid)
+        del estimate_model
+        gc.collect()
         print(f"total weight:{modality_weights[0]}, img weight:{modality_weights[1]}, text weight:{modality_weights[2]}")
     for epoch in range(1, supervise_epochs + 1):
         epoch_supervise_loss_train = 0
@@ -107,7 +111,7 @@ def train(args,model, dataset,
 
         num_steps = min(len(dataset['train_sup']), len(dataset['train_unsup']))
 
-        for step, (supbatch, unsupbatch) in tqdm(enumerate(zip(dataset['train_sup'], dataset['train_unsup']), start=1),desc=f'epoch:{epoch}',
+        for step, (supbatch, unsupbatch) in tqdm(enumerate(zip(dataset['train_sup'], dataset['train_unsup']), start=1),desc=f'epoch {epoch}',
                                                 total=min(len(dataset['train_sup']), len(dataset['train_unsup']))):
             # print(batch_index)
 

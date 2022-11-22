@@ -118,7 +118,7 @@ def GB_estimate(args,model,train_epochs,dataset,optimizer,scheduler,criterion,cu
         epoch_total_loss_train = 0
 
         num_steps = len(dataset['train_sup'])
-        for step, supbatch in enumerate(tqdm(dataset['train_sup'],total=len(dataset['train_sup']),desc=f'epoch:{epoch}')):
+        for step, supbatch in enumerate(tqdm(dataset['train_sup'],total=len(dataset['train_sup']),desc=f'epoch {epoch}')):
             (sup_img, sup_text), sup_label = supbatch
             if args.use_adjust_lr:
                 lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
