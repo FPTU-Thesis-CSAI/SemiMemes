@@ -88,7 +88,7 @@ def train(args,model, dataset,
     if args.use_org:
         print("==============use ORG===============")
         estimate_model = deepcopy(model)
-        modality_weights = GB_estimate(args,model,supervise_epochs,dataset,optimizer,scheduler,criterion,cuda,sigmoid)
+        modality_weights = GB_estimate(args,estimate_model,supervise_epochs,dataset,optimizer,scheduler,criterion,cuda,sigmoid)
         del estimate_model
         gc.collect()
         print(f"total weight:{modality_weights[0]}, img weight:{modality_weights[1]}, text weight:{modality_weights[2]}")
