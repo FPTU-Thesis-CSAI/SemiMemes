@@ -122,10 +122,9 @@ def get_args():
     parser.add_argument('--lr-supervise', type = float, default =0.0001,help="train Learning rate")
     parser.add_argument('--use-drop-out',action='store_true',default=True)
 
-    parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
-    parser.add_argument('--use-sim-loss',action='store_true',default=False)
-    parser.add_argument('--use-vicreg-in-training',action='store_true',default=False)
-    parser.add_argument('--use-vicreg-pretrain',action='store_true',default=False)
+    parser.add_argument('--use-vcreg-loss',action='store_true',default=True)
+    parser.add_argument('--use-sim-loss',action='store_true',default=True)
+    parser.add_argument('--use-vicreg-in-training',action='store_true',default=True)
 
     parser.add_argument('--use-amp',action='store_true',default=True)
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
@@ -133,7 +132,7 @@ def get_args():
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
     parser.add_argument("--use-augmentation", action='store_true', default=True,help='')
-    parser.add_argument("--use-clip-norm", action='store_true', default=False,help='')
+    parser.add_argument("--use-clip-norm", action='store_true', default=True,help='')
     parser.add_argument("--use-coattention", action='store_true', default=False,help='')
     parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
 
@@ -144,9 +143,9 @@ def get_args():
     parser.add_argument("--use-asymmetric-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-bce-loss",action='store_true', default=False,help='')
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
-    parser.add_argument("--use-act",action='store_true', default=False,help='')
-    parser.add_argument("--use-sgd",action='store_true', default=False,help='')
-    parser.add_argument("--use-adam",action='store_true', default=True,help='')
+    parser.add_argument("--use-act",action='store_true', default=True,help='')
+    parser.add_argument("--use-sgd",action='store_true', default=True,help='')
+    parser.add_argument("--use-adam",action='store_true', default=False,help='')
 
     parser.add_argument("--use-resample-loss", action='store_true', default=True,help='')
     parser.add_argument("--use-sigmoid", type = bool, default=True,help='')

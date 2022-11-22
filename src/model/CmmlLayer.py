@@ -244,6 +244,10 @@ class CmmlModel(nn.Module):
         self.Predictmodel = PredictNet(self.args,self.Predictparam)
         self.Imgmodel = ImgNet(self.args,clip_model=self.clip_model,clip_dim=self.cdim)
         self.Attentionmodel = AttentionNet(self.Attentionparam)
+        self.FusionCoattention = None
+        self.ProjectormodelImgText = None 
+        self.ProjectormodelImgTotal = None
+        self.ProjectormodelTextTotal = None
         if self.args.use_coattention:
             self.FusionCoattention = FusionNet(self.Textfeatureparam[-1],self.Textfeatureparam[-1], 0.2)
         if self.args.use_vcreg_loss:

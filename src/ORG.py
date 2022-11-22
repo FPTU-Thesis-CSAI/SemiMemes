@@ -103,7 +103,7 @@ def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,m
                 lr = adjust_learning_rate(args, optimizer, dataset['val'], step)
             elif args.use_step_lr:
                 scheduler.step()
-
+            y = label
             img_xx = img
             if args.use_sentence_vectorizer:
                 text_xx = text['sentence_vectors'].float()
@@ -326,6 +326,7 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
                     lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
                 elif args.use_step_lr:
                     scheduler.step()
+            y = sup_label
             '''
             Attention architecture and use bceloss.
             '''
@@ -336,7 +337,7 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
             if args.use_bert_embedding:
                 supervise_bert_xx = sup_text['sbert_embedding']
             label = sup_label
-
+            
             if args.use_bert_model:
                 supervise_input_ids = sup_text['input_ids']
                 supervise_attn_mask = sup_text['attention_mask']
@@ -426,3 +427,5 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
         print("use modified ORG")
         coeff = np.array([1./(total_gen*total_o**2),1./(img_gen*img_o**2),1./(text_gen*text_o**2)])
         return coeff/sum(coeff)
+
+# total weight:-0.2526951582982574, img weight:0.7043387509350074, text weight:0.54835640736325
