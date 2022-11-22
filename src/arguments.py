@@ -114,7 +114,7 @@ def get_args():
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
     parser.add_argument('--batchsize', type = int, default = 70,help="train and test batchsize")  
-    parser.add_argument('--epochs', default=50, type=int, metavar='N',
+    parser.add_argument('--epochs', default=5, type=int, metavar='N',
                     help='number of total epochs to run')  
     parser.add_argument('--wd', '--weight-decay', default=0, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
