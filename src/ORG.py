@@ -188,7 +188,7 @@ def create_optimizer_and_scheduler(args,model):
     if args.use_linear_scheduler:
         scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,start_factor=1./3,total_iters=80)
     elif args.use_step_lr:
-        scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9)  
+        scheduler = StepLR(optimizer, step_size = 200, gamma = 0.9)  
     elif args.use_multi_step_lr:
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5,10,15],gamma=0.5)
     return optimizer, scheduler

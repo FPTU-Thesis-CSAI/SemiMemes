@@ -109,11 +109,11 @@ def get_args():
     parser.add_argument("--use-step-lr",action='store_true', default=True,help='')
     parser.add_argument("--use-multi-step-lr", action='store_true', default=False,help='')
     parser.add_argument("--use-linear-scheduler", action='store_true', default=False,help='')
-    parser.add_argument("--use-concat-modalities", action='store_true', default=False,help='')
-    parser.add_argument("--use-deep-weak-attention", action='store_true', default=True,help='')
+    parser.add_argument("--use-concat-modalities", action='store_true', default=True,help='')
+    parser.add_argument("--use-deep-weak-attention", action='store_true', default=False,help='')
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
-    parser.add_argument('--batchsize', type = int, default = 70,help="train and test batchsize")  
+    parser.add_argument('--batchsize', type = int, default = 80,help="train and test batchsize")  
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')  
     parser.add_argument('--wd', '--weight-decay', default=0, type=float,
@@ -122,12 +122,17 @@ def get_args():
     parser.add_argument('--lr-supervise', type = float, default =0.0001,help="train Learning rate")
     parser.add_argument('--use-drop-out',action='store_true',default=True)
 
-    parser.add_argument('--use-vcreg-loss',action='store_true',default=True)
-    parser.add_argument('--use-sim-loss',action='store_true',default=True)
-    parser.add_argument('--use-vicreg-in-training',action='store_true',default=True)
+    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 256',
+    help="architecture of text feature network")
+    parser.add_argument('--Imgpredictpara', type = str, default = '256, 5',help="architecture of img predict network")
+    parser.add_argument('--Textpredictpara', type = str, default = '256, 5',help="architecture of text predict network")
+    parser.add_argument('--Predictpara', type = str, default = '512, 5',help="architecture of attention predict network")
+    parser.add_argument('--Attentionparameter', type = str, default = '256, 64, 32, 1',
+    help="architecture of attention network")
 
-    parser.add_argument('--use-amp',action='store_true',default=True)
-    parser.add_argument('--use-auto-weight',action='store_true',default=False)
+    parser.add_argument('--use-sim-loss',action='store_true',default=False)
+    parser.add_argument('--use-vicreg-in-training',action='store_true',default=False)
+
     parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
@@ -144,8 +149,8 @@ def get_args():
     parser.add_argument("--use-bce-loss",action='store_true', default=False,help='')
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-act",action='store_true', default=True,help='')
-    parser.add_argument("--use-sgd",action='store_true', default=True,help='')
-    parser.add_argument("--use-adam",action='store_true', default=False,help='')
+    parser.add_argument("--use-sgd",action='store_true', default=False,help='')
+    parser.add_argument("--use-adam",action='store_true', default=True,help='')
 
     parser.add_argument("--use-resample-loss", action='store_true', default=True,help='')
     parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
@@ -193,13 +198,7 @@ def get_args():
     parser.add_argument('--savepath', type = str, default = 'models')
     parser.add_argument('--textbatchsize', type = int, default = 32)
     parser.add_argument('--imgbatchsize', type = int, default = 32)
-    parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 256',
-    help="architecture of text feature network")
-    parser.add_argument('--Imgpredictpara', type = str, default = '256, 5',help="architecture of img predict network")
-    parser.add_argument('--Textpredictpara', type = str, default = '256, 5',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '256, 5',help="architecture of attention predict network")
-    parser.add_argument('--Attentionparameter', type = str, default = '256, 64, 32, 1',
-    help="architecture of attention network")
+
     parser.add_argument('--img-supervise-epochs', type = int, default = 0)
     parser.add_argument('--text-supervise-epochs', type = int, default = 1)
     parser.add_argument('--img-lr-supervise', type = float, default = 0.001)

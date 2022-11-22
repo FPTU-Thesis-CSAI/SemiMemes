@@ -16,8 +16,6 @@ class TextfeatureNet(nn.Module):
         if self.args.use_clip:
             self.clip_model = clip_model
             self.linear = nn.Linear(clip_dim,args.output_backbone_dim)
-            if self.args.use_drop_out:
-                self.dropout = nn.Dropout(0.2)
             # self.dropout = nn.Dropout(0.2)
             # self.bigru = nn.LSTM(clip_dim,neure_num[-1], 1, bidirectional=False, batch_first=True, bias=False)
         elif self.args.use_bert_model:
@@ -32,7 +30,9 @@ class TextfeatureNet(nn.Module):
             self.feature = nn.Linear(neure_num[-2], neure_num[-1])
             if args.add_block_linear_bert_embed:
                 self.linear = make_layers([384,neure_num[-2]])
-
+        if self.args.use_drop_out:
+            self.dropout = nn.Dropout(0.2)
+            
     def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None):
         if self.args.use_clip:
             with torch.no_grad():
@@ -45,6 +45,8 @@ class TextfeatureNet(nn.Module):
             last_hidden_state = output.last_hidden_state
             x = last_hidden_state[:, self.target_token_idx, :]
             x = self.linear(x)
+            if self.args.use_drop_out:
+                x = self.dropout(x)
         else:
             temp_x = self.mlp(x)
             if self.args.use_bert_embedding:
@@ -109,8 +111,6 @@ class ImgNet(nn.Module):
             self.fc1 = nn.Sequential(       
             nn.Linear(clip_dim, args.output_backbone_dim)
             )
-            if args.use_drop_out:
-                self.dropout = nn.Dropout(0.2)
         else:
             if args.resnet_model == 'resnet50':
                 self.feature = Models.resnet50('ResNet50_Weights.DEFAULT')
@@ -124,7 +124,9 @@ class ImgNet(nn.Module):
                 )
             self.feature = nn.Sequential(*list(self.feature.children())[:-1])
         self.args = args 
-
+        if args.use_drop_out:
+            self.dropout = nn.Dropout(0.2)
+            
     def forward(self, x):
         if self.args.use_clip:
             with torch.no_grad():
@@ -140,6 +142,8 @@ class ImgNet(nn.Module):
             elif self.args.resnet_model == 'resnet50':
                 x = x.view(N, 2048)
             x = self.fc1(x)
+            if self.args.use_drop_out:
+                x = self.dropout(x)
         return x
 
 def make_layers(cfg):
@@ -250,7 +254,7 @@ class CmmlModel(nn.Module):
         self.ProjectormodelTextTotal = None
         if self.args.use_coattention:
             self.FusionCoattention = FusionNet(self.Textfeatureparam[-1],self.Textfeatureparam[-1], 0.2)
-        if self.args.use_vcreg_loss:
+        if self.args.use_vicreg_in_training:
             self.ProjectormodelImgText = VICReg(self.args)
             self.ProjectormodelImgTotal = VICReg(self.args)
             self.ProjectormodelTextTotal = VICReg(self.args)
