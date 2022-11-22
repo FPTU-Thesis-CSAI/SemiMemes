@@ -22,6 +22,7 @@ def compute_O(N_epoch_loss_train,N_epoch_loss_val,init_loss_train,init_loss_val)
     return N_epoch_overfit - init_epoch_overfit
 
 def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,mode=''):
+    model.eval()
     num_steps = len(dataset['val'])
     if mode == 'img':
         img_loss_val = 0 
@@ -36,14 +37,15 @@ def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,m
             img_xx = img_xx.float()
             label = label.float()
             img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)                  
-            label = Variable(label).cuda() if cuda else Variable(label)  
-            imghidden = model.Imgmodel(img_xx)
-            imgpredict = model.Imgpredictmodel(imghidden)
-            if args.use_focal_loss or  args.use_bce_loss:
-                imgpredict = sigmoid(imgpredict)                
-                imgloss = criterion(imgpredict, label)
-            elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
-                imgloss = criterion(imgpredict, label)
+            label = Variable(label).cuda() if cuda else Variable(label)
+            with torch.no_grad():  
+                imghidden = model.Imgmodel(img_xx)
+                imgpredict = model.Imgpredictmodel(imghidden)
+                if args.use_focal_loss or  args.use_bce_loss:
+                    imgpredict = sigmoid(imgpredict)                
+                    imgloss = criterion(imgpredict, label)
+                elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
+                    imgloss = criterion(imgpredict, label)
             img_loss_val += imgloss.item()
         return img_loss_val/num_steps
 
@@ -75,20 +77,21 @@ def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,m
                 clip_ids = Variable(clip_ids).cuda() if cuda else Variable(clip_ids)  
             label = label.float()
             label = Variable(label).cuda() if cuda else Variable(label)  
-            if args.use_clip:
-                texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids)
-            elif args.use_bert_embedding:
-                texthidden = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
-            elif args.use_bert_model:
-                texthidden = model.Textfeaturemodel(input_ids = input_ids,attn_mask = attn_mask)
-            else:
-                texthidden = model.Textfeaturemodel(x = text_xx)
-            textpredict = model.Textpredictmodel(texthidden)
-            if args.use_focal_loss or  args.use_bce_loss:
-                textpredict = sigmoid(textpredict)   
-                textloss = criterion(textpredict, label)
-            elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
-                textloss = criterion(textpredict, label)
+            with torch.no_grad():
+                if args.use_clip:
+                    texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids)
+                elif args.use_bert_embedding:
+                    texthidden = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
+                elif args.use_bert_model:
+                    texthidden = model.Textfeaturemodel(input_ids = input_ids,attn_mask = attn_mask)
+                else:
+                    texthidden = model.Textfeaturemodel(x = text_xx)
+                textpredict = model.Textpredictmodel(texthidden)
+                if args.use_focal_loss or  args.use_bce_loss:
+                    textpredict = sigmoid(textpredict)   
+                    textloss = criterion(textpredict, label)
+                elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
+                    textloss = criterion(textpredict, label)
             text_loss_val += textloss.item() 
         return text_loss_val/num_steps
     
@@ -125,45 +128,46 @@ def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,m
             label = label.float()
             img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)                  
             label = Variable(label).cuda() if cuda else Variable(label)  
-            imghidden = model.Imgmodel(img_xx)
-            
-            if args.use_clip:
-                texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids)
-            elif args.use_bert_embedding:
-                texthidden = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
-            elif args.use_bert_model:
-                texthidden = model.Textfeaturemodel(input_ids = input_ids,attn_mask = attn_mask)
-            else:
-                texthidden = model.Textfeaturemodel(x = text_xx)
+            with torch.no_grad():
+                imghidden = model.Imgmodel(img_xx)
+                
+                if args.use_clip:
+                    texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids)
+                elif args.use_bert_embedding:
+                    texthidden = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
+                elif args.use_bert_model:
+                    texthidden = model.Textfeaturemodel(input_ids = input_ids,attn_mask = attn_mask)
+                else:
+                    texthidden = model.Textfeaturemodel(x = text_xx)
 
-            if args.use_deep_weak_attention:
-                imgk = model.Attentionmodel(imghidden)
-                textk = model.Attentionmodel(texthidden)
-                modality_attention = []
-                modality_attention.append(imgk)
-                modality_attention.append(textk)
-                modality_attention = torch.cat(modality_attention, 1)
-                modality_attention = nn.functional.softmax(modality_attention, dim = 1)
-                img_attention = torch.zeros(1, len(y))
-                img_attention[0] = modality_attention[:,0]
-                img_attention = img_attention.t()
-                text_attention = torch.zeros(1, len(y))
-                text_attention[0] = modality_attention[:,1]
-                text_attention = text_attention.t()
-                if cuda:
-                    img_attention = img_attention.cuda()
-                    text_attention = text_attention.cuda()
-                feature_hidden = img_attention * imghidden + text_attention * texthidden
-            elif args.use_coattention:
-                feature_hidden = model.FusionCoattention(imghidden,texthidden)
-            elif args.use_concat_modalities:
-                feature_hidden = torch.cat((imghidden, texthidden), dim=1)
-            predict = model.Predictmodel(feature_hidden)       
-            if args.use_focal_loss or  args.use_bce_loss:
-                predict = sigmoid(predict)
-                totalloss = criterion(predict, label)
-            elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
-                totalloss = criterion(predict, label)
+                if args.use_deep_weak_attention:
+                    imgk = model.Attentionmodel(imghidden)
+                    textk = model.Attentionmodel(texthidden)
+                    modality_attention = []
+                    modality_attention.append(imgk)
+                    modality_attention.append(textk)
+                    modality_attention = torch.cat(modality_attention, 1)
+                    modality_attention = nn.functional.softmax(modality_attention, dim = 1)
+                    img_attention = torch.zeros(1, len(y))
+                    img_attention[0] = modality_attention[:,0]
+                    img_attention = img_attention.t()
+                    text_attention = torch.zeros(1, len(y))
+                    text_attention[0] = modality_attention[:,1]
+                    text_attention = text_attention.t()
+                    if cuda:
+                        img_attention = img_attention.cuda()
+                        text_attention = text_attention.cuda()
+                    feature_hidden = img_attention * imghidden + text_attention * texthidden
+                elif args.use_coattention:
+                    feature_hidden = model.FusionCoattention(imghidden,texthidden)
+                elif args.use_concat_modalities:
+                    feature_hidden = torch.cat((imghidden, texthidden), dim=1)
+                predict = model.Predictmodel(feature_hidden)       
+                if args.use_focal_loss or  args.use_bce_loss:
+                    predict = sigmoid(predict)
+                    totalloss = criterion(predict, label)
+                elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
+                    totalloss = criterion(predict, label)
             total_loss_val += totalloss.item()
         return total_loss_val/num_steps
 
@@ -197,12 +201,17 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
     print("===========train image modality===========")
     for epoch in range(1,train_epochs + 1):
         epoch_img_loss_train = 0
+        if epoch == 1:
+            model.eval()
+        else:
+            model.train()
         for step, supbatch in enumerate(tqdm(dataset['train_sup'],total=len(dataset['train_sup']),desc=f'epoch {epoch}, modality image')):
             (sup_img, sup_text), sup_label = supbatch
-            if args.use_adjust_lr:
-                lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
-            elif args.use_step_lr:
-                scheduler.step()
+            if epoch != 1:
+                if args.use_adjust_lr:
+                    lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
+                elif args.use_step_lr:
+                    scheduler.step()
             supervise_img_xx = sup_img
             label = sup_label
             supervise_img_xx = supervise_img_xx.float()
@@ -213,13 +222,15 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
             supervise_imgpredict = model.Imgpredictmodel(supervise_imghidden)
             imgloss = criterion(supervise_imgpredict, label)
             epoch_img_loss_train += imgloss.item()
-            optimizer.zero_grad()
-            imgloss.backward()
-            if args.use_clip_norm:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
-        if args.use_multi_step_lr or args.use_linear_scheduler:
-            scheduler.step()
+            if epoch != 1:
+                optimizer.zero_grad()
+                imgloss.backward()
+                if args.use_clip_norm:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+        if epoch != 1:
+            if args.use_multi_step_lr or args.use_linear_scheduler:
+                scheduler.step()
         if epoch==1:
             initial_img_loss_train = epoch_img_loss_train/num_steps
             initial_img_loss_val =  cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,mode='img')
@@ -234,12 +245,17 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
     optimizer, scheduler = create_optimizer_and_scheduler(args,model)
     for epoch in range(1,train_epochs + 1):
         epoch_text_loss_train = 0
+        if epoch == 1:
+            model.eval()
+        else:
+            model.train()
         for step, supbatch in enumerate(tqdm(dataset['train_sup'],total=len(dataset['train_sup']),desc=f'epoch {epoch}, modality text')):
             (sup_img, sup_text), sup_label = supbatch
-            if args.use_adjust_lr:
-                lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
-            elif args.use_step_lr:
-                scheduler.step()
+            if epoch != 1:
+                if args.use_adjust_lr:
+                    lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
+                elif args.use_step_lr:
+                    scheduler.step()
             if args.use_sentence_vectorizer:
                 supervise_text_xx = sup_text['sentence_vectors'].float()
                 supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
@@ -276,13 +292,15 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
             elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
                 textloss = criterion(supervise_textpredict, label)
             epoch_text_loss_train += textloss.item()
-            optimizer.zero_grad()
-            textloss.backward()
-            if args.use_clip_norm:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
-        if args.use_multi_step_lr or args.use_linear_scheduler:
-            scheduler.step()
+            if epoch != 1:
+                optimizer.zero_grad()
+                textloss.backward()
+                if args.use_clip_norm:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+        if epoch != 1:
+            if args.use_multi_step_lr or args.use_linear_scheduler:
+                scheduler.step()
         if epoch==1:
             initial_text_loss_train = epoch_text_loss_train/num_steps
             initial_text_loss_val =  cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,mode='text')
@@ -297,12 +315,17 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
     optimizer, scheduler = create_optimizer_and_scheduler(args,model)
     for epoch in range(1,train_epochs + 1):
         epoch_total_loss_train = 0
+        if epoch == 1:
+            model.eval()
+        else:
+            model.train()
         for step, supbatch in enumerate(tqdm(dataset['train_sup'],total=len(dataset['train_sup']),desc=f'epoch {epoch}, modality combine')):
             (sup_img, sup_text), sup_label = supbatch
-            if args.use_adjust_lr:
-                lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
-            elif args.use_step_lr:
-                scheduler.step()
+            if epoch != 1:
+                if args.use_adjust_lr:
+                    lr = adjust_learning_rate(args, optimizer, dataset['train_sup'], step)
+                elif args.use_step_lr:
+                    scheduler.step()
             '''
             Attention architecture and use bceloss.
             '''
@@ -372,13 +395,14 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
 
             epoch_total_loss_train += totalloss.item()
             optimizer.zero_grad()
-            totalloss.backward()
-            if args.use_clip_norm:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
-
-        if args.use_multi_step_lr or args.use_linear_scheduler:
-            scheduler.step()
+            if epoch != 1:
+                totalloss.backward()
+                if args.use_clip_norm:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+        if epoch != 1:
+            if args.use_multi_step_lr or args.use_linear_scheduler:
+                scheduler.step()
         if epoch==1:
             initial_total_loss_train = epoch_total_loss_train/num_steps 
             initial_total_loss_val =  cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,mode='total')

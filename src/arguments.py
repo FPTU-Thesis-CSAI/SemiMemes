@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='clip-one-head', type=str,help="Optional Name of Experiment (used by tensorboard)")
+    parser.add_argument('--experiment', default='weighted-loss', type=str,help="Optional Name of Experiment (used by tensorboard)")
 
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
@@ -110,17 +110,17 @@ def get_args():
     parser.add_argument("--use-multi-step-lr", action='store_true', default=False,help='')
     parser.add_argument("--use-linear-scheduler", action='store_true', default=False,help='')
     parser.add_argument("--use-concat-modalities", action='store_true', default=False,help='')
-    parser.add_argument("--use-deep-weak-attention", action='store_true', default=False,help='')
+    parser.add_argument("--use-deep-weak-attention", action='store_true', default=True,help='')
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
     parser.add_argument('--batchsize', type = int, default = 70,help="train and test batchsize")  
-    parser.add_argument('--epochs', default=5, type=int, metavar='N',
+    parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')  
     parser.add_argument('--wd', '--weight-decay', default=0, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
     parser.add_argument('--lr-supervise', type = float, default =0.0001,help="train Learning rate")
-    parser.add_argument('--use-drop-out',action='store_true',default=False)
+    parser.add_argument('--use-drop-out',action='store_true',default=True)
 
     parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
@@ -134,7 +134,7 @@ def get_args():
     parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
     parser.add_argument("--use-augmentation", action='store_true', default=True,help='')
     parser.add_argument("--use-clip-norm", action='store_true', default=False,help='')
-    parser.add_argument("--use-coattention", action='store_true', default=True,help='')
+    parser.add_argument("--use-coattention", action='store_true', default=False,help='')
     parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
 
     parser.add_argument("--use-org",action='store_true', default=True,help='')
@@ -145,8 +145,8 @@ def get_args():
     parser.add_argument("--use-bce-loss",action='store_true', default=False,help='')
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-act",action='store_true', default=False,help='')
-    parser.add_argument("--use-sgd",action='store_true', default=True,help='')
-    parser.add_argument("--use-adam",action='store_true', default=False,help='')
+    parser.add_argument("--use-sgd",action='store_true', default=False,help='')
+    parser.add_argument("--use-adam",action='store_true', default=True,help='')
 
     parser.add_argument("--use-resample-loss", action='store_true', default=True,help='')
     parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
