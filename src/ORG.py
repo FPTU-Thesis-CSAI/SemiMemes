@@ -11,7 +11,7 @@ from model.utils import LARS,adjust_learning_rate,exclude_bias_and_norm
 from torch.optim.lr_scheduler import StepLR
 
 def compute_generalization(loss_val_N,loss_val_init):
-    return loss_val_N-loss_val_init
+    return abs(loss_val_N-loss_val_init)
 
 def compute_overfitting(loss_val,loss_train):
     return loss_val - loss_train
@@ -435,4 +435,3 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
         coeff = np.array([1./(total_gen*total_o**2),1./(img_gen*img_o**2),1./(text_gen*text_o**2)])
         return coeff/sum(coeff)
 
-# total weight:-0.2526951582982574, img weight:0.7043387509350074, text weight:0.54835640736325

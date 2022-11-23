@@ -109,14 +109,14 @@ def get_args():
     parser.add_argument("--use-step-lr",action='store_true', default=True,help='')
     parser.add_argument("--use-multi-step-lr", action='store_true', default=False,help='')
     parser.add_argument("--use-linear-scheduler", action='store_true', default=False,help='')
-    parser.add_argument("--use-concat-modalities", action='store_true', default=True,help='')
-    parser.add_argument("--use-deep-weak-attention", action='store_true', default=False,help='')
+    parser.add_argument("--use-concat-modalities", action='store_true', default=False,help='')
+    parser.add_argument("--use-deep-weak-attention", action='store_true', default=True,help='')
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
     parser.add_argument('--batchsize', type = int, default = 80,help="train and test batchsize")  
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')  
-    parser.add_argument('--wd', '--weight-decay', default=0, type=float,
+    parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
     parser.add_argument('--lr-supervise', type = float, default =0.0001,help="train Learning rate")
@@ -126,7 +126,7 @@ def get_args():
     help="architecture of text feature network")
     parser.add_argument('--Imgpredictpara', type = str, default = '256, 5',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '256, 5',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '512, 5',help="architecture of attention predict network")
+    parser.add_argument('--Predictpara', type = str, default = '256, 5',help="architecture of attention predict network")
     parser.add_argument('--Attentionparameter', type = str, default = '256, 64, 32, 1',
     help="architecture of attention network")
 
@@ -137,13 +137,13 @@ def get_args():
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
     parser.add_argument("--use-augmentation", action='store_true', default=True,help='')
-    parser.add_argument("--use-clip-norm", action='store_true', default=True,help='')
+    parser.add_argument("--use-clip-norm", action='store_true', default=False,help='')
     parser.add_argument("--use-coattention", action='store_true', default=False,help='')
     parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
 
     parser.add_argument("--use-org",action='store_true', default=True,help='')
-    parser.add_argument("--original-org",action='store_true', default=False,help='')
-    parser.add_argument("--modified-org",action='store_true', default=True,help='')
+    parser.add_argument("--original-org",action='store_true', default=True,help='')
+    parser.add_argument("--modified-org",action='store_true', default=False,help='')
     parser.add_argument("--use-zlpr-loss",action='store_true', default=False,help='')
     parser.add_argument("--use-asymmetric-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-bce-loss",action='store_true', default=False,help='')

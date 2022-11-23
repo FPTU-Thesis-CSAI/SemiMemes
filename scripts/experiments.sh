@@ -61,5 +61,7 @@ CUDA_VISIBLE_DEVICES=$1 python src/CmmlTrain.py \
 #     --neg-scale 7.0 \
 #     --epochs 150
 
-#total weight:0.7183905025643998, img weight:0.2403833052800633, text weight:0.041226192155536835 (clip,sgd,deep_weak_attention) 
-# (concat,bert model, resent, adam)
+#total weight:0.7183905025643998, img weight:0.2403833052800633, text weight:0.041226192155536835 (clip,sgd,deep_weak_attention,resampleloss) 
+#total weight:0.7966240742351592, img weight:0.10191846424448874, text weight:0.10145746152035197 (concat,clip model, adam,resampleloss)
+#(clip,adam,deep_weak_attention,resampleloss,mORG)
+#(clip,adam,deep_weak_attention,resampleloss,oORG)
