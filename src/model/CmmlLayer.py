@@ -32,7 +32,7 @@ class TextfeatureNet(nn.Module):
                 self.linear = make_layers([384,neure_num[-2]])
         if self.args.use_drop_out:
             self.dropout = nn.Dropout(0.2)
-            
+
     def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None):
         if self.args.use_clip:
             with torch.no_grad():
@@ -187,7 +187,7 @@ class VICReg(nn.Module):
         super().__init__()
         self.args = args
         self.num_features = int(args.mlp_expand_dim.split("-")[-1])
-        self.projector = Projector(args.mlp_expand_dim, args.output_backbone_dim)
+        self.projector = Projector(args.mlp_expand_dim, args.mlp_expand_dim)
 
     def forward(self, x, y):
         x = self.projector(x)
@@ -250,12 +250,8 @@ class CmmlModel(nn.Module):
         self.Attentionmodel = AttentionNet(self.Attentionparam)
         self.FusionCoattention = None
         self.ProjectormodelImgText = None 
-        self.ProjectormodelImgTotal = None
-        self.ProjectormodelTextTotal = None
         if self.args.use_coattention:
             self.FusionCoattention = FusionNet(self.Textfeatureparam[-1],self.Textfeatureparam[-1], 0.2)
-        if self.args.use_vicreg_in_training:
+        if self.args.use_one_head:
             self.ProjectormodelImgText = VICReg(self.args)
-            self.ProjectormodelImgTotal = VICReg(self.args)
-            self.ProjectormodelTextTotal = VICReg(self.args)
 

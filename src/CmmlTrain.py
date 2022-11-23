@@ -63,7 +63,7 @@ def train(args,model, dataset,
         scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,start_factor=1./3,total_iters=80)
     elif args.use_step_lr:
         print("==============use step scheduler===============")
-        scheduler = StepLR(optimizer, step_size = 200, gamma = 0.9)  
+        scheduler = StepLR(optimizer, step_size = 100, gamma = 0.9)  
     elif args.use_multi_step_lr:
         print("==============use multi step scheduler===============")
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5,10,15],gamma=0.5)
@@ -195,46 +195,49 @@ def train(args,model, dataset,
             elif args.use_concat_modalities:
                 # print("===============use concat================")
                 supervise_feature_hidden = torch.cat((supervise_imghidden, supervise_texthidden), dim=1)
-            if args.use_vicreg_in_training:
-                # print("===============use vcreg================")
-                vcreg_loss_supervise_img_text = model.ProjectormodelImgText(supervise_imghidden,supervise_texthidden)
-                vcreg_loss_supervise_img_total = model.ProjectormodelImgTotal(supervise_imghidden,supervise_feature_hidden)
-                vcreg_loss_supervise_text_total = model.ProjectormodelTextTotal(supervise_feature_hidden,supervise_texthidden)
 
             supervise_predict = model.Predictmodel(supervise_feature_hidden)       
             if args.use_focal_loss or  args.use_bce_loss:
                 supervise_predict = sigmoid(supervise_predict)
                 totalloss = criterion(supervise_predict, label)
-                supervise_textpredict = sigmoid(supervise_textpredict)
-                supervise_imgpredict = sigmoid(supervise_imgpredict)                
-                imgloss = criterion(supervise_imgpredict, label)
-                textloss = criterion(supervise_textpredict, label)
+                if not args.use_one_head:
+                    supervise_textpredict = sigmoid(supervise_textpredict)
+                    supervise_imgpredict = sigmoid(supervise_imgpredict)                
+                    imgloss = criterion(supervise_imgpredict, label)
+                    textloss = criterion(supervise_textpredict, label)
             elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
-                imgloss = criterion(supervise_imgpredict, label)
-                textloss = criterion(supervise_textpredict, label)
+                if not args.use_one_head:
+                    imgloss = criterion(supervise_imgpredict, label)
+                    textloss = criterion(supervise_textpredict, label)
+                    supervise_imgpredict = sigmoid(supervise_imgpredict)
+                    supervise_textpredict = sigmoid(supervise_textpredict)
                 totalloss = criterion(supervise_predict, label)
-                supervise_imgpredict = sigmoid(supervise_imgpredict)
-                supervise_textpredict = sigmoid(supervise_textpredict)
-            '''
-            Diversity Measure code.
-            '''        
-            div = nn.CosineSimilarity(dim=1)(supervise_imgpredict, supervise_textpredict).mean(axis=0)
+            if args.use_one_head:
+                vicreg_loss = model.ProjectormodelImgText(supervise_imgpredict,supervise_textpredict)
+            else:
+                    
+                '''
+                Diversity Measure code.
+                '''        
+                div = nn.CosineSimilarity(dim=1)(supervise_imgpredict, supervise_textpredict).mean(axis=0)
 
-            '''
-            Diversity Measure code.
-            ''' 
+                '''
+                Diversity Measure code.
+                ''' 
             # print("div: ", div.item(), end='\t')
             # div_arr[batch_index-1] = div.item()
             if args.use_org:
                 supervise_loss = modality_weights[1]*imgloss + modality_weights[2]*textloss + modality_weights[0]*totalloss
+            elif args.use_one_head:
+                supervise_loss = 2.0*totalloss+sum(vicreg_loss)
             else:
-                supervise_loss = imgloss + textloss + 2.0*totalloss
-            if args.use_vicreg_in_training:
-                supervise_loss += sum(vcreg_loss_supervise_img_text)+sum(vcreg_loss_supervise_img_total)+sum(vcreg_loss_supervise_text_total)
+                supervise_loss = 1.5*imgloss + textloss + 2.0*totalloss
 
-            epoch_img_loss_train += imgloss.item()
-            epoch_text_loss_train += textloss.item() 
             epoch_total_loss_train += totalloss.item()
+            if not args.use_one_head:
+                epoch_img_loss_train += imgloss.item()
+                epoch_text_loss_train += textloss.item() 
+                
             #=======================================#
 
             # ================== UNSUPERVISE =================== # 
@@ -272,37 +275,39 @@ def train(args,model, dataset,
             else:
                 unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
 
-            if args.use_vicreg_in_training:
+            if args.use_one_head:
                 # print("===============use vcreg in unsupervised data================")
-                vcreg_loss_unsupervise_img_text = model.ProjectormodelImgText(unsupervise_imghidden,unsupervise_texthidden)
+                vicreg_loss = model.ProjectormodelImgText(model.Imgpredictmodel(unsupervise_imghidden),
+                    model.Textpredictmodel(unsupervise_texthidden))
+                total_loss = supervise_loss+sum(vicreg_loss)
+            else:
+                unsupervise_imgpredict = sigmoid(model.Imgpredictmodel(unsupervise_imghidden))
+                unsupervise_textpredict = sigmoid(model.Textpredictmodel(unsupervise_texthidden))
 
-            unsupervise_imgpredict = sigmoid(model.Imgpredictmodel(unsupervise_imghidden))
-            unsupervise_textpredict = sigmoid(model.Textpredictmodel(unsupervise_texthidden))
+                '''
+                Robust Consistency Measure code.
+                '''
+                dis = 2 - nn.CosineSimilarity(dim=1)(unsupervise_imgpredict, unsupervise_textpredict)
+
+                tensor1 = dis[torch.abs(dis) < cita]
+                tensor2 = dis[torch.abs(dis) >= cita]
+                tensor1loss = torch.sum(tensor1 * tensor1/2)
+                tensor2loss = torch.sum(cita * (torch.abs(tensor2) - 1/2 * cita))
+
+                unsupervise_loss = (tensor1loss + tensor2loss)/unsupervise_img_xx.size()[0]      
+                '''
+                Robust Consistency Measure code.
+                '''
+
+                # print("unsup loss: ", unsupervise_loss.item())
+
+                total_loss = supervise_loss + 0.01* div +  unsupervise_loss
+
+                
             
-            '''
-            Robust Consistency Measure code.
-            '''
-            dis = 2 - nn.CosineSimilarity(dim=1)(unsupervise_imgpredict, unsupervise_textpredict)
-
-            tensor1 = dis[torch.abs(dis) < cita]
-            tensor2 = dis[torch.abs(dis) >= cita]
-            tensor1loss = torch.sum(tensor1 * tensor1/2)
-            tensor2loss = torch.sum(cita * (torch.abs(tensor2) - 1/2 * cita))
-
-            unsupervise_loss = (tensor1loss + tensor2loss)/unsupervise_img_xx.size()[0]      
-            '''
-            Robust Consistency Measure code.
-            '''
-
-            # print("unsup loss: ", unsupervise_loss.item())
-
-            total_loss = supervise_loss + 0.01* div +  unsupervise_loss
-            if args.use_vicreg_in_training:
-                total_loss += sum(vcreg_loss_unsupervise_img_text)
-            
-            epoch_supervise_loss_train += supervise_loss.item()
-            epoch_div_train += div.item() 
-            epoch_unsupervise_loss_train += unsupervise_loss.item()
+                epoch_supervise_loss_train += supervise_loss.item()
+                epoch_div_train += div.item() 
+                epoch_unsupervise_loss_train += unsupervise_loss.item()
 
             # ================== UNSUPERVISE =================== #
             
@@ -317,14 +322,22 @@ def train(args,model, dataset,
             scheduler.step()
 
         #===================== Multilabel =================#
-        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
-        f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
-        auc_pm1,auc_pm2,auc_pm3,
-        total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
-        sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
-        model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
-        model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda,
-        FusionCoattention = model.FusionCoattention)
+        if args.use_one_head:
+            (f1_macro_multi_total,f1_weighted_multi_total,auc_pm1,
+            total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
+            sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
+            model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
+            model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda,
+            FusionCoattention = model.FusionCoattention)
+        else:
+            (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
+            f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
+            auc_pm1,auc_pm2,auc_pm3,
+            total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
+            sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
+            model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
+            model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda,
+            FusionCoattention = model.FusionCoattention)
 
         total_step = num_steps
         epoch_supervise_loss_train = epoch_supervise_loss_train/total_step
@@ -336,27 +349,33 @@ def train(args,model, dataset,
 
 
         print("epoch_total_loss_train:",epoch_total_loss_train)
-        print("epoch_img_loss_train",epoch_img_loss_train,
-            "\t epoch_text_loss_train:",epoch_text_loss_train,
-            "\t epoch_total_loss_train:",epoch_total_loss_train)
+        if not args.use_one_head:
+            print("epoch_img_loss_train",epoch_img_loss_train,
+                "\t epoch_text_loss_train:",epoch_text_loss_train,
+                "\t epoch_total_loss_train:",epoch_total_loss_train)
         
-        print("epoch_supervise_loss_train:",epoch_supervise_loss_train,
-        '\t epoch_div_train:',epoch_div_train,'\t epoch_unsupervise_loss_train',epoch_unsupervise_loss_train)
+            print("epoch_supervise_loss_train:",epoch_supervise_loss_train,
+            '\t epoch_div_train:',epoch_div_train,'\t epoch_unsupervise_loss_train',epoch_unsupervise_loss_train)
 
         if not args.use_adjust_lr:
             wandb.log({"learning rate/lr":scheduler.get_last_lr()[0]})
 
         wandb.log({"f1_macro_multi_total":f1_macro_multi_total})
-        wandb.log({"f1_macro_multi_img":f1_macro_multi_img})
-        wandb.log({"f1_macro_multi_text":f1_macro_multi_text})
+        if not args.use_one_head:
+            wandb.log({"f1_macro_multi_img":f1_macro_multi_img})
+            wandb.log({"f1_macro_multi_text":f1_macro_multi_text})
 
         wandb.log({"f1_weighted_multi_total":f1_weighted_multi_total})
-        wandb.log({"f1_weighted_multi_img":f1_weighted_multi_img})
-        wandb.log({"f1_weighted_multi_text":f1_weighted_multi_text})
+        if not args.use_one_head:
+            wandb.log({"f1_weighted_multi_img":f1_weighted_multi_img})
+            wandb.log({"f1_weighted_multi_text":f1_weighted_multi_text})
         
- 
-        print(f"[F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
-        print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
+        if args.use_one_head:
+            print(f"[F1 Macro multilabel] Total: {f1_macro_multi_total}")
+            print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total}")
+        else:
+            print(f"[F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
+            print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
 
 
         total_2 = (total_predict > 0.5).astype('int')
@@ -380,7 +399,10 @@ def train(args,model, dataset,
         wandb.log({"histogram/_hist_label_objectification_truth":wandb.Histogram(np_histogram = offensive_truth)})
         wandb.log({"histogram/_hist_label_violence_truth":wandb.Histogram(np_histogram = motivational_truth)})
 
-        print('rocauc_pm:    ', auc_pm1,'\t', auc_pm2,'\t', auc_pm3)
+        if not args.use_one_head:
+            print('rocauc_pm:    ', auc_pm1,'\t', auc_pm2,'\t', auc_pm3)
+        else:
+            print('rocauc_pm:    ', auc_pm1)
 
         # if not args.use_one_head: 
         #     (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,

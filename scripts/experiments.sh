@@ -63,5 +63,5 @@ CUDA_VISIBLE_DEVICES=$1 python src/CmmlTrain.py \
 
 #total weight:0.7183905025643998, img weight:0.2403833052800633, text weight:0.041226192155536835 (clip,sgd,deep_weak_attention,resampleloss) 
 #total weight:0.7966240742351592, img weight:0.10191846424448874, text weight:0.10145746152035197 (concat,clip model, adam,resampleloss)
-#(clip,adam,deep_weak_attention,resampleloss,mORG)
-#(clip,adam,deep_weak_attention,resampleloss,oORG)
+#total weight:0.0748026304586017, img weight:0.6779435845145609, text weight:0.24725378502683737 (clip,adam,deep_weak_attention,resampleloss,mORG)
+#total weight:0.048916584058129445, img weight:0.9453698511056364, text weight:0.005713564836234145 (clip,adam,deep_weak_attention,resampleloss,oORG)
