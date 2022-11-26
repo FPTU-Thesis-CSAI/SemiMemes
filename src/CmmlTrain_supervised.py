@@ -1,5 +1,5 @@
 from arguments import get_args 
-import os
+import os  
 import torch 
 from data.dataClass import MemotionDatasetForCmml
 from model.CmmlLayer import CmmlModel
@@ -34,7 +34,6 @@ from utils.npy_save import npy_save_txt
 
 from model.dualstream_net import CmmlModel_v2
 from model.deep_weak_attention import deep_weak_attention
-
 
 
 def train(args,model, dataset,
@@ -272,89 +271,82 @@ def train(args,model, dataset,
 
             # ================== UNSUPERVISE =================== # 
 
-            unsupervise_img_xx = unsup_img
-            if args.use_sentence_vectorizer:
-                unsupervise_text_xx = unsup_text['sentence_vectors'].float()
-                unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
+            # unsupervise_img_xx = unsup_img
+            # if args.use_sentence_vectorizer:
+            #     unsupervise_text_xx = unsup_text['sentence_vectors'].float()
+            #     unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
 
-            if args.use_bert_embedding:
-                unsupervise_bert_xx = unsup_text['sbert_embedding']
-                unsupervise_bert_xx = Variable(unsupervise_bert_xx).cuda() if cuda else Variable(unsupervise_bert_xx)
+            # if args.use_bert_embedding:
+            #     unsupervise_bert_xx = unsup_text['sbert_embedding']
+            #     unsupervise_bert_xx = Variable(unsupervise_bert_xx).cuda() if cuda else Variable(unsupervise_bert_xx)
             
-            if args.use_bert_model:
-                unsupervise_token_xx = unsup_text['input_ids']
-                unsupervise_attn_mask_xx = unsup_text['attention_mask']
-                unsupervise_token_xx = unsupervise_token_xx.long()
-                unsupervise_attn_mask_xx = unsupervise_attn_mask_xx.long()
-                unsupervise_token_xx = Variable(unsupervise_token_xx).cuda() if cuda else Variable(unsupervise_token_xx) 
-                unsupervise_attn_mask_xx = Variable(unsupervise_attn_mask_xx).cuda() if cuda else Variable(unsupervise_attn_mask_xx) 
+            # if args.use_bert_model:
+            #     unsupervise_token_xx = unsup_text['input_ids']
+            #     unsupervise_attn_mask_xx = unsup_text['attention_mask']
+            #     unsupervise_token_xx = unsupervise_token_xx.long()
+            #     unsupervise_attn_mask_xx = unsupervise_attn_mask_xx.long()
+            #     unsupervise_token_xx = Variable(unsupervise_token_xx).cuda() if cuda else Variable(unsupervise_token_xx) 
+            #     unsupervise_attn_mask_xx = Variable(unsupervise_attn_mask_xx).cuda() if cuda else Variable(unsupervise_attn_mask_xx) 
                 
-            if args.use_clip:
-                unsupervise_clip_ids = unsup_text['clip_tokens']
-                unsupervise_clip_ids = Variable(unsupervise_clip_ids).cuda() if cuda else Variable(unsupervise_clip_ids)    
+            # if args.use_clip:
+            #     unsupervise_clip_ids = unsup_text['clip_tokens']
+            #     unsupervise_clip_ids = Variable(unsupervise_clip_ids).cuda() if cuda else Variable(unsupervise_clip_ids)    
 
-            unsupervise_img_xx = unsupervise_img_xx.float()
-            unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)     
+            # unsupervise_img_xx = unsupervise_img_xx.float()
+            # unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)     
 
-            # #=========== DEFAULT FORWARD ===========#
-            unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
-            if args.use_bert_embedding:
-                # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
-                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
-            if args.use_clip:
-                unsupervise_texthidden = model.Textfeaturemodel(clip_input_ids = unsupervise_clip_ids)
-            elif args.use_bert_embedding:
-                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
-            elif args.use_bert_model:
-                unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
-            else:
-                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
+            # # #=========== DEFAULT FORWARD ===========#
+            # unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
+            # if args.use_bert_embedding:
+            #     # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+            #     unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
+            # if args.use_clip:
+            #     unsupervise_texthidden = model.Textfeaturemodel(clip_input_ids = unsupervise_clip_ids)
+            # elif args.use_bert_embedding:
+            #     unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+            # elif args.use_bert_model:
+            #     unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
+            # else:
+            #     unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
 
-            if args.multi_scale_fe:
-                unsupervise_imghidden, attn_w = model.ImgAttention(query=unsupervise_texthidden.unsqueeze(1), 
-                                                                    key=unsupervise_imghidden,
-                                                                    value=unsupervise_imghidden)
-                unsupervise_imghidden = unsupervise_imghidden.squeeze(1)
-            # #=========== DEFAULT FORWARD ===========#
+            # if args.multi_scale_fe:
+            #     unsupervise_imghidden, attn_w = model.ImgAttention(query=unsupervise_texthidden.unsqueeze(1), 
+            #                                                         key=unsupervise_imghidden,
+            #                                                         value=unsupervise_imghidden)
+            #     unsupervise_imghidden = unsupervise_imghidden.squeeze(1)
+            # # #=========== DEFAULT FORWARD ===========#
 
-            if args.use_vicreg_in_training:
-                # print("===============use vcreg in unsupervised data================")
-                vcreg_loss_unsupervise_img_text = model.ProjectormodelImgText(unsupervise_imghidden,unsupervise_texthidden)
+            # if args.use_vicreg_in_training:
+            #     # print("===============use vcreg in unsupervised data================")
+            #     vcreg_loss_unsupervise_img_text = model.ProjectormodelImgText(unsupervise_imghidden,unsupervise_texthidden)
 
-            unsupervise_imgpredict = model.Imgpredictmodel(unsupervise_imghidden)
-            unsupervise_textpredict = model.Textpredictmodel(unsupervise_texthidden)
+            # unsupervise_imgpredict = model.Imgpredictmodel(unsupervise_imghidden)
+            # unsupervise_textpredict = model.Textpredictmodel(unsupervise_texthidden)
 
-            '''
-            Robust Consistency Measure code.
-            '''
-            if args.consistency == 'cosine_huber':
-                unsupervise_loss = consistency_measurement(sigmoid(unsupervise_imgpredict), sigmoid(unsupervise_textpredict), cita=cita)
-            elif args.consistency == 'mse':
-                unsupervise_loss = torch.nn.MSELoss()(sigmoid(unsupervise_imgpredict), sigmoid(unsupervise_textpredict))
-            '''
-            Robust Consistency Measure code.
-            '''
+            # '''
+            # Robust Consistency Measure code.
+            # '''
+            # unsupervise_loss = consistency_measurement(sigmoid(unsupervise_imgpredict), sigmoid(unsupervise_textpredict), cita=cita)
+            # '''
+            # Robust Consistency Measure code.
+            # '''
 
-            if args.use_div:
-                total_loss = supervise_loss + 0.01* div +  unsupervise_loss
-            else:
-                total_loss = supervise_loss + unsupervise_loss
+            # total_loss = supervise_loss + 0.01* div +  unsupervise_loss
+            # if args.use_vicreg_in_training:
+            #     total_loss += sum(vcreg_loss_unsupervise_img_text)
             
-            if args.use_vicreg_in_training:
-                total_loss += sum(vcreg_loss_unsupervise_img_text)
-            
-            epoch_supervise_loss_train += supervise_loss.item()
-            epoch_div_train += div.item() 
-            epoch_unsupervise_loss_train += unsupervise_loss.item()
+            # epoch_supervise_loss_train += supervise_loss.item()
+            # epoch_div_train += div.item() 
+            # epoch_unsupervise_loss_train += unsupervise_loss.item()
 
-            # ================== UNSUPERVISE =================== #
+            # # ================== UNSUPERVISE =================== #
             
-            loss += total_loss.item()
+            # loss += total_loss.item()
             
             # ============= optimize ==============#
             
             optimizer.zero_grad()
-            total_loss.backward()
+            totalloss.backward()
             if args.use_clip_norm:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()

@@ -49,14 +49,8 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
 
         if args.use_bert_embedding:
             bert_xx = sup_text['sbert_embedding']
-        y = sup_label.numpy()
-
-        # label = y.numpy()
-        img_xx = img_xx.float()
-        
-        if args.use_bert_embedding:
             bert_xx = bert_xx.float()
-        
+
         if args.use_bert_model:
             token_xx = sup_text['input_ids']
             attn_mask_xx = sup_text['attention_mask']
@@ -70,6 +64,10 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
             supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
             supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
 
+        y = sup_label.numpy()
+
+        # label = y.numpy()
+        img_xx = img_xx.float()
         img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)
         
         # if args.use_bert_embedding:
@@ -260,7 +258,7 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
     #     'pred': total_predict
     # })
 
-    return (f1_macro_multi_total, f1_weighted_multi_img, f1_macro_multi_text,
+    return (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
         f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
         auc_pm_total,auc_pm_img,auc_pm_text,
         total_predict, truth, humour,sarcasm,offensive,motivational,humour_truth,
@@ -419,13 +417,13 @@ def test_multilabel_v2(args, model, testdataset, batchsize = 32, cuda = False):
     #     'f1_weighted_multi_text': f1_weighted_multi_text
     # })
 
-    f1_skl1 = f1_score_sklearn(total_predict, truth)
-    f1_skl2 = f1_score_sklearn(img_predict, truth)
-    f1_skl3 = f1_score_sklearn(text_predict, truth)
+    # f1_skl1 = f1_score_sklearn(total_predict, truth)
+    # f1_skl2 = f1_score_sklearn(img_predict, truth)
+    # f1_skl3 = f1_score_sklearn(text_predict, truth)
 
-    f1_pm1 = f1_score_pytorch(total_predict, truth)
-    f1_pm2 = f1_score_pytorch(img_predict, truth)
-    f1_pm3 = f1_score_pytorch(text_predict, truth)
+    # f1_pm1 = f1_score_pytorch(total_predict, truth)
+    # f1_pm2 = f1_score_pytorch(img_predict, truth)
+    # f1_pm3 = f1_score_pytorch(text_predict, truth)
 
     auc_pm_total = auroc_score_pytorch(total_predict, truth)
     auc_pm_img = auroc_score_pytorch(img_predict, truth)
@@ -437,29 +435,29 @@ def test_multilabel_v2(args, model, testdataset, batchsize = 32, cuda = False):
     #     'auc_pm_text': auc_pm_text
     # })
 
-    average_precison1 = average_precision(total_predict, truth)
-    average_precison2 = average_precision(img_predict, truth)
-    average_precison3 = average_precision(text_predict, truth)
+    # average_precison1 = average_precision(total_predict, truth)
+    # average_precison2 = average_precision(img_predict, truth)
+    # average_precison3 = average_precision(text_predict, truth)
     
-    coverage1 = coverage(total_predict, truth)
-    coverage2 = coverage(img_predict, truth)
-    coverage3 = coverage(text_predict, truth)
+    # coverage1 = coverage(total_predict, truth)
+    # coverage2 = coverage(img_predict, truth)
+    # coverage3 = coverage(text_predict, truth)
     
-    example_auc1 = example_auc(total_predict, truth)
-    example_auc2 = example_auc(img_predict, truth)
-    example_auc3 = example_auc(text_predict, truth)
+    # example_auc1 = example_auc(total_predict, truth)
+    # example_auc2 = example_auc(img_predict, truth)
+    # example_auc3 = example_auc(text_predict, truth)
 
-    macro_auc1 = macro_auc(total_predict, truth)
-    macro_auc2 = macro_auc(img_predict, truth)
-    macro_auc3 = macro_auc(text_predict, truth)
+    # macro_auc1 = macro_auc(total_predict, truth)
+    # macro_auc2 = macro_auc(img_predict, truth)
+    # macro_auc3 = macro_auc(text_predict, truth)
 
-    micro_auc1 = micro_auc(total_predict, truth)
-    micro_auc2 = micro_auc(img_predict, truth)
-    micro_auc3 = micro_auc(text_predict, truth)
+    # micro_auc1 = micro_auc(total_predict, truth)
+    # micro_auc2 = micro_auc(img_predict, truth)
+    # micro_auc3 = micro_auc(text_predict, truth)
 
-    ranking_loss1 = ranking_loss(total_predict, truth)
-    ranking_loss2 = ranking_loss(img_predict, truth)
-    ranking_loss3 = ranking_loss(text_predict, truth)
+    # ranking_loss1 = ranking_loss(total_predict, truth)
+    # ranking_loss2 = ranking_loss(img_predict, truth)
+    # ranking_loss3 = ranking_loss(text_predict, truth)
     
     humour = np.histogram(total_predict[:,0])
     sarcasm = np.histogram(total_predict[:,1])
@@ -490,22 +488,11 @@ def test_multilabel_v2(args, model, testdataset, batchsize = 32, cuda = False):
     #     'pred': total_predict
     # })
 
-    return (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, 
-            f1_weighted_multi_total, f1_weighted_multi_img, f1_weighted_multi_text,
-            total_predict, truth, 
-            f1_skl1, f1_skl2, f1_skl3, 
-            f1_pm1, f1_pm2, f1_pm3, 
-            auc_pm_total, auc_pm_img, auc_pm_text, 
-            average_precison1, average_precison2, average_precison3, 
-            coverage1, coverage2, coverage3, 
-            example_auc1, example_auc2, example_auc3, 
-            macro_auc1, macro_auc2, macro_auc3, 
-            micro_auc1, micro_auc2, micro_auc3, 
-            ranking_loss1, ranking_loss2, ranking_loss3, 
-            humour,sarcasm,offensive,motivational,
-            humour_truth,sarcasm_truth,offensive_truth,motivational_truth,
-            )
-
+    return (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
+        f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
+        auc_pm_total,auc_pm_img,auc_pm_text,
+        total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
+        sarcasm_truth,offensive_truth,motivational_truth)
 
 def test_singlelabel(args, model, testdataset, batchsize = 32, cuda = False):
     if cuda:

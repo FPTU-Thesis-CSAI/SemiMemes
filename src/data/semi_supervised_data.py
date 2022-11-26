@@ -323,10 +323,12 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip)
 
-    caption_transform = CaptionTransform(args, use_sbert=args.use_bert_embedding,
-        txt_bert_model=args.pretrain_bert_model,
-        use_countvectorizer=args.use_sentence_vectorizer,
-        use_clip=args.use_clip)
+    # caption_transform = CaptionTransform(args, use_sbert=args.use_bert_embedding,
+    #     txt_bert_model=args.pretrain_bert_model,
+    #     use_countvectorizer=args.use_sentence_vectorizer,
+    #     use_clip=args.use_clip)
+    
+    caption_transform = None
     
     # if args.dual_stream:
     #     txt_transforms = TextTransform(
@@ -342,10 +344,10 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
             train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
 
     train_sup = ImageText(train_img_dir, metadata_csv=train_labeled_csv, is_labeled=True,
-                        im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
+                        im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
 
     train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
-                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
+                            im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
 
     val = ImageText(val_img_dir, metadata_csv=val_csv, is_labeled=True,
                     im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
@@ -390,6 +392,8 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
         txt_bert_model=args.pretrain_bert_model,
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip)
+    
+    caption_transform = None
         
     target_transforms = None
 

@@ -25,6 +25,7 @@ class TextfeatureNet(nn.Module):
             self.clip_model = clip_model
             self.linear = nn.Linear(clip_dim,args.output_backbone_dim)
             if self.args.use_drop_out:
+                self.relu = nn.ReLU()
                 self.dropout = nn.Dropout(0.2)
             # self.dropout = nn.Dropout(0.2)
             # self.bigru = nn.LSTM(clip_dim,neure_num[-1], 1, bidirectional=False, batch_first=True, bias=False)
@@ -45,9 +46,10 @@ class TextfeatureNet(nn.Module):
         if self.args.use_clip:
             with torch.no_grad():
                 feats = self.clip_model.encode_text(clip_input_ids)
-            if self.args.use_drop_out:
-                feats = self.dropout(feats)
             x = self.linear(feats)
+            if self.args.use_drop_out:
+                feats = self.relu(feats)
+                feats = self.dropout(feats)
         elif self.args.use_bert_model:
             output = self.encoder(input_ids,attn_mask)
             last_hidden_state = output.last_hidden_state
@@ -102,12 +104,12 @@ class PredictNet(nn.Module):
             self.act = nn.ReLU()
         # print("---------mlp----------",self.mlp)
         
-        if use_softmax:
-            self.softmax = torch.nn.Softmax()
-            self.sigmoid = None
-        else:
-            self.softmax = None
-            self.sigmoid = torch.nn.Sigmoid()
+        # if use_softmax:
+        #     self.softmax = torch.nn.Softmax()
+        #     self.sigmoid = None
+        # else:
+        #     self.softmax = None
+        #     self.sigmoid = torch.nn.Sigmoid()
 
 
         # print("------------sigmoid-------------",self.sigmoid)
@@ -147,6 +149,7 @@ class ImgNet(nn.Module):
             nn.Linear(clip_dim, args.output_backbone_dim)
             )
             if args.use_drop_out:
+                self.relu = nn.ReLU()
                 self.dropout = nn.Dropout(0.2)
         else:
             if args.resnet_model == 'resnet50':
@@ -166,9 +169,10 @@ class ImgNet(nn.Module):
         if self.args.use_clip:
             with torch.no_grad():
                 x = self.clip_model.encode_image(x)
-            if self.args.use_drop_out:
-                x = self.dropout(x)
             x = self.fc1(x)
+            if self.args.use_drop_out:
+                x = self.relu(x)
+                x = self.dropout(x)
         else:
             N = x.size()[0]
             x = self.feature(x.view(N, 3, 256, 256))
@@ -195,7 +199,7 @@ def make_layers(cfg):
     input_dim = cfg[0]
     for i in range(1, n):
         output_dim = cfg[i]
-        layers += [nn.Linear(input_dim, output_dim), nn.ReLU(inplace = True)]
+        layers += [nn.Linear(input_dim, output_dim), nn.ReLU()]
         input_dim = output_dim
     return nn.Sequential(*layers)
 

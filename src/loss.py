@@ -253,6 +253,21 @@ def consistency_measurement(unsupervise_imgpredict, unsupervise_textpredict, cit
 
     unsupervise_loss = (tensor1loss + tensor2loss)/unsupervise_imgpredict.size()[0]      
     return unsupervise_loss
+
+# def consistency_measurement_mse(unsupervise_imgpredict, unsupervise_textpredict, reduce=True):
+
+    # dis = 2 - nn.CosineSimilarity(dim=1)(unsupervise_imgpredict, unsupervise_textpredict)          
+
+    # tensor1 = dis[torch.abs(dis) < cita]
+    # tensor2 = dis[torch.abs(dis) >= cita]
+    # tensor1loss = torch.sum(tensor1 * tensor1/2)
+    # tensor2loss = torch.sum(cita * (torch.abs(tensor2) - 1/2 * cita))
+
+    # unsupervise_loss = (tensor1loss + tensor2loss)/unsupervise_imgpredict.size()[0]      
+    # return unsupervise_loss
+
+
+
 def zlpr_loss(logits,labels):
     pos_labels = labels
     pos_exp_logits = torch.exp(-logits)

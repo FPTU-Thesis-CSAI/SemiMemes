@@ -3,9 +3,8 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='clip_resampler', type=str,
+    parser.add_argument('--experiment', default='consistency_mse_no_div', type=str,
                     help="Optional Name of Experiment (used by tensorboard)")
-
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -110,18 +109,18 @@ def get_args():
     parser.add_argument("--use-step-lr",action='store_true', default=True,help='')
     parser.add_argument("--use-multi-step-lr", action='store_true', default=False,help='')
     parser.add_argument("--use-linear-scheduler", action='store_true', default=False,help='')
-    parser.add_argument("--use-concat-modalities", action='store_true', default=False,help='')
-    parser.add_argument("--use-deep-weak-attention", action='store_true', default=True,help='')
+    parser.add_argument("--use-concat-modalities", action='store_true', default=True,help='')
+    parser.add_argument("--use-deep-weak-attention", action='store_true', default=False,help='')
+    parser.add_argument('--use-drop-out',action='store_true',default=True)
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
     parser.add_argument('--batchsize', type = int, default = 80,help="train and test batchsize")  
-    parser.add_argument('--epochs', default=50, type=int, metavar='N',
+    parser.add_argument('--epochs', default=30, type=int, metavar='N',
                     help='number of total epochs to run')  
     parser.add_argument('--wd', '--weight-decay', default=0, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
     parser.add_argument('--lr-supervise', type = float, default=0.0001,help="train Learning rate")
-    parser.add_argument('--use-drop-out',action='store_true',default=False)
 
     parser.add_argument('--use-vcreg-loss',action='store_true',default=False)
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
@@ -160,7 +159,7 @@ def get_args():
     parser.add_argument("--use-adam",action='store_true', default=True,help='')
 
     parser.add_argument("--use-resample-loss", action='store_true', default=True,help='')
-    parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
+    # parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
     parser.add_argument("--reduction", type = str, default='mean',help='')
     parser.add_argument("--loss-weight", type = float, default=1.0,help='')
     parser.add_argument("--focal", type = bool, default=False,help='')
@@ -173,6 +172,9 @@ def get_args():
     parser.add_argument("--map-param-gamma", type = float, default=0.1,help='')
     parser.add_argument("--reweight-func", type = str, default='rebalance',help='')
     parser.add_argument("--freq-file", type = str, default='data/class_freq.pkl',help='')
+    
+    parser.add_argument('--consistency', type = str, default='mse', choices=['cosine_huber', 'mse'])
+    parser.add_argument('--use_div', type = bool, default=False)
     
     parser.add_argument("--use-sentence-vectorizer", type = bool, default=False,help='')
     ####
@@ -209,7 +211,7 @@ def get_args():
     help="architecture of text feature network")
     parser.add_argument('--Imgpredictpara', type = str, default = '256, 4',help="architecture of img predict network")
     parser.add_argument('--Textpredictpara', type = str, default = '256, 4',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '256, 4',help="architecture of attention predict network")
+    parser.add_argument('--Predictpara', type = str, default = '512, 4',help="architecture of attention predict network")
     parser.add_argument('--Attentionparameter', type = str, default = '256, 64, 32, 1',
     help="architecture of attention network")
     parser.add_argument('--img-supervise-epochs', type = int, default = 0)
