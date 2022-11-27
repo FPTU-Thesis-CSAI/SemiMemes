@@ -261,7 +261,7 @@ def train(args,model, dataset,
                 
                 if args.use_caption:
                     supervise_loss = imgloss + textloss + 2.5*totalloss
-                
+
             if args.use_vicreg_in_training:
                 supervise_loss += sum(vcreg_loss_supervise_img_text)+sum(vcreg_loss_supervise_img_total)+sum(vcreg_loss_supervise_text_total)
 
@@ -359,23 +359,14 @@ def train(args,model, dataset,
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             
-            scheduler.step()
-            
-            # optimizer.zero_grad()
-            # imgloss.backward()
-            # optimizer.step()
-            
-            # optimizer.zero_grad()
-            # textloss.backward()
-            # optimizer.step()
-            
-            # optimizer.zero_grad()
-            # (totalloss+0.01*div+unsupervise_loss).backward()
-            # optimizer.step()
-            
             # optimizer.zero_grad()
             # totalloss.backward()
+            # if args.use_clip_norm:
+            #     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             # optimizer.step()
+
+            scheduler.step()
+
 
         if args.use_multi_step_lr or args.use_linear_scheduler:
             scheduler.step()
@@ -523,8 +514,8 @@ if __name__ == '__main__':
     train_supervised_loader, train_unsupervised_loader, val_loader  \
         = create_semi_supervised_dataloaders(args,
         train_img_dir='data/MAMI_processed/images/train',
-        train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.3.csv',
-        train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
+        train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.05.csv',
+        train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.05.csv',
         val_img_dir = 'data/MAMI_processed/images/val',
         val_csv='data/MAMI_processed/val.csv',
         batch_size=args.batchsize, image_size=256,input_resolution=input_resolution)

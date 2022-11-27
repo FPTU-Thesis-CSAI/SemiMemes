@@ -5,7 +5,7 @@ import os
 
 parser = argparse.ArgumentParser(description='train_split')
 parser.add_argument('--train_csv_path', type=str, default="data/MAMI_processed/train.csv")
-parser.add_argument('--label_ratio', type=float, default=0.3)
+parser.add_argument('--label_ratio', type=float, default=0.05)
 parser.add_argument('--save_dir', type=str, default="data/MAMI_processed")
 parser.add_argument('--seed', type=int, default=42)
 args = parser.parse_args()
@@ -22,7 +22,7 @@ df = pd.read_csv(args.train_csv_path)
 # df2 = pd.DataFrame(unlabeled_sample)
 
 df_labeled = df.sample(frac=args.label_ratio, random_state=args.seed)
-df_unlabeled = df.drop(df_labeled.index) 
+df_unlabeled = df.drop(df_labeled.index)
 
 df_labeled.to_csv(os.path.join(args.save_dir,f"train_labeled_ratio-{args.label_ratio}.csv"), index=False)
-df_unlabeled.to_csv(os.path.join(args.save_dir,f"train_unlabeled_ratio-{args.label_ratio}.csv"), index=False) 
+df_unlabeled.to_csv(os.path.join(args.save_dir,f"train_unlabeled_ratio-{args.label_ratio}.csv"), index=False)

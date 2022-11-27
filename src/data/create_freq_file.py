@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd 
 
 def dump_freq_data():
-    metadata = pd.read_csv('data/MAMI_processed/train_labeled_ratio-0.3.csv')
+    metadata = pd.read_csv('data/MAMI_processed/train_labeled_ratio-0.05.csv')
     labels = metadata[["shaming","stereotype","objectification","violence"]].values
     num_classes = 4
     co_labels = [[] for _ in range(num_classes)]

@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='consistency_mse_no_div', type=str,
+    parser.add_argument('--experiment', default='semisupervised 0.05 concat resample', type=str,
                     help="Optional Name of Experiment (used by tensorboard)")
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
@@ -132,7 +132,7 @@ def get_args():
     parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
     # parser.add_argument("--resnet-model", type = str, default='resnet18', help='')
-    parser.add_argument("--use_augmentation", action='store_true', default=True,help='')
+    parser.add_argument("--use_augmentation", action='store_true', default=False,help='')
     parser.add_argument("--multi_scale_fe", action='store_true', default=False,help='')
     parser.add_argument("--img_size", type=int, default=256,help='')
     parser.add_argument("--dual_stream", action='store_true', default=False, help='')
@@ -173,8 +173,8 @@ def get_args():
     parser.add_argument("--reweight-func", type = str, default='rebalance',help='')
     parser.add_argument("--freq-file", type = str, default='data/class_freq.pkl',help='')
     
-    parser.add_argument('--consistency', type = str, default='mse', choices=['cosine_huber', 'mse'])
-    parser.add_argument('--use_div', type = bool, default=False)
+    parser.add_argument('--consistency', type = str, default='cosine_huber', choices=['cosine_huber', 'mse'])
+    parser.add_argument('--use_div', type = bool, default=True)
     
     parser.add_argument("--use-sentence-vectorizer", type = bool, default=False,help='')
     ####
