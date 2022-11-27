@@ -9,13 +9,11 @@ from .unsupervised import FusionNet
 warnings.filterwarnings("ignore", category=UserWarning) 
 
 class TextfeatureNet(nn.Module):
-    
-    def __init__(self, args, neure_num,clip_model=None,clip_dim=None):
+    def __init__(self, args, neure_num,clip_dim=None):
         super(TextfeatureNet, self).__init__()
         self.args = args  
         if self.args.use_clip:
-            self.clip_model = clip_model
-            self.linear = nn.Linear(clip_dim,args.output_backbone_dim)
+            self.fc = nn.Linear(clip_dim,args.output_backbone_dim)
             # self.dropout = nn.Dropout(0.2)
             # self.bigru = nn.LSTM(clip_dim,neure_num[-1], 1, bidirectional=False, batch_first=True, bias=False)
         elif self.args.use_bert_model:
@@ -30,16 +28,24 @@ class TextfeatureNet(nn.Module):
             self.feature = nn.Linear(neure_num[-2], neure_num[-1])
             if args.add_block_linear_bert_embed:
                 self.linear = make_layers([384,neure_num[-2]])
-        if self.args.use_drop_out:
-            self.dropout = nn.Dropout(0.2)
-            
-    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None):
+        self.dropout = nn.Dropout(0.2)
+        self.relu = nn.ReLU()
+
+    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None,clip_model=None):
         if self.args.use_clip:
-            with torch.no_grad():
-                feats = self.clip_model.encode_text(clip_input_ids)
-            if self.args.use_drop_out:
-                feats = self.dropout(feats)
-            x = self.linear(feats)
+            if self.args.unfreeze:
+                    feats = clip_model.encode_text(clip_input_ids)
+            else:
+                with torch.no_grad():
+                    feats = clip_model.encode_text(clip_input_ids)
+            x = self.fc(feats)
+            if self.args.use_norm:
+                x = x / x.norm(dim=1, keepdim=True)
+                x = self.dropout(x)
+            else:
+                x = self.relu(x)
+                x = self.dropout(x)
+            
         elif self.args.use_bert_model:
             output = self.encoder(input_ids,attn_mask)
             last_hidden_state = output.last_hidden_state
@@ -58,13 +64,20 @@ class TextfeatureNet(nn.Module):
 
 class PredictNet(nn.Module):
     
-    def __init__(self, args,neure_num, use_softmax=False):
+    def __init__(self, args,neure_num, use_softmax=False,mode=''):
         #print("---------PredictNet-----")
         super(PredictNet, self).__init__()
         self.mlp = make_predict_layers(neure_num)
         self.args = args
-        if self.args.use_act:
-            self.act = nn.ReLU()
+        self.mode = mode
+        if self.mode == 'predict sep head':
+            if self.args.cal_sep_class_loss:
+                self.act = nn.ReLU()
+                self.pl = nn.Linear(neure_num[-3],neure_num[-2])
+                self.cf1 = nn.Linear(neure_num[-2], 1)
+                self.cf2 = nn.Linear(neure_num[-2], 1)
+                self.cf3 = nn.Linear(neure_num[-2], 1)
+                self.cf4 = nn.Linear(neure_num[-2], 1)
         # print("---------mlp----------",self.mlp)
         
         # if use_softmax:
@@ -79,18 +92,13 @@ class PredictNet(nn.Module):
         # self.sigma = nn.Parameter(torch.FloatTensor([1.,1.,1./2]))
 
     def forward(self, x):
-        if self.args.use_act:
-            x = self.act(x)
-            y= self.mlp(x)
+        if self.mode == 'predict sep head':
+            if self.args.cal_sep_class_loss:
+                x = self.act(self.pl(x))
+                return(self.cf1(x),self.cf2(x),self.cf3(x), self.cf4(x))
         else:
-            y = self.mlp(x)
-        # if not self.sigmoid is None:
-        #     y = self.sigmoid(y)
-        # else:
-        #     y = self.softmax(y)
-        #print("---------y------------", y)
-        #print("--------------------")
-        return y
+            y= self.mlp(x)
+            return y
 
 
 class AttentionNet(nn.Module):
@@ -104,10 +112,9 @@ class AttentionNet(nn.Module):
         return y
 
 class ImgNet(nn.Module):
-    def __init__(self,args,clip_model=None,clip_dim=None):
+    def __init__(self,args,clip_dim=None):
         super(ImgNet, self).__init__()
         if args.use_clip:
-            self.clip_model = clip_model
             self.fc1 = nn.Sequential(       
             nn.Linear(clip_dim, args.output_backbone_dim)
             )
@@ -124,16 +131,23 @@ class ImgNet(nn.Module):
                 )
             self.feature = nn.Sequential(*list(self.feature.children())[:-1])
         self.args = args 
-        if args.use_drop_out:
-            self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.2)
+        self.relu = nn.ReLU()
             
-    def forward(self, x):
+    def forward(self, x,clip_model=None):
         if self.args.use_clip:
-            with torch.no_grad():
-                x = self.clip_model.encode_image(x)
-            if self.args.use_drop_out:
+            if self.args.unfreeze:
+                x = clip_model.encode_image(x)
+            else:
+                with torch.no_grad():
+                    x = clip_model.encode_image(x)  
+            x = self.fc1(x)   
+            if self.args.use_norm:
+                x = x / x.norm(dim=1, keepdim=True)
                 x = self.dropout(x)
-            x = self.fc1(x)
+            else:          
+                x = self.relu(x) 
+                x = self.dropout(x)
         else:
             N = x.size()[0]
             x = self.feature(x.view(N, 3, 256, 256))
@@ -152,7 +166,7 @@ def make_layers(cfg):
     input_dim = cfg[0]
     for i in range(1, n):
         output_dim = cfg[i]
-        layers += [nn.Linear(input_dim, output_dim), nn.ReLU(inplace = True)]
+        layers += [nn.Linear(input_dim, output_dim)]
         input_dim = output_dim
     return nn.Sequential(*layers)
 
@@ -160,10 +174,11 @@ def make_predict_layers(cfg):
     layers = []
     n = len(cfg)
     input_dim = cfg[0]
-    for i in range(1, n):
+    for i in range(1, n-1):
         output_dim = cfg[i]
-        layers += [nn.Linear(input_dim, output_dim)]
+        layers += [nn.Linear(input_dim, output_dim),nn.ReLU(True)]
         input_dim = output_dim
+    layers.append(nn.Linear(cfg[-2], cfg[-1], bias=False))
     return nn.Sequential(*layers)
 
 def off_diagonal(x):
@@ -187,7 +202,7 @@ class VICReg(nn.Module):
         super().__init__()
         self.args = args
         self.num_features = int(args.mlp_expand_dim.split("-")[-1])
-        self.projector = Projector(args.mlp_expand_dim, args.output_backbone_dim)
+        self.projector = Projector(args.mlp_expand_dim, args.mlp_expand_dim)
 
     def forward(self, x, y):
         x = self.projector(x)
@@ -241,21 +256,19 @@ class CmmlModel(nn.Module):
         self.cdim = cdim 
         self.generate_model()
     def generate_model(self):
-        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,
-            clip_model=self.clip_model,clip_dim=self.cdim)
+        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,clip_dim=self.cdim)
         self.Imgpredictmodel = PredictNet(self.args,self.Imgpredictparam)
         self.Textpredictmodel = PredictNet(self.args,self.Textpredictparam)
-        self.Predictmodel = PredictNet(self.args,self.Predictparam)
-        self.Imgmodel = ImgNet(self.args,clip_model=self.clip_model,clip_dim=self.cdim)
+        if self.args.cal_sep_class_loss:
+            self.Predictmodel = PredictNet(self.args,self.Predictparam,mode='predict sep head')
+        else:
+            self.Predictmodel = PredictNet(self.args,self.Predictparam)
+        self.Imgmodel = ImgNet(self.args,clip_dim=self.cdim)
         self.Attentionmodel = AttentionNet(self.Attentionparam)
         self.FusionCoattention = None
         self.ProjectormodelImgText = None 
-        self.ProjectormodelImgTotal = None
-        self.ProjectormodelTextTotal = None
         if self.args.use_coattention:
             self.FusionCoattention = FusionNet(self.Textfeatureparam[-1],self.Textfeatureparam[-1], 0.2)
-        if self.args.use_vicreg_in_training:
+        if self.args.use_one_head:
             self.ProjectormodelImgText = VICReg(self.args)
-            self.ProjectormodelImgTotal = VICReg(self.args)
-            self.ProjectormodelTextTotal = VICReg(self.args)
 

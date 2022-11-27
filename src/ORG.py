@@ -39,7 +39,7 @@ def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,m
             img_xx = Variable(img_xx).cuda() if cuda else Variable(img_xx)                  
             label = Variable(label).cuda() if cuda else Variable(label)
             with torch.no_grad():  
-                imghidden = model.Imgmodel(img_xx)
+                imghidden = model.Imgmodel(img_xx,clip_model=model.clip_model)
                 imgpredict = model.Imgpredictmodel(imghidden)
                 if args.use_focal_loss or  args.use_bce_loss:
                     imgpredict = sigmoid(imgpredict)                
@@ -79,7 +79,7 @@ def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,m
             label = Variable(label).cuda() if cuda else Variable(label)  
             with torch.no_grad():
                 if args.use_clip:
-                    texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids)
+                    texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids,clip_model=model.clip_model)
                 elif args.use_bert_embedding:
                     texthidden = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
                 elif args.use_bert_model:
@@ -132,7 +132,7 @@ def cal_loss_val(args,model,dataset,optimizer,scheduler,criterion,cuda,sigmoid,m
                 imghidden = model.Imgmodel(img_xx)
                 
                 if args.use_clip:
-                    texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids)
+                    texthidden = model.Textfeaturemodel(clip_input_ids = clip_ids,clip_model=model.clip_model)
                 elif args.use_bert_embedding:
                     texthidden = model.Textfeaturemodel(x = text_xx,bert_emb = bert_xx)
                 elif args.use_bert_model:
@@ -188,7 +188,7 @@ def create_optimizer_and_scheduler(args,model):
     if args.use_linear_scheduler:
         scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,start_factor=1./3,total_iters=80)
     elif args.use_step_lr:
-        scheduler = StepLR(optimizer, step_size = 200, gamma = 0.9)  
+        scheduler = StepLR(optimizer, step_size = 100, gamma = 0.9)  
     elif args.use_multi_step_lr:
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5,10,15],gamma=0.5)
     return optimizer, scheduler
@@ -218,9 +218,13 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
             label = label.float()
             supervise_img_xx = Variable(supervise_img_xx).cuda() if cuda else Variable(supervise_img_xx)                  
             label = Variable(label).cuda() if cuda else Variable(label)  
-            supervise_imghidden = model.Imgmodel(supervise_img_xx)
+            supervise_imghidden = model.Imgmodel(supervise_img_xx,clip_model=model.clip_model)
             supervise_imgpredict = model.Imgpredictmodel(supervise_imghidden)
-            imgloss = criterion(supervise_imgpredict, label)
+            if args.use_focal_loss or  args.use_bce_loss:
+                supervise_imgpredict = sigmoid(supervise_imgpredict)
+                imgloss = criterion(supervise_imgpredict, label)
+            elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
+                imgloss = criterion(supervise_imgpredict, label)
             epoch_img_loss_train += imgloss.item()
             if epoch != 1:
                 optimizer.zero_grad()
@@ -281,7 +285,7 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
             label = Variable(label).cuda() if cuda else Variable(label)  
 
             if args.use_clip:
-                supervise_texthidden = model.Textfeaturemodel(clip_input_ids = supervise_clip_ids)
+                supervise_texthidden = model.Textfeaturemodel(clip_input_ids = supervise_clip_ids,clip_model=model.clip_model)
             elif args.use_bert_embedding:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
             elif args.use_bert_model:
@@ -362,7 +366,7 @@ def GB_estimate(args,orig_model,train_epochs,dataset,optimizer,scheduler,criteri
             supervise_imghidden = model.Imgmodel(supervise_img_xx)
             
             if args.use_clip:
-                supervise_texthidden = model.Textfeaturemodel(clip_input_ids = supervise_clip_ids)
+                supervise_texthidden = model.Textfeaturemodel(clip_input_ids = supervise_clip_ids,clip_model=model.clip_model)
             elif args.use_bert_embedding:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
             elif args.use_bert_model:

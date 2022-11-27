@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='weighted-loss', type=str,help="Optional Name of Experiment (used by tensorboard)")
+    parser.add_argument('--experiment', default='morm-dropout', type=str,help="Optional Name of Experiment (used by tensorboard)")
 
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
@@ -44,7 +44,7 @@ def get_args():
 
     parser.add_argument('-j', '--workers', default=20, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
-    parser.add_argument('-b', '--batch-size', default=256, type=int,
+    parser.add_argument('-b', '--batch-size', default=10, type=int,
                     metavar='N',
                     help='mini-batch size (default: 32), this is the total '
                             'batch size of all GPUs on the current node when '
@@ -109,29 +109,41 @@ def get_args():
     parser.add_argument("--use-step-lr",action='store_true', default=True,help='')
     parser.add_argument("--use-multi-step-lr", action='store_true', default=False,help='')
     parser.add_argument("--use-linear-scheduler", action='store_true', default=False,help='')
-    parser.add_argument("--use-concat-modalities", action='store_true', default=False,help='')
-    parser.add_argument("--use-deep-weak-attention", action='store_true', default=True,help='')
+    parser.add_argument("--use-concat-modalities", action='store_true', default=True,help='')
+    parser.add_argument("--use-FMI-modalities", action='store_true', default=False,help='')
+    parser.add_argument("--use-deep-weak-attention", action='store_true', default=False,help='')
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
-    parser.add_argument('--batchsize', type = int, default = 80,help="train and test batchsize")  
-    parser.add_argument('--epochs', default=100, type=int, metavar='N',
+    parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")  
+    parser.add_argument('--epochs', default=500, type=int, metavar='N',
                     help='number of total epochs to run')  
-    parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
+    parser.add_argument('--wd', '--weight-decay', default=0, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
-    parser.add_argument('--lr-supervise', type = float, default =0.0001,help="train Learning rate")
-    parser.add_argument('--use-drop-out',action='store_true',default=True)
+    parser.add_argument('--lr-supervise', type = float, default =1e-4,help="train Learning rate")
+    parser.add_argument('--use-drop-out',action='store_true',default=False)
+    parser.add_argument('--unfreeze',action='store_true',default=False)
+    
+    parser.add_argument('--T',type=int,default=2)
+    parser.add_argument('--supervise-entropy-minimization',action='store_true',default=True)
+    parser.add_argument('--unsupervise-entropy-minimization',action='store_true',default=True)
 
     parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 256',
     help="architecture of text feature network")
-    parser.add_argument('--Imgpredictpara', type = str, default = '256, 5',help="architecture of img predict network")
-    parser.add_argument('--Textpredictpara', type = str, default = '256, 5',help="architecture of text predict network")
-    parser.add_argument('--Predictpara', type = str, default = '256, 5',help="architecture of attention predict network")
+    parser.add_argument('--Imgpredictpara', type = str, default = '256,128, 4',help="architecture of img predict network")
+    parser.add_argument('--Textpredictpara', type = str, default = '256,128,4',help="architecture of text predict network")
+    parser.add_argument("--mlp-expand-dim", default="1024",help='Size and number of layers of the MLP expander head')
+    parser.add_argument("--use-one-head", action='store_true', default=False,help='')
+    parser.add_argument('--Predictpara', type = str, default = '512, 256, 4',help="architecture of attention predict network")
     parser.add_argument('--Attentionparameter', type = str, default = '256, 64, 32, 1',
     help="architecture of attention network")
-
+    parser.add_argument("--output-backbone-dim", type=int, default=256,help='')
     parser.add_argument('--use-sim-loss',action='store_true',default=False)
-    parser.add_argument('--use-vicreg-in-training',action='store_true',default=False)
+    parser.add_argument('--cal-sep-class-loss',action='store_true',default=False)
+    parser.add_argument('--use-div-dist-for-one-head',action='store_true',default=False)
+    parser.add_argument('--use-div',action='store_true',default=True)
+    parser.add_argument('--train-supervise-only',action='store_true',default=False)
+    parser.add_argument('--use_vicreg',action='store_true',default=False)
 
     parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
@@ -139,16 +151,17 @@ def get_args():
     parser.add_argument("--use-augmentation", action='store_true', default=True,help='')
     parser.add_argument("--use-clip-norm", action='store_true', default=False,help='')
     parser.add_argument("--use-coattention", action='store_true', default=False,help='')
-    parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
+    
+    parser.add_argument("--use-norm",action='store_true', default=True,help='')
 
-    parser.add_argument("--use-org",action='store_true', default=True,help='')
-    parser.add_argument("--original-org",action='store_true', default=True,help='')
-    parser.add_argument("--modified-org",action='store_true', default=False,help='')
+    parser.add_argument("--use-org",action='store_true', default=False,help='')
+    parser.add_argument("--original-org",action='store_true', default=False,help='')
+    parser.add_argument('--use-org-weights',action='store_true',default=True)
+    parser.add_argument("--modified-org",action='store_true', default=True,help='')
     parser.add_argument("--use-zlpr-loss",action='store_true', default=False,help='')
     parser.add_argument("--use-asymmetric-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-bce-loss",action='store_true', default=False,help='')
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
-    parser.add_argument("--use-act",action='store_true', default=True,help='')
     parser.add_argument("--use-sgd",action='store_true', default=False,help='')
     parser.add_argument("--use-adam",action='store_true', default=True,help='')
 
@@ -206,7 +219,6 @@ def get_args():
     parser.add_argument('--traintestproportion', type = float, default = 0.667,help="ratio of train data to test data") 
     parser.add_argument('--lambda1', type = float, default = 0.01,help="ratio of train data to test data")
     parser.add_argument('--lambda2', type = float, default = 1,help="ratio of train data to test data")
-    parser.add_argument("--output-backbone-dim", type=int, default=256,help='')
     parser.add_argument("--std-coeff", type=float, default=25.0,help='Variance regularization loss coefficient')
     parser.add_argument("--cov-coeff", type=float, default=1.0,help='Covariance regularization loss coefficient')
     parser.add_argument("--sim-coeff", type=float, default=25.0,help='Invariance regularization loss coefficient')

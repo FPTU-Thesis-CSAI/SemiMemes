@@ -159,9 +159,10 @@ class TextTransform():
         return outputs
 
 class ImageText(Dataset):
-    def __init__(self, img_folder, metadata_csv, is_labeled, img_col='file_name', text_col='Text Transcription', label_cols='misogynous', im_transforms=None, txt_transform=None, target_transform=None):
-        self.metadata = pd.read_csv(metadata_csv)
+    def __init__(self, img_folder, metadata_csv, is_labeled, img_col='file_name', 
+    text_col='Text Transcription', label_cols='misogynous', im_transforms=None,txt_transform=None, target_transform=None):
 
+        self.metadata = pd.read_csv(metadata_csv)
         self.is_labeled = is_labeled
         if self.is_labeled:
             assert not label_cols is None, "supervised data needs labels"
@@ -215,7 +216,7 @@ class ImageText(Dataset):
 def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, train_unlabeled_csv, 
                                                 val_img_dir, val_csv, batch_size, image_size, inbatch_label_ratio=None, debug=False,input_resolution=None):
     # args.use_augmentation = False
-    label_cols = ['misogynous','shaming', 'stereotype', 'objectification', 'violence']
+    label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
 
     if args.use_clip:
         image_size = input_resolution
@@ -236,36 +237,37 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     # need compute vocab before transform text
     if args.use_sentence_vectorizer:
         txt_transforms.precompute_stats(data_utils.get_texts(train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
+        
+    if inbatch_label_ratio is None:
+        inbatch_label_ratio = data_utils.calculate_label_ratio(train_labeled_csv, train_unlabeled_csv)
 
     train_sup = ImageText(train_img_dir, metadata_csv=train_labeled_csv, is_labeled=True,
-                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols)
-
-    train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
-                            im_transforms=im_transforms.train_transform, txt_transform=txt_transforms, label_cols=label_cols)
+                                im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
+    train_supervised_loader = DataLoader(dataset=train_sup, batch_size=int(inbatch_label_ratio*batch_size), 
+                                            num_workers=cpu_count()//2, drop_last=True, shuffle=True)
+    if not args.train_supervise_only:
+        train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
+                                im_transforms=im_transforms.test_transform, 
+                                txt_transform=txt_transforms, label_cols=label_cols)
+        train_unsupervised_loader = DataLoader(dataset=train_unsup, batch_size=batch_size - int(inbatch_label_ratio*batch_size),
+                                            num_workers=cpu_count()//2, drop_last=True, shuffle=True)
 
     val = ImageText(val_img_dir, metadata_csv=val_csv, is_labeled=True,
                             im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     # collate_fn_batch = ...
     # dataloader = DataLoader(dataset=data, collate_fn = collate_fn_batch, batch_size=batch_size, num_workers=cpu_count()//2, drop_last=True, shuffle=True)
-    
-    if inbatch_label_ratio is None:
-        inbatch_label_ratio = data_utils.calculate_label_ratio(train_labeled_csv, train_unlabeled_csv)
-
-    train_supervised_loader = DataLoader(dataset=train_sup, batch_size=int(inbatch_label_ratio*batch_size), 
-                                            num_workers=cpu_count()//2, drop_last=True, shuffle=True)
-    train_unsupervised_loader = DataLoader(dataset=train_unsup, batch_size=batch_size - int(inbatch_label_ratio*batch_size),
-                                            num_workers=cpu_count()//2, drop_last=True, shuffle=True)
-    
     val_loader = DataLoader(dataset=val, batch_size=batch_size, num_workers=cpu_count()*3//4, drop_last=False, shuffle=False)
-
+    
+    if args.train_supervise_only:
+        return train_supervised_loader, None, val_loader
     if not debug:
         return train_supervised_loader, train_unsupervised_loader, val_loader
     else:
         return train_supervised_loader, train_unsupervised_loader, val_loader, im_transforms, txt_transforms
 
 def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_size, image_size, debug=False,input_resolution=None):
-    label_cols = ['misogynous','shaming', 'stereotype', 'objectification', 'violence']
+    label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
     
     if args.use_clip:
         image_size = input_resolution

@@ -1,7 +1,7 @@
 import torch
 from torch import optim 
 import math 
-
+    
 def l2norm(X, dim, eps=1e-8):
     """L2-normalize columns of X
     """

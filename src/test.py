@@ -13,12 +13,14 @@ from torch.autograd import Variable
 import torch.nn as nn
 
 
-def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset,FusionCoattention = None, batchsize = 32, cuda = False):
+def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset,clip_model=None,FusionCoattention = None, batchsize = 32, cuda = False):
     if cuda:
         Textfeaturemodel.cuda()
         if Imgpredictmodel is not None:
             Imgpredictmodel.cuda()
             Textpredictmodel.cuda()
+        if args.use_clip:
+            clip_model.cuda()
         Imgmodel.cuda()
         Predictmodel.cuda()
         Attentionmodel.cuda()
@@ -32,6 +34,7 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     if FusionCoattention is not None:
         FusionCoattention.cuda()
         FusionCoattention.eval()
+    clip_model.eval()
 
     print('----------------- Test data:------------')
     
@@ -84,9 +87,9 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
             bert_xx = Variable(bert_xx).cuda() if cuda else Variable(bert_xx)
         
         with torch.no_grad():
-            imghidden = Imgmodel(img_xx)
+            imghidden = Imgmodel(img_xx,clip_model=clip_model)
             if args.use_clip:
-                texthidden = Textfeaturemodel(clip_input_ids = clip_ids)
+                texthidden = Textfeaturemodel(clip_input_ids = clip_ids,clip_model=clip_model)
             elif args.use_bert_embedding:
                 texthidden = Textfeaturemodel(x = text_xx, bert_emb = bert_xx)
             elif args.use_bert_model:
@@ -115,48 +118,60 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
                 feature_hidden = FusionCoattention(imghidden,texthidden)
             elif args.use_concat_modalities:
                 feature_hidden = torch.cat((imghidden,texthidden), dim=1)
-            imgpredict = sigmoid(Imgpredictmodel(imghidden))
-            textpredict = sigmoid(Textpredictmodel(texthidden))
-            predict = sigmoid(Predictmodel(feature_hidden))
-        img_ = imgpredict.cpu().data.numpy()
-        text_ = textpredict.cpu().data.numpy()
-        img_predict.append(img_)
-        text_predict.append(text_)
+            if not args.use_one_head:
+                imgpredict = sigmoid(Imgpredictmodel(imghidden))
+                textpredict = sigmoid(Textpredictmodel(texthidden))
+            if args.cal_sep_class_loss:
+                predict = Predictmodel(feature_hidden)
+                predict = [sigmoid(p) for p in predict]
+            else:
+                predict = sigmoid(args.T*Predictmodel(feature_hidden))
+        if not args.use_one_head:
+            img_ = imgpredict.cpu().data.numpy()
+            text_ = textpredict.cpu().data.numpy()
+            img_predict.append(img_)
+            text_predict.append(text_)
+        if args.cal_sep_class_loss:
+            predict = torch.cat(predict,dim=-1)
         predict = predict.cpu().data.numpy()
         total_predict.append(predict)
 
         truth.append(y)
 
     total_predict = np.array(total_predict)
-    img_predict = np.array(img_predict)
-    text_predict = np.array(text_predict)
+    if not args.use_one_head:
+        img_predict = np.array(img_predict)
+        text_predict = np.array(text_predict)
     truth = np.array(truth)
     temp = total_predict[0]
     for i in range(1, len(total_predict)):
         temp = np.vstack((temp, total_predict[i]))
     total_predict = temp
-
-    temp = img_predict[0]
-    for i in range(1, len(img_predict)):
-        temp = np.vstack((temp, img_predict[i]))
-    img_predict = temp
-    temp = text_predict[0]
-    for i in range(1, len(text_predict)):
-        temp = np.vstack((temp, text_predict[i]))
-    text_predict = temp
+    if not args.use_one_head:
+        temp = img_predict[0]
+        for i in range(1, len(img_predict)):
+            temp = np.vstack((temp, img_predict[i]))
+        img_predict = temp
+        temp = text_predict[0]
+        for i in range(1, len(text_predict)):
+            temp = np.vstack((temp, text_predict[i]))
+        text_predict = temp
 
     temp = truth[0]
     for i in range(1, len(truth)):
         temp = np.vstack((temp, truth[i]))
     truth = temp
 
-    f1_macro_multi_1 = macro_f1_multilabel(total_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5, reduce = True)
-    f1_macro_multi_2 = macro_f1_multilabel(img_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5, reduce = True)
-    f1_macro_multi_3 = macro_f1_multilabel(text_predict[:,1:], truth[:,1:],  num_labels=4, threshold = 0.5, reduce = True)
 
-    f1_weighted_multi_1  = weighted_f1_multilabel(total_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5)
-    f1_weighted_multi_2  = weighted_f1_multilabel(img_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5)
-    f1_weighted_multi_3  = weighted_f1_multilabel(text_predict[:,1:], truth[:,1:], num_labels=4, threshold = 0.5)
+    f1_macro_multi_1 = macro_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
+    if not args.use_one_head:
+        f1_macro_multi_2 = macro_f1_multilabel(img_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
+        f1_macro_multi_3 = macro_f1_multilabel(text_predict, truth,  num_labels=4, threshold = 0.5, reduce = True)
+
+    f1_weighted_multi_1  = weighted_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5)
+    if not args.use_one_head:
+        f1_weighted_multi_2  = weighted_f1_multilabel(img_predict, truth, num_labels=4, threshold = 0.5)
+        f1_weighted_multi_3  = weighted_f1_multilabel(text_predict, truth, num_labels=4, threshold = 0.5)
 
     # f1_skl1 = f1_score_sklearn(total_predict, truth)
     # f1_skl2 = f1_score_sklearn(img_predict, truth)
@@ -167,8 +182,9 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     # f1_pm3 = f1_score_pytorch(text_predict, truth)
 
     auc_pm1 = auroc_score_pytorch(total_predict, truth)
-    auc_pm2 = auroc_score_pytorch(img_predict, truth)
-    auc_pm3 = auroc_score_pytorch(text_predict, truth)
+    if not args.use_one_head:
+        auc_pm2 = auroc_score_pytorch(img_predict, truth)
+        auc_pm3 = auroc_score_pytorch(text_predict, truth)
 
     # average_precison1 = average_precision(total_predict, truth)
     # average_precison2 = average_precision(img_predict, truth)
@@ -194,16 +210,20 @@ def test_multilabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Im
     # ranking_loss2 = ranking_loss(img_predict, truth)
     # ranking_loss3 = ranking_loss(text_predict, truth)
     
-    humour = np.histogram(total_predict[:,1])
-    sarcasm = np.histogram(total_predict[:,2])
-    offensive = np.histogram(total_predict[:,3])
-    motivational = np.histogram(total_predict[:,4])
+    humour = np.histogram(total_predict[:,0])
+    sarcasm = np.histogram(total_predict[:,1])
+    offensive = np.histogram(total_predict[:,2])
+    motivational = np.histogram(total_predict[:,3])
 
-    humour_truth = np.histogram(truth[:,1])
-    sarcasm_truth = np.histogram(truth[:,2])
-    offensive_truth = np.histogram(truth[:,3])
-    motivational_truth = np.histogram(truth[:,4])
+    humour_truth = np.histogram(truth[:,0])
+    sarcasm_truth = np.histogram(truth[:,1])
+    offensive_truth = np.histogram(truth[:,2])
+    motivational_truth = np.histogram(truth[:,3])
 
+    if args.use_one_head:
+        return(f1_macro_multi_1,f1_weighted_multi_1,auc_pm1,
+        total_predict, truth, humour,sarcasm,offensive,motivational,humour_truth,
+        sarcasm_truth,offensive_truth,motivational_truth)
 
     return (f1_macro_multi_1, f1_macro_multi_2, f1_macro_multi_3,
         f1_weighted_multi_1,f1_weighted_multi_2,f1_weighted_multi_3,
@@ -349,9 +369,9 @@ def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, I
     # example_auc2 = example_auc(img_predict, truth)
     # example_auc3 = example_auc(text_predict, truth)
 
-    macro_roc_auc1 = roc_auc_binary(total_predict[:,1:], truth[:,1:])
-    macro_roc_auc2 = roc_auc_binary(img_predict[:,1:], truth[:,1:])
-    macro_roc_auc3 = roc_auc_binary(text_predict[:,1:], truth[:,1:])
+    macro_roc_auc1 = roc_auc_binary(total_predict, truth)
+    macro_roc_auc2 = roc_auc_binary(img_predict, truth)
+    macro_roc_auc3 = roc_auc_binary(text_predict, truth)
 
     # micro_auc1 = micro_auc(total_predict, truth)
     # micro_auc2 = micro_auc(img_predict, truth)
