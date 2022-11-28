@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='semisupervised 0.05 concat resample', type=str,
+    parser.add_argument('--experiment', default='0.05 pretrain unsupervised only', type=str,
                     help="Optional Name of Experiment (used by tensorboard)")
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
@@ -114,9 +114,9 @@ def get_args():
     parser.add_argument('--use-drop-out',action='store_true',default=True)
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
-    parser.add_argument('--batchsize', type = int, default = 80,help="train and test batchsize")  
-    parser.add_argument('--epochs', default=30, type=int, metavar='N',
-                    help='number of total epochs to run')  
+    parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")  
+    parser.add_argument('--epochs', default=200, type=int, metavar='N',
+                    help='number of total epochs to run')
     parser.add_argument('--wd', '--weight-decay', default=0, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
@@ -157,8 +157,8 @@ def get_args():
     parser.add_argument("--use-act",action='store_true', default=False,help='')
     parser.add_argument("--use-sgd",action='store_true', default=False,help='')
     parser.add_argument("--use-adam",action='store_true', default=True,help='')
-
     parser.add_argument("--use-resample-loss", action='store_true', default=True,help='')
+    
     # parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
     parser.add_argument("--reduction", type = str, default='mean',help='')
     parser.add_argument("--loss-weight", type = float, default=1.0,help='')
@@ -239,6 +239,15 @@ def get_args():
     parser.add_argument('--semi-supervised', type=bool, default=False)
     parser.add_argument('--use-sweep', type=bool, default=False)
     parser.add_argument('--hyper_yaml_path', type=str, default="config/hyper1.yml") 
+    
+    # Clip pre-extract
+    parser.add_argument('--input_file_clip_extractor', type=str, default="data/MAMI_processed/train_unlabeled_ratio-0.03.csv")
+    parser.add_argument('--input_img_dir_clip_extractor', type=str, default="data/MAMI_processed/images/train")
+    parser.add_argument('--output_dir_clip_extractor', type=str, default="data/MAMI_processed/clip_features")
+    
+    # pretrain feature clip
+    parser.add_argument('--pretrain_auto_encoder', type=bool, default=True)
+
     args = parser.parse_args()
     return args
 

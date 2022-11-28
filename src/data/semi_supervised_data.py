@@ -3,7 +3,8 @@ from torch.multiprocessing import cpu_count
 from torch.utils.data import DataLoader
 import torchvision.transforms as T
 import pandas as pd
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, TensorDataset
+from torch import Tensor
 import os
 from glob import glob
 # from torchvision.io import read_image
@@ -388,10 +389,10 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
         use_countvectorizer=args.use_sentence_vectorizer,
         use_clip=args.use_clip, vocab_path='data/vocab.json')
     
-    caption_transform = CaptionTransform(args, use_sbert=args.use_bert_embedding,
-        txt_bert_model=args.pretrain_bert_model,
-        use_countvectorizer=args.use_sentence_vectorizer,
-        use_clip=args.use_clip)
+    # caption_transform = CaptionTransform(args, use_sbert=args.use_bert_embedding,
+    #     txt_bert_model=args.pretrain_bert_model,
+    #     use_countvectorizer=args.use_sentence_vectorizer,
+    #     use_clip=args.use_clip)
     
     caption_transform = None
         
@@ -408,6 +409,62 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
     else:
         return test_loader, im_transforms, txt_transforms
 
+
+def create_dataloader_clip_extractor(args, input_img_dir_clip_extractor, input_file_clip_extractor, batch_size, image_size, debug=False):
+    im_transforms = DefaultImgTransform(img_size=image_size) 
+    txt_transforms = TextTransform(args, use_clip=args.use_clip)
+    data = ImageText(input_img_dir_clip_extractor, 
+                     metadata_csv=input_file_clip_extractor, is_labeled=False,
+                     im_transforms=im_transforms.test_transform, txt_transform=txt_transforms)
+    
+    loader = DataLoader(dataset=data, batch_size=batch_size,
+                         num_workers=os.cpu_count()*3//4, drop_last=False, shuffle=False)
+
+    if not debug:
+        return loader
+    else:
+        return loader, im_transforms, txt_transforms
+
+def compute_feature_stats(image_features_path, text_features_path):
+    image_features_arr = np.loadtxt(image_features_path)
+    text_features_arr = np.loadtxt(text_features_path)
+    
+    image_features_mean = image_features_arr.mean(axis=0)
+    image_features_std = image_features_arr.std(axis=0)
+    
+    text_features_mean = text_features_arr.mean(axis=0)
+    text_features_std = text_features_arr.std(axis=0)
+    
+    feature_stats = {
+        'image_features_mean':image_features_mean,
+        'image_features_std':image_features_std,
+        'text_features_mean':text_features_mean,
+        'text_features_std':text_features_std
+    }
+    
+    return feature_stats
+
+def create_dataloader_pre_extracted(args, image_features_path, text_features_path, batch_size, is_labeled=False, label_path=None, label_cols=None, shuffle=False, normalize=False, feature_stats=None):
+    image_features_arr = np.loadtxt(image_features_path)
+    text_features_arr = np.loadtxt(text_features_path)
+    
+    if normalize:
+        assert not feature_stats is None, "to normalize, need feature stats"
+        image_features_arr = (image_features_arr-feature_stats['image_features_mean'])/feature_stats['image_features_std']
+        text_features_arr = (text_features_arr-feature_stats['text_features_mean'])/feature_stats['text_features_std']
+        
+    if is_labeled:
+        assert (not label_cols is None) and (not label_path is None), "supervised data needs labels"
+        metadata = pd.read_csv(label_path)
+        # can extract from both series and DataFrame
+        labels = metadata[label_cols].values
+        data = TensorDataset(Tensor(image_features_arr), Tensor(text_features_arr), Tensor(labels))
+    else:
+        data = TensorDataset(Tensor(image_features_arr), Tensor(text_features_arr))
+        
+    loader = DataLoader(data, shuffle=shuffle, batch_size=batch_size)
+
+    return loader
 
 # from ..arguments import get_args
 

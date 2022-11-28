@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader 
 import datetime 
 import numpy as np  
-from test import test_multilabel
+from test_func import test_multilabel
 from tqdm import tqdm
 from loss import focal_binary_cross_entropy, diversity_measurement, consistency_measurement
 from loss import focal_binary_cross_entropy,zlpr_loss,AsymmetricLoss,ResampleLoss 

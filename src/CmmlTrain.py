@@ -9,8 +9,8 @@ from torch.optim.lr_scheduler import StepLR
 from torch.autograd import Variable
 from torch.utils.data import DataLoader 
 import datetime 
-import numpy as np  
-from test import test_multilabel
+import numpy as np
+from test_func import test_multilabel
 from tqdm import tqdm
 from loss import focal_binary_cross_entropy, diversity_measurement, consistency_measurement
 from loss import focal_binary_cross_entropy,zlpr_loss,AsymmetricLoss,ResampleLoss 
@@ -34,7 +34,6 @@ from utils.npy_save import npy_save_txt
 
 from model.dualstream_net import CmmlModel_v2
 from model.deep_weak_attention import deep_weak_attention
-
 
 
 def train(args,model, dataset,
@@ -482,8 +481,8 @@ if __name__ == '__main__':
     args = get_args()
 
     wandb.login(key = 'd87822d5fa951a22676b0985f891c9021b875ae3')
-    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    wandb.init(project="meme_experiments", entity="meme-analysts")
+    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    # wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment
