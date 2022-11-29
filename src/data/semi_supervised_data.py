@@ -2,6 +2,8 @@ from functools import partial
 from torch.multiprocessing import cpu_count
 from torchvision.datasets import STL10
 from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, TensorDataset
+from torch import Tensor
 import torchvision.transforms as T
 import pandas as pd
 from torch.utils.data import Dataset
@@ -33,41 +35,7 @@ import os
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-
-class ImgAugment:
-
-    def __init__(self, img_size, s=1):
-
-        mean = [0.48145466, 0.4578275, 0.40821073]
-        std = [0.26862954, 0.26130258, 0.27577711]
-        # color_jitter = T.ColorJitter(
-        #     0.2 * s, 0.2 * s, 0.2 * s
-        # )
-        # # 10% of the image
-        # blur = T.GaussianBlur((3, 3), (0.1, 2.0))
-
-
-        self.train_transform = T.Compose(
-          [
-            T.RandomResizedCrop(img_size, interpolation=T.InterpolationMode.BICUBIC),
-            T.RandomHorizontalFlip(),
-            # transforms.ColorJitter(brightness=0.2, contrast=0.1, saturation=0.1, hue=0.2),
-            T.RandomGrayscale(p=0.1),
-            # transforms.RandomPerspective(),
-            T.RandomRotation(degrees=10),
-            T.ToTensor(),
-            T.Normalize(mean=mean,std=std)
-    ]
-        )
-
-        self.test_transform = T.Compose([
-            T.Resize((img_size,img_size), interpolation=T.InterpolationMode.BICUBIC),
-            # transforms.CenterCrop(clip_model.visual.input_resolution),
-            T.ToTensor(),
-            T.Normalize(mean=mean,std=std)
-        ]
-            )
-
+ 
 class DefaultImgTransform:
 
     def __init__(self, img_size):
@@ -93,69 +61,17 @@ class DefaultImgTransform:
         )
 
 class TextTransform():
-    def __init__(self,args, txt_bert_model=None, txt_max_length=128, use_sbert=False,
-                use_countvectorizer=False,vocab_path=None,use_clip=None):
-        self.vocab_path = vocab_path
-        self.use_countvectorizer = use_countvectorizer
-        if self.use_countvectorizer:
-            if vocab_path is None:
-                self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True)
-            else:
-                self.vocab = json.load(open(vocab_path))
-                self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True, vocabulary=self.vocab)
-
-        self.use_sbert = use_sbert
-        if use_sbert:
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
-
-        self.txt_bert_model = txt_bert_model
-        if not txt_bert_model is None:
-            if txt_bert_model == 'roberta-base':
-                self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
-            else:
-                self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_max_length)
-        self.use_clip = use_clip
-        self.args = args 
-        if args.use_open_clip:
-            self.tokenizer = open_clip.get_tokenizer('xlm-roberta-large-ViT-H-14')
-
+    def __init__(self):
+        pass 
     def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
-        self.sentence_vectors_extractor.fit(texts)
-
-        # save vocabulary
-        self.vocab = self.sentence_vectors_extractor.vocabulary_
-        self.vocab_path = path_save_vocab
-
-        # value from vectorizer is numpy type, convert to int to serialize in json
-        json.dump({key: int(value) for (key, value) in self.vocab.items()}, open(path_save_vocab, 'w'))
-        print(f"Compute vocabulary for {len(texts)} sentences. Save to {path_save_vocab}")
-
+        pass
     def __call__(self, raw_texts):
         texts = []
         for t in raw_texts:
             texts.append(preprocess(t))
-
-        outputs = dict()
-        if self.use_countvectorizer:
-            sentence_vectors = self.sentence_vectors_extractor.transform(texts).toarray()
-            outputs['sentence_vectors'] = sentence_vectors
-
-        if self.use_sbert:
-            sbert_embedding = self.model.encode(texts)
-            outputs['sbert_embedding'] = sbert_embedding
-
-        if not self.txt_bert_model is None:
-            toks = self.tokenizer(texts, padding='max_length', truncation=True, return_tensors="pt")
-            # output of bert tokenizer is a dictionary
-            outputs.update(toks)
-        
-        if self.use_clip:
-            if self.args.use_open_clip:
-                toks = self.tokenizer(texts)
-                outputs["clip_tokens"] = toks
-            else:
-                toks = clip.tokenize(texts,truncate=True)
-                outputs["clip_tokens"] = toks
+        outputs = {}
+        toks = clip.tokenize(texts,truncate=True)
+        outputs["clip_tokens"] = toks
         return outputs
 
 class ImageText(Dataset):
@@ -221,22 +137,9 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     if args.use_clip:
         image_size = input_resolution
 
-    if args.use_augmentation:
-        im_transforms = ImgAugment(img_size=image_size)
-    else:
-        im_transforms = DefaultImgTransform(img_size=image_size)
-    if not args.use_bert_model:
-        args.pretrain_bert_model = None
-    txt_transforms = TextTransform(args,use_sbert=args.use_bert_embedding,
-        txt_bert_model=args.pretrain_bert_model,
-        use_countvectorizer=args.use_sentence_vectorizer,
-        use_clip=args.use_clip)
+    im_transforms = DefaultImgTransform(img_size=image_size)
 
-    target_transforms = None
-
-    # need compute vocab before transform text
-    if args.use_sentence_vectorizer:
-        txt_transforms.precompute_stats(data_utils.get_texts(train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
+    txt_transforms = TextTransform()
         
     if inbatch_label_ratio is None:
         inbatch_label_ratio = data_utils.calculate_label_ratio(train_labeled_csv, train_unlabeled_csv)
@@ -245,11 +148,10 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
                                 im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
     train_supervised_loader = DataLoader(dataset=train_sup, batch_size=int(inbatch_label_ratio*batch_size), 
                                             num_workers=cpu_count()//2, drop_last=True, shuffle=True)
-    if not args.train_supervise_only:
-        train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
+    train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
                                 im_transforms=im_transforms.test_transform, 
                                 txt_transform=txt_transforms, label_cols=label_cols)
-        train_unsupervised_loader = DataLoader(dataset=train_unsup, batch_size=batch_size - int(inbatch_label_ratio*batch_size),
+    train_unsupervised_loader = DataLoader(dataset=train_unsup, batch_size=batch_size - int(inbatch_label_ratio*batch_size),
                                             num_workers=cpu_count()//2, drop_last=True, shuffle=True)
 
     val = ImageText(val_img_dir, metadata_csv=val_csv, is_labeled=True,
@@ -258,9 +160,6 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     # collate_fn_batch = ...
     # dataloader = DataLoader(dataset=data, collate_fn = collate_fn_batch, batch_size=batch_size, num_workers=cpu_count()//2, drop_last=True, shuffle=True)
     val_loader = DataLoader(dataset=val, batch_size=batch_size, num_workers=cpu_count()*3//4, drop_last=False, shuffle=False)
-    
-    if args.train_supervise_only:
-        return train_supervised_loader, None, val_loader
     if not debug:
         return train_supervised_loader, train_unsupervised_loader, val_loader
     else:
@@ -272,14 +171,9 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
     if args.use_clip:
         image_size = input_resolution
 
-    im_transforms = ImgAugment(img_size=image_size)
-    txt_transforms = TextTransform(args,use_sbert=args.use_bert_embedding,
-        txt_bert_model=args.pretrain_bert_model,
-        use_countvectorizer=args.use_sentence_vectorizer,
-        use_clip=args.use_clip, vocab_path='data/vocab.json')
+    im_transforms = DefaultImgTransform(img_size=image_size)
+    txt_transforms = TextTransform()
         
-    target_transforms = None
-
     test = ImageText(test_img_dir, metadata_csv=test_csv, is_labeled=True,
                             im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
@@ -290,7 +184,42 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
     else:
         return test_loader, im_transforms, txt_transforms
 
+def create_dataloader_clip_extractor(args, input_img_dir_clip_extractor, input_file_clip_extractor, batch_size, image_size, debug=False):
+    im_transforms = DefaultImgTransform(img_size=image_size) 
+    txt_transforms = TextTransform()
+    data = ImageText(input_img_dir_clip_extractor, 
+                     metadata_csv=input_file_clip_extractor, is_labeled=False,
+                     im_transforms=im_transforms.test_transform, txt_transform=txt_transforms)
+    
+    loader = DataLoader(dataset=data, batch_size=batch_size,
+                         num_workers=os.cpu_count()*3//4, drop_last=False, shuffle=False)
 
+    if not debug:
+        return loader
+    else:
+        return loader, im_transforms, txt_transforms
+
+def create_dataloader_pre_extracted(args, image_features_path, text_features_path, batch_size, is_labeled=False, label_path=None, label_cols=None, shuffle=False, normalize=False, feature_stats=None):
+    image_features_arr = np.loadtxt(image_features_path)
+    text_features_arr = np.loadtxt(text_features_path)
+    
+    if normalize:
+        assert not feature_stats is None, "to normalize, need feature stats"
+        image_features_arr = (image_features_arr-feature_stats['image_features_mean'])/feature_stats['image_features_std']
+        text_features_arr = (text_features_arr-feature_stats['text_features_mean'])/feature_stats['text_features_std']
+        
+    if is_labeled:
+        assert (not label_cols is None) and (not label_path is None), "supervised data needs labels"
+        metadata = pd.read_csv(label_path)
+        # can extract from both series and DataFrame
+        labels = metadata[label_cols].values
+        data = TensorDataset(Tensor(image_features_arr), Tensor(text_features_arr), Tensor(labels))
+    else:
+        data = TensorDataset(Tensor(image_features_arr), Tensor(text_features_arr))
+        
+    loader = DataLoader(data, shuffle=shuffle, batch_size=batch_size)
+
+    return loader
 # from ..arguments import get_args
 
 # def main():

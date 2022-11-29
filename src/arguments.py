@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='morm-dropout', type=str,help="Optional Name of Experiment (used by tensorboard)")
+    parser.add_argument('--experiment', default='0.05integration_concat_vcreg', type=str,help="Optional Name of Experiment (used by tensorboard)")
 
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
@@ -103,65 +103,42 @@ def get_args():
     parser.add_argument("--use-clip", action='store_true', default=True,help='')
     parser.add_argument("--use-open-clip", type = bool, default=False,help='')
     parser.add_argument("--clip-model", type = str, default='vit14',help='')
-    parser.add_argument("--clip-pretrained", type = str, default='frozen_laion5b_s13b_b90k',help='')
-    parser.add_argument("--use-lars-optimizer",action='store_true', default=False,help='')
-    parser.add_argument("--use-adjust-lr", action='store_true', default=False,help='')
     parser.add_argument("--use-step-lr",action='store_true', default=True,help='')
-    parser.add_argument("--use-multi-step-lr", action='store_true', default=False,help='')
-    parser.add_argument("--use-linear-scheduler", action='store_true', default=False,help='')
     parser.add_argument("--use-concat-modalities", action='store_true', default=True,help='')
-    parser.add_argument("--use-FMI-modalities", action='store_true', default=False,help='')
     parser.add_argument("--use-deep-weak-attention", action='store_true', default=False,help='')
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")  
-    parser.add_argument('--epochs', default=500, type=int, metavar='N',
+    parser.add_argument('--epochs', default=80, type=int, metavar='N',
                     help='number of total epochs to run')  
     parser.add_argument('--wd', '--weight-decay', default=0, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
     parser.add_argument('--lr-supervise', type = float, default =1e-4,help="train Learning rate")
-    parser.add_argument('--use-drop-out',action='store_true',default=False)
-    parser.add_argument('--unfreeze',action='store_true',default=False)
-    
+    parser.add_argument("--mlp-expand-dim", default="8192",help='Size and number of layers of the MLP expander head')
+    parser.add_argument("--output-backbone-dim", type=int, default=768,help='')
     parser.add_argument('--T',type=int,default=2)
-    parser.add_argument('--supervise-entropy-minimization',action='store_true',default=True)
-    parser.add_argument('--unsupervise-entropy-minimization',action='store_true',default=True)
+    parser.add_argument('--supervise-entropy-minimization',action='store_true',default=False)
+    parser.add_argument('--unsupervise-entropy-minimization',action='store_true',default=False)
 
     parser.add_argument('--Textfeaturepara', type = str, default = '3000, 384, 256',
     help="architecture of text feature network")
-    parser.add_argument('--Imgpredictpara', type = str, default = '256,128, 4',help="architecture of img predict network")
-    parser.add_argument('--Textpredictpara', type = str, default = '256,128,4',help="architecture of text predict network")
-    parser.add_argument("--mlp-expand-dim", default="1024",help='Size and number of layers of the MLP expander head')
-    parser.add_argument("--use-one-head", action='store_true', default=False,help='')
-    parser.add_argument('--Predictpara', type = str, default = '512, 256, 4',help="architecture of attention predict network")
+    parser.add_argument('--Imgpredictpara', type = str, default = '512,128, 4',help="architecture of img predict network")
+    parser.add_argument('--Textpredictpara', type = str, default = '512,128,4',help="architecture of text predict network")
+    parser.add_argument('--Predictpara', type = str, default = '1024, 256, 4',help="architecture of attention predict network")
     parser.add_argument('--Attentionparameter', type = str, default = '256, 64, 32, 1',
     help="architecture of attention network")
-    parser.add_argument("--output-backbone-dim", type=int, default=256,help='')
-    parser.add_argument('--use-sim-loss',action='store_true',default=False)
-    parser.add_argument('--cal-sep-class-loss',action='store_true',default=False)
-    parser.add_argument('--use-div-dist-for-one-head',action='store_true',default=False)
-    parser.add_argument('--use-div',action='store_true',default=True)
-    parser.add_argument('--train-supervise-only',action='store_true',default=False)
-    parser.add_argument('--use_vicreg',action='store_true',default=False)
 
-    parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
-    parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
-    parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
     parser.add_argument("--use-augmentation", action='store_true', default=True,help='')
-    parser.add_argument("--use-clip-norm", action='store_true', default=False,help='')
-    parser.add_argument("--use-coattention", action='store_true', default=False,help='')
-    
+    parser.add_argument("--use-clip-norm", action='store_true', default=False,help='')    
     parser.add_argument("--use-norm",action='store_true', default=True,help='')
 
-    parser.add_argument("--use-org",action='store_true', default=False,help='')
+    parser.add_argument("--use-org",action='store_true', default=True,help='')
     parser.add_argument("--original-org",action='store_true', default=False,help='')
-    parser.add_argument('--use-org-weights',action='store_true',default=True)
+    parser.add_argument('--use-org-weights',action='store_true',default=False)
     parser.add_argument("--modified-org",action='store_true', default=True,help='')
-    parser.add_argument("--use-zlpr-loss",action='store_true', default=False,help='')
     parser.add_argument("--use-asymmetric-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-bce-loss",action='store_true', default=False,help='')
-    parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-sgd",action='store_true', default=False,help='')
     parser.add_argument("--use-adam",action='store_true', default=True,help='')
 
@@ -180,8 +157,12 @@ def get_args():
     parser.add_argument("--reweight-func", type = str, default='rebalance',help='')
     parser.add_argument("--freq-file", type = str, default='/home/fptu/viet/SSLMemes/data/class_freq.pkl',help='')
     
-    parser.add_argument("--use-sentence-vectorizer", type = bool, default=False,help='')
-    ####
+    parser.add_argument('--input_file_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/val.csv")
+    parser.add_argument('--input_img_dir_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/images/val")
+    parser.add_argument('--output_dir_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/clip_features")
+    parser.add_argument('--pretrain-auto-encoder', type=bool, default=True)
+
+        ####
     ####
     parser.add_argument('--use-gpu', type = bool, default = True)
     parser.add_argument('--visible-gpu', type = str, default = '0')

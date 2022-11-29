@@ -4,80 +4,45 @@ import torchvision.models as Models
 import warnings
 import torch.nn.functional as F 
 from transformers import RobertaModel, DistilBertModel
-from .unsupervised import FusionNet
 
 warnings.filterwarnings("ignore", category=UserWarning) 
 
 class TextfeatureNet(nn.Module):
-    def __init__(self, args, neure_num,clip_dim=None):
+    def __init__(self, args, neure_num,clip_dim=None,encoder_text=None):
         super(TextfeatureNet, self).__init__()
         self.args = args  
-        if self.args.use_clip:
-            self.fc = nn.Linear(clip_dim,args.output_backbone_dim)
-            # self.dropout = nn.Dropout(0.2)
-            # self.bigru = nn.LSTM(clip_dim,neure_num[-1], 1, bidirectional=False, batch_first=True, bias=False)
-        elif self.args.use_bert_model:
-            if args.pretrain_bert_model == "distilbert-base-uncased":
-                self.encoder = DistilBertModel.from_pretrained(args.pretrain_bert_model)
-            if args.pretrain_bert_model == "roberta-base":
-                self.encoder = RobertaModel.from_pretrained(args.pretrain_bert_model)
-            self.linear = make_layers([768,neure_num[-1]])
-            self.target_token_idx = 0
-        else:
-            self.mlp = make_layers(neure_num[:-1])
-            self.feature = nn.Linear(neure_num[-2], neure_num[-1])
-            if args.add_block_linear_bert_embed:
-                self.linear = make_layers([384,neure_num[-2]])
+        self.encoder_text = encoder_text
+        self.fc1 = nn.Linear(clip_dim,args.output_backbone_dim)
+        self.fc2 = nn.Linear(clip_dim,args.output_backbone_dim)
+        # self.dropout = nn.Dropout(0.2)
+        # self.bigru = nn.LSTM(clip_dim,neure_num[-1], 1, bidirectional=False, batch_first=True, bias=False)
         self.dropout = nn.Dropout(0.2)
         self.relu = nn.ReLU()
 
-    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None,clip_model=None):
-        if self.args.use_clip:
-            if self.args.unfreeze:
-                    feats = clip_model.encode_text(clip_input_ids)
-            else:
-                with torch.no_grad():
-                    feats = clip_model.encode_text(clip_input_ids)
-            x = self.fc(feats)
-            if self.args.use_norm:
-                x = x / x.norm(dim=1, keepdim=True)
-                x = self.dropout(x)
-            else:
-                x = self.relu(x)
-                x = self.dropout(x)
-            
-        elif self.args.use_bert_model:
-            output = self.encoder(input_ids,attn_mask)
-            last_hidden_state = output.last_hidden_state
-            x = last_hidden_state[:, self.target_token_idx, :]
-            x = self.linear(x)
-            if self.args.use_drop_out:
-                x = self.dropout(x)
-        else:
-            temp_x = self.mlp(x)
-            if self.args.use_bert_embedding:
-                if self.args.add_block_linear_bert_embed:
-                    bert_emb = self.linear(bert_emb)
-                temp_x = temp_x + bert_emb
-            x = self.feature(temp_x)
-        return x
+    def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None,clip_model=None,clip_emb=None):
+        # with torch.no_grad():
+        #     feats = clip_model.encode_text(clip_input_ids)
+        text_feature = self.fc1(clip_emb)
+        with torch.no_grad():
+            text_encoded = self.encoder_text(clip_emb)
+        text_encoded = self.fc1(text_encoded)
+        text_encoded = self.dropout(self.relu(text_encoded))
+        text_feature = self.dropout(self.relu(text_feature))
+        # if self.args.use_norm:
+        #     x = x / x.norm(dim=1, keepdim=True)
+        #     x = self.dropout(x)
+        # else:
+        #     x = self.relu(x)
+        #     x = self.dropout(x)
+        return text_feature,text_encoded
 
 class PredictNet(nn.Module):
     
-    def __init__(self, args,neure_num, use_softmax=False,mode=''):
+    def __init__(self, args,neure_num, use_softmax=False):
         #print("---------PredictNet-----")
         super(PredictNet, self).__init__()
         self.mlp = make_predict_layers(neure_num)
         self.args = args
-        self.mode = mode
-        if self.mode == 'predict sep head':
-            if self.args.cal_sep_class_loss:
-                self.act = nn.ReLU()
-                self.pl = nn.Linear(neure_num[-3],neure_num[-2])
-                self.cf1 = nn.Linear(neure_num[-2], 1)
-                self.cf2 = nn.Linear(neure_num[-2], 1)
-                self.cf3 = nn.Linear(neure_num[-2], 1)
-                self.cf4 = nn.Linear(neure_num[-2], 1)
         # print("---------mlp----------",self.mlp)
         
         # if use_softmax:
@@ -92,13 +57,8 @@ class PredictNet(nn.Module):
         # self.sigma = nn.Parameter(torch.FloatTensor([1.,1.,1./2]))
 
     def forward(self, x):
-        if self.mode == 'predict sep head':
-            if self.args.cal_sep_class_loss:
-                x = self.act(self.pl(x))
-                return(self.cf1(x),self.cf2(x),self.cf3(x), self.cf4(x))
-        else:
-            y= self.mlp(x)
-            return y
+        y= self.mlp(x)
+        return y
 
 
 class AttentionNet(nn.Module):
@@ -112,53 +72,37 @@ class AttentionNet(nn.Module):
         return y
 
 class ImgNet(nn.Module):
-    def __init__(self,args,clip_dim=None):
+    def __init__(self,args,clip_dim=None,encoder_img=None):
         super(ImgNet, self).__init__()
-        if args.use_clip:
-            self.fc1 = nn.Sequential(       
+        self.encoder_img = encoder_img
+        self.fc1 = nn.Sequential(       
             nn.Linear(clip_dim, args.output_backbone_dim)
             )
-        else:
-            if args.resnet_model == 'resnet50':
-                self.feature = Models.resnet50('ResNet50_Weights.DEFAULT')
-                self.fc1 = nn.Sequential(       
-                nn.Linear(2048, args.output_backbone_dim)
-                )
-            elif args.resnet_model == 'resnet18':
-                self.feature = Models.resnet18('ResNet18_Weights.DEFAULT')
-                self.fc1 = nn.Sequential(       
-                nn.Linear(512, args.output_backbone_dim)
-                )
-            self.feature = nn.Sequential(*list(self.feature.children())[:-1])
+        self.fc2 = nn.Sequential(       
+            nn.Linear(clip_dim, args.output_backbone_dim)
+            )
         self.args = args 
         self.dropout = nn.Dropout(0.2)
         self.relu = nn.ReLU()
             
-    def forward(self, x,clip_model=None):
-        if self.args.use_clip:
-            if self.args.unfreeze:
-                x = clip_model.encode_image(x)
-            else:
-                with torch.no_grad():
-                    x = clip_model.encode_image(x)  
-            x = self.fc1(x)   
-            if self.args.use_norm:
-                x = x / x.norm(dim=1, keepdim=True)
-                x = self.dropout(x)
-            else:          
-                x = self.relu(x) 
-                x = self.dropout(x)
-        else:
-            N = x.size()[0]
-            x = self.feature(x.view(N, 3, 256, 256))
-            if self.args.resnet_model == 'resnet18':
-                x = x.view(N, 512)
-            elif self.args.resnet_model == 'resnet50':
-                x = x.view(N, 2048)
-            x = self.fc1(x)
-            if self.args.use_drop_out:
-                x = self.dropout(x)
-        return x
+    def forward(self, x):
+        # with torch.no_grad():
+        #     x = clip_model.encode_image(x) 
+        #  
+        image_feature = self.fc1(x)   
+        with torch.no_grad():
+            img_encoded = self.encoder_img(x)
+        img_encoded = self.fc2(img_encoded)
+        img_encoded = self.dropout(self.relu(img_encoded))
+        image_feature = self.dropout(self.relu(image_feature))
+
+        # if self.args.use_norm:
+        #     x = x / x.norm(dim=1, keepdim=True)
+        #     x = self.dropout(x)
+        # else:          
+        #     x = self.relu(x) 
+        #     x = self.dropout(x)
+        return image_feature,img_encoded
 
 def make_layers(cfg):
     layers = []
@@ -181,11 +125,6 @@ def make_predict_layers(cfg):
     layers.append(nn.Linear(cfg[-2], cfg[-1], bias=False))
     return nn.Sequential(*layers)
 
-def off_diagonal(x):
-    n, m = x.shape
-    assert n == m
-    return x.flatten()[:-1].view(n - 1, n + 1)[:, 1:].flatten()
-
 def Projector(mlp_expand_dim, embedding):
     mlp_spec = f"{embedding}-{mlp_expand_dim}"
     layers = []
@@ -197,51 +136,12 @@ def Projector(mlp_expand_dim, embedding):
     layers.append(nn.Linear(f[-2], f[-1], bias=False))
     return nn.Sequential(*layers)
 
-class VICReg(nn.Module):
-    def __init__(self, args):
-        super().__init__()
-        self.args = args
-        self.num_features = int(args.mlp_expand_dim.split("-")[-1])
-        self.projector = Projector(args.mlp_expand_dim, args.mlp_expand_dim)
-
-    def forward(self, x, y):
-        x = self.projector(x)
-        y = self.projector(y)
-
-        if self.args.use_sim_loss:
-            repr_loss = F.mse_loss(x, y)
-        # x = torch.cat(FullGatherLayer.apply(x), dim=0)
-        # y = torch.cat(FullGatherLayer.apply(y), dim=0)
-        x = x - x.mean(dim=0)
-        y = y - y.mean(dim=0)
-
-        std_x = torch.sqrt(x.var(dim=0) + 0.0001)
-        std_y = torch.sqrt(y.var(dim=0) + 0.0001)
-        std_loss = torch.mean(F.relu(1 - std_x)) / 2 + torch.mean(F.relu(1 - std_y)) / 2
-
-        cov_x = (x.T @ x) / (self.args.batchsize - 1)
-        cov_y = (y.T @ y) / (self.args.batchsize - 1)
-        cov_loss = off_diagonal(cov_x).pow_(2).sum().div(
-            self.num_features
-        ) + off_diagonal(cov_y).pow_(2).sum().div(self.num_features)
-
-        if self.args.use_sim_loss:
-            loss = [
-                self.args.std_coeff * std_loss,
-                self.args.sim_coeff * repr_loss,
-                self.args.cov_coeff * cov_loss
-            ]
-        else:
-            loss = [
-                self.args.std_coeff * std_loss,
-                self.args.cov_coeff * cov_loss
-            ]   
-        return loss
-
 class CmmlModel(nn.Module):
-    def __init__(self,args,clip_model=None,cdim=None):
+    def __init__(self,args,clip_model=None,cdim=None,image_encoder=None,text_encoder=None):
         super(CmmlModel, self).__init__()
         self.args = args 
+        self.image_encoder = image_encoder
+        self.text_encoder = text_encoder
         param = args.Textfeaturepara.split(',')
         self.Textfeatureparam = list(map(int, param))
         param = args.Predictpara.split(',')
@@ -256,19 +156,10 @@ class CmmlModel(nn.Module):
         self.cdim = cdim 
         self.generate_model()
     def generate_model(self):
-        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,clip_dim=self.cdim)
+        self.Textfeaturemodel = TextfeatureNet(self.args,self.Textfeatureparam,clip_dim=self.cdim,encoder_text=self.text_encoder)
         self.Imgpredictmodel = PredictNet(self.args,self.Imgpredictparam)
         self.Textpredictmodel = PredictNet(self.args,self.Textpredictparam)
-        if self.args.cal_sep_class_loss:
-            self.Predictmodel = PredictNet(self.args,self.Predictparam,mode='predict sep head')
-        else:
-            self.Predictmodel = PredictNet(self.args,self.Predictparam)
-        self.Imgmodel = ImgNet(self.args,clip_dim=self.cdim)
+        self.Predictmodel = PredictNet(self.args,self.Predictparam)
+        self.Imgmodel = ImgNet(self.args,clip_dim=self.cdim,encoder_img = self.image_encoder)
         self.Attentionmodel = AttentionNet(self.Attentionparam)
-        self.FusionCoattention = None
-        self.ProjectormodelImgText = None 
-        if self.args.use_coattention:
-            self.FusionCoattention = FusionNet(self.Textfeatureparam[-1],self.Textfeatureparam[-1], 0.2)
-        if self.args.use_one_head:
-            self.ProjectormodelImgText = VICReg(self.args)
 
