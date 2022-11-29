@@ -272,11 +272,11 @@ def test_auto_encoder(model, testdataset):
 
     loss_func = nn.MSELoss()
     epoch_loss = 0
-    for ii, (image_feature, text_feature, target) in tqdm(enumerate(testdataset), total = len(testdataset)):
-        image_feature = image_feature.cuda().float()
-        text_feature = text_feature.cuda().float()
-        y = target.numpy()
-        target = target.cuda().float()
+    for ii, batch_input in tqdm(enumerate(testdataset), total = len(testdataset)):
+        image_feature = batch_input[0].cuda().float()
+        text_feature = batch_input[1].cuda().float()
+        # y = target.numpy()
+        # target = target.cuda().float()
 
         if model.encode_image:
             text_feature_pred = model(image_feature)                

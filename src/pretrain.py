@@ -7,7 +7,7 @@ from utils.unsupervisedUtils import EarlyStopping
 
 # Train model
 
-def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1):
+def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1, pretrain_epochs=30):
 
     optimizer = optim.Adam(model.parameters(), lr=2e-4, weight_decay=1e-4)
     loss_func = nn.MSELoss()
@@ -18,7 +18,7 @@ def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1):
     
     print('============== Pretrain Auto Encoder ==================')
 
-    for epoch in range(1000):
+    for epoch in range(pretrain_epochs):
         model.train()
         epoch_loss = 0  
         for ii, (image_feature, text_feature) in tqdm(enumerate(train_loader), total = len(train_loader)):

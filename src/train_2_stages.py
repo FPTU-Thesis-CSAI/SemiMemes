@@ -38,6 +38,7 @@ from model.AutoEncoder import AutoEncoder, ModelCombineAE, ModelConCat
 from pretrain import train_auto_encoder
 from test_func import test_auto_encoder, test_multilabel_finetune
 from data.create_freq_file import dump_freq_data
+from torch.utils.data import random_split
 
 
 def finetune_supervised(args,model, dataset,
@@ -47,7 +48,7 @@ def finetune_supervised(args,model, dataset,
         imgbatchsize = 32, cuda = False, savepath = '',eman=None): 
     
     print("============================ Fine tune ===================================")
-    num_update_steps = 10*8000/batchsize # MAMI train contains 8000 samples
+    num_update_steps = 15*8000/batchsize # MAMI train contains 8000 samples
     print(f"Update model for: {num_update_steps} steps.")
 
     if args.use_lars_optimizer:
@@ -73,7 +74,8 @@ def finetune_supervised(args,model, dataset,
         scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,start_factor=1./3,total_iters=80)
     elif args.use_step_lr:
         print("==============use step scheduler===============")
-        scheduler = StepLR(optimizer, step_size = num_update_steps/100, gamma = 0.95)  
+        # 0.1 data is 800 sample
+        scheduler = StepLR(optimizer, step_size = 800/batchsize, gamma = 0.95)  
     elif args.use_multi_step_lr:
         print("==============use multi step scheduler===============")
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5,10,15],gamma=0.5)
@@ -270,7 +272,7 @@ def finetune_supervised(args,model, dataset,
         if num_update_steps <= 0: break
     
     return 
-
+100
 
 if __name__ == '__main__':
     seed = 42
@@ -346,12 +348,12 @@ if __name__ == '__main__':
     
     label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
     
-    train_supervise_path = 'data/MAMI_processed/train_labeled_ratio-0.05.csv'
-    train_supervise_image_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.05/image_feature.txt'
-    train_supervise_text_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.05/text_feature.txt'
+    train_supervise_path = 'data/MAMI_processed/train_labeled_ratio-0.3.csv'
+    train_supervise_image_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.3/image_feature.txt'
+    train_supervise_text_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.3/text_feature.txt'
     
-    unsupervise_image_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.05/image_feature.txt'
-    unsupervise_text_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.05/text_feature.txt'
+    unsupervise_image_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.3/image_feature.txt'
+    unsupervise_text_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.3/text_feature.txt'
     
     # feature_stats = compute_feature_stats(unsupervise_image_feature_path, unsupervise_text_feature_path)
     
@@ -360,6 +362,7 @@ if __name__ == '__main__':
                                                                 text_features_path=unsupervise_text_feature_path,
                                                                 shuffle=True, batch_size=args.batchsize, 
                                                                 # normalize=True, feature_stats=feature_stats
+                                                                # is_split=True, val_size=1000
                                                                 )
     
     finetune_supervised_loader = create_dataloader_pre_extracted(args,
@@ -368,7 +371,7 @@ if __name__ == '__main__':
                                                                 is_labeled=True, label_path=train_supervise_path, label_cols=label_cols,
                                                                 shuffle=True, batch_size=args.batchsize,
                                                                 # normalize=True, feature_stats=feature_stats
-                                                                )       
+                                                                )      
 
     val_loader = create_dataloader_pre_extracted(args,
                                                 image_features_path='data/MAMI_processed/clip_features/val/image_feature.txt',
@@ -388,6 +391,11 @@ if __name__ == '__main__':
 
     if args.use_resample_loss:
         args.freq_file = dump_freq_data(train_supervise_path, label_cols)
+        
+    # unsupervised_pretrain_loader, unsupervised_pretrain_loader_val = random_split(unsupervised_pretrain_loader, 
+    #                                                                               [int(len(unsupervised_pretrain_loader)*0.9),
+    #                                                                                len(unsupervised_pretrain_loader)-int(len(unsupervised_pretrain_loader)*0.9)],
+    #                                                                               generator=torch.Generator().manual_seed(42))
 
     if args.pretrain_auto_encoder:
         image_ae = AutoEncoder(encode_image=True)
@@ -396,13 +404,13 @@ if __name__ == '__main__':
             image_ae.cuda()
             text_ae.cuda()
         
-        list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3)
+        list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=30)
         test_loss = test_auto_encoder(image_ae, test_loader)
         print()
         print(test_loss)
         # wandb.log({"test_loss image ae": test_loss})
         
-        list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3)
+        list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=30)
         test_loss = test_auto_encoder(text_ae, test_loader)
         print()
         print(test_loss)

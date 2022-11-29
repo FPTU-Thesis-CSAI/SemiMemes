@@ -32,6 +32,7 @@ from transformers import LxmertTokenizer
 from . import data_utils
 import os
 # import data_utils
+from torch.utils.data import random_split
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -269,7 +270,7 @@ class ImageText(Dataset):
             self.text_transform_outputs = None
 
         if not second_txt_transform is None:
-            second_text_col = 'generated_caption'
+            second_text_col = 'genesplit_ratiod_caption'
             self.second_texts = self.metadata[second_text_col]
             self.second_text_transform_outputs = second_txt_transform(self.second_texts)
         else:
@@ -444,7 +445,7 @@ def compute_feature_stats(image_features_path, text_features_path):
     
     return feature_stats
 
-def create_dataloader_pre_extracted(args, image_features_path, text_features_path, batch_size, is_labeled=False, label_path=None, label_cols=None, shuffle=False, normalize=False, feature_stats=None):
+def create_dataloader_pre_extracted(args, image_features_path, text_features_path, batch_size, is_labeled=False, label_path=None, label_cols=None, shuffle=False, normalize=False, feature_stats=None, is_split=False, val_size=None):
     image_features_arr = np.loadtxt(image_features_path)
     text_features_arr = np.loadtxt(text_features_path)
     
@@ -461,10 +462,29 @@ def create_dataloader_pre_extracted(args, image_features_path, text_features_pat
         data = TensorDataset(Tensor(image_features_arr), Tensor(text_features_arr), Tensor(labels))
     else:
         data = TensorDataset(Tensor(image_features_arr), Tensor(text_features_arr))
+    
+    if is_split:
+        assert not val_size is None
+        
+        if 0 < val_size < 1: # ratio
+            data_len = len(data)-int(val_size*len(data))
+            data_len_val = int(val_size*len(data))
+        elif type(val_size) is int:
+            data_len = len(data) - val_size
+            data_len_val = val_size
+        else:
+            raise Exception("Invalid val_size!")
+            
+        data, data_val = random_split(data, lengths=[data_len, data_len_val], 
+                                    generator=torch.Generator().manual_seed(42))
+        loader_val = DataLoader(data_val, shuffle=False, batch_size=batch_size)
         
     loader = DataLoader(data, shuffle=shuffle, batch_size=batch_size)
 
-    return loader
+    if is_split:
+        return loader, loader_val
+    else:
+        return loader
 
 # from ..arguments import get_args
 
