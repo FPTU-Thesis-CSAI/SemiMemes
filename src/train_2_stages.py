@@ -39,17 +39,19 @@ from pretrain import train_auto_encoder
 from test_func import test_auto_encoder, test_multilabel_finetune
 from data.create_freq_file import dump_freq_data
 from torch.utils.data import random_split
+import yaml
+from optimizer.RecAdam import RecAdam
 
 
-def finetune_supervised(args,model, dataset,
+def finetune_supervised(args, config, model, dataset, 
         supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
         lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
         weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
         imgbatchsize = 32, cuda = False, savepath = '',eman=None): 
     
     print("============================ Fine tune ===================================")
-    num_update_steps = 15*8000/batchsize # MAMI train contains 8000 samples
-    print(f"Update model for: {num_update_steps} steps.")
+    # num_update_steps = 15*8000/batchsize # MAMI train contains 8000 samples
+    # print(f"Update model for: {num_update_steps} steps.")
 
     if args.use_lars_optimizer:
         print("==============use lars optimizer===============")
@@ -66,8 +68,12 @@ def finetune_supervised(args,model, dataset,
     elif args.use_adam:
         print("==============use adam optimizer===============")
         optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
+    # elif args.use_recadam:
+    #     print("==============use adam optimizer===============")
+    #     optimizer = RecAdam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay,
+    #                          pretrain_params=[p for p in model.fc_img_encoded.parameters()] + [p for p in model.fc_text_encoded.parameters()], anneal_k=0.5, anneal_t0=800/batchsize)
     
-    print(optimizer)
+    print(optimizer)   
     
     if args.use_linear_scheduler:
         print("==============use linear lr scheduler===============")
@@ -75,7 +81,8 @@ def finetune_supervised(args,model, dataset,
     elif args.use_step_lr:
         print("==============use step scheduler===============")
         # 0.1 data is 800 sample
-        scheduler = StepLR(optimizer, step_size = 800/batchsize, gamma = 0.95)  
+        # scheduler = StepLR(optimizer, step_size = 800/batchsize, gamma = 0.95)
+        scheduler = StepLR(optimizer, step_size = 1, gamma = config.step_lr_gamma)
     elif args.use_multi_step_lr:
         print("==============use multi step scheduler===============")
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5,10,15],gamma=0.5)
@@ -169,7 +176,7 @@ def finetune_supervised(args,model, dataset,
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
 
-            scheduler.step()       
+        scheduler.step()       
 
         if args.use_multi_step_lr or args.use_linear_scheduler:
             scheduler.step()
@@ -268,11 +275,10 @@ def finetune_supervised(args,model, dataset,
         #     print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
         #     print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
 
-        num_update_steps -= num_steps
-        if num_update_steps <= 0: break
+        # num_update_steps -= num_steps
+        # if num_update_steps <= 0: break
     
-    return 
-100
+    return
 
 if __name__ == '__main__':
     seed = 42
@@ -287,6 +293,8 @@ if __name__ == '__main__':
 
     args = get_args()
     print(args)
+    config = yaml.safe_load(open(args.config_yaml_path))
+    # config.update(args)
 
     wandb.login(key = 'd87822d5fa951a22676b0985f891c9021b875ae3')
     # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
@@ -295,6 +303,9 @@ if __name__ == '__main__':
 
     wandb.run.name = args.experiment
     print(f"Experiement: {wandb.run.name}")
+    
+    wandb.config.update(config)
+    config = wandb.config
 
     if args.use_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
@@ -348,12 +359,12 @@ if __name__ == '__main__':
     
     label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
     
-    train_supervise_path = 'data/MAMI_processed/train_labeled_ratio-0.3.csv'
-    train_supervise_image_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.3/image_feature.txt'
-    train_supervise_text_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.3/text_feature.txt'
+    train_supervise_path = config.train_supervise_path
+    train_supervise_image_feature_path = config.train_supervise_image_feature_path
+    train_supervise_text_feature_path = config.train_supervise_text_feature_path
     
-    unsupervise_image_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.3/image_feature.txt'
-    unsupervise_text_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.3/text_feature.txt'
+    unsupervise_image_feature_path = config.unsupervise_image_feature_path
+    unsupervise_text_feature_path = config.unsupervise_text_feature_path
     
     # feature_stats = compute_feature_stats(unsupervise_image_feature_path, unsupervise_text_feature_path)
     
@@ -404,13 +415,13 @@ if __name__ == '__main__':
             image_ae.cuda()
             text_ae.cuda()
         
-        list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=100)
+        list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=5, pretrain_epochs=100)
         test_loss = test_auto_encoder(image_ae, test_loader)
         print()
         print(test_loss)
         # wandb.log({"test_loss image ae": test_loss})
         
-        list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=100)
+        list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=5, pretrain_epochs=100)
         test_loss = test_auto_encoder(text_ae, test_loader)
         print()
         print(test_loss)
@@ -438,7 +449,7 @@ if __name__ == '__main__':
             'val': val_loader,
             'test': test_loader}
 
-    finetune_supervised(args,model, dataset,supervise_epochs = args.epochs,
+    finetune_supervised(args, config, model, dataset,supervise_epochs = config.finetune_epochs,
                                         # text_supervise_epochs = args.text_supervise_epochs, 
                                         # img_supervise_epochs = args.img_supervise_epochs,
                                         lr_supervise = args.lr_supervise, 

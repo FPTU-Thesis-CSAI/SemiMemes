@@ -3,8 +3,8 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='0.3 pretrain unsupervised only 100 epochs', type=str,
-                    help="Optional Name of Experiment (used by tensorboard)")
+    parser.add_argument('--experiment', default='0.05 pretrain unsupervised 100 epochs prelu', type=str)
+    parser.add_argument('--config_yaml_path', default="config/0.05label.yaml", type=str)
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -157,6 +157,7 @@ def get_args():
     parser.add_argument("--use-act",action='store_true', default=False,help='')
     parser.add_argument("--use-sgd",action='store_true', default=False,help='')
     parser.add_argument("--use-adam",action='store_true', default=True,help='')
+    parser.add_argument("--use-recadam",action='store_true', default=False,help='')
     parser.add_argument("--use-resample-loss", action='store_true', default=True,help='')
     
     # parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
