@@ -404,13 +404,13 @@ if __name__ == '__main__':
             image_ae.cuda()
             text_ae.cuda()
         
-        list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=30)
+        list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=100)
         test_loss = test_auto_encoder(image_ae, test_loader)
         print()
         print(test_loss)
         # wandb.log({"test_loss image ae": test_loss})
         
-        list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=30)
+        list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=3, pretrain_epochs=100)
         test_loss = test_auto_encoder(text_ae, test_loader)
         print()
         print(test_loss)

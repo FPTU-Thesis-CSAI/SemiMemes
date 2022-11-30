@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='0.3 pretrain unsupervised only 30 epochs', type=str,
+    parser.add_argument('--experiment', default='0.3 pretrain unsupervised only 100 epochs', type=str,
                     help="Optional Name of Experiment (used by tensorboard)")
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")

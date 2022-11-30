@@ -7,7 +7,7 @@ from utils.unsupervisedUtils import EarlyStopping
 
 # Train model
 
-def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1, pretrain_epochs=30):
+def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1, pretrain_epochs=30, use_early_stop=False):
 
     optimizer = optim.Adam(model.parameters(), lr=2e-4, weight_decay=1e-4)
     loss_func = nn.MSELoss()
@@ -53,9 +53,10 @@ def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1, p
         list_train_loss.append(epoch_loss)
         list_val_loss.append(val_loss)
         
-        earlystopping(val_loss)
-        if earlystopping.early_stop:
-            break
+        if use_early_stop:
+            earlystopping(val_loss)
+            if earlystopping.early_stop:
+                break
 
         # if val_loss > best_loss:
         #     trigger_times += 1
