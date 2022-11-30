@@ -35,8 +35,10 @@ from utils.npy_save import npy_save_txt
 from model.dualstream_net import CmmlModel_v2
 from model.deep_weak_attention import deep_weak_attention
 
+import yaml
 
-def train(args,model, dataset,
+
+def train(args, config, model, dataset,
         supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
         lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
         weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
@@ -69,7 +71,7 @@ def train(args,model, dataset,
         scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,start_factor=1./3,total_iters=80)
     elif args.use_step_lr:
         print("==============use step scheduler===============")
-        scheduler = StepLR(optimizer, step_size = 100, gamma = 0.9)  
+        scheduler = StepLR(optimizer, step_size = 200, gamma = config.step_lr_gamma) # default step size is 500
     elif args.use_multi_step_lr:
         print("==============use multi step scheduler===============")
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5,10,15],gamma=0.5)
@@ -170,12 +172,12 @@ def train(args,model, dataset,
                 
             label = Variable(label).cuda() if cuda else Variable(label)  
             
-            if args.use_caption:
-                supervise_clip_ids_caption = sup_text['caption_clip_tokens']
-                supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
-                supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
-                supervise_captionpredict = model.Captionpredictmodel(supervise_caption_hidden)
-                captionloss = criterion(supervise_captionpredict, label)
+            # if args.use_caption:
+            #     supervise_clip_ids_caption = sup_text['caption_clip_tokens']
+            #     supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
+            #     supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
+            #     supervise_captionpredict = model.Captionpredictmodel(supervise_caption_hidden)
+            #     captionloss = criterion(supervise_captionpredict, label)
             
             # #=========== DEFAULT FORWARD ===========#
             supervise_imghidden = model.Imgmodel(supervise_img_xx)
@@ -202,8 +204,8 @@ def train(args,model, dataset,
             supervise_textpredict = model.Textpredictmodel(supervise_texthidden)
             
             modalities = [supervise_imghidden, supervise_texthidden]
-            if args.use_caption:
-                modalities.append(supervise_caption_hidden)
+            # if args.use_caption:
+            #     modalities.append(supervise_caption_hidden)
             
             if args.use_deep_weak_attention:
                 # print("===============use deep weak attention================")
@@ -258,8 +260,8 @@ def train(args,model, dataset,
             else:
                 supervise_loss = imgloss + textloss + 2.0*totalloss
                 
-                if args.use_caption:
-                    supervise_loss = imgloss + textloss + 2.5*totalloss
+                # if args.use_caption:
+                #     supervise_loss = imgloss + textloss + 2.5*totalloss
 
             if args.use_vicreg_in_training:
                 supervise_loss += sum(vcreg_loss_supervise_img_text)+sum(vcreg_loss_supervise_img_total)+sum(vcreg_loss_supervise_text_total)
@@ -479,14 +481,19 @@ if __name__ == '__main__':
     random.seed(seed)
 
     args = get_args()
+    config = yaml.safe_load(open(args.config_yaml_path))
+
 
     wandb.login(key = 'd87822d5fa951a22676b0985f891c9021b875ae3')
-    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    # wandb.init(project="meme_experiments", entity="meme-analysts")
+    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment
     print(f"Experiement: {wandb.run.name}")
+    
+    wandb.config.update(config)
+    config = wandb.config
 
     if args.use_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
@@ -513,8 +520,8 @@ if __name__ == '__main__':
     train_supervised_loader, train_unsupervised_loader, val_loader  \
         = create_semi_supervised_dataloaders(args,
         train_img_dir='data/MAMI_processed/images/train',
-        train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.05.csv',
-        train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.05.csv',
+        train_labeled_csv=args.train_labeled_csv,
+        train_unlabeled_csv=args.train_unlabeled_csv,
         val_img_dir = 'data/MAMI_processed/images/val',
         val_csv='data/MAMI_processed/val.csv',
         batch_size=args.batchsize, image_size=256,input_resolution=input_resolution)
@@ -534,13 +541,9 @@ if __name__ == '__main__':
 
     # model = CmmlModel(args)
     model = CmmlModel(args,clip_model = clip_model,cdim = cdim)
-    
-    if args.dual_stream:
-        model = CmmlModel_v2(args)
 
     if cuda:
         model = model.cuda()
-
 
     savepath_folder = args.savepath+"/"+args.experiment+"/"
     if not os.path.exists(args.savepath):
@@ -548,7 +551,7 @@ if __name__ == '__main__':
     if not os.path.exists(savepath_folder):
         os.mkdir(savepath_folder)
     print(args)
-    train_supervise_loss = train(args,model, dataset,supervise_epochs = args.epochs,
+    train_supervise_loss = train(args, config, model, dataset,supervise_epochs = args.epochs,
                                         text_supervise_epochs = args.text_supervise_epochs, 
                                         img_supervise_epochs = args.img_supervise_epochs,
                                         lr_supervise = args.lr_supervise, 

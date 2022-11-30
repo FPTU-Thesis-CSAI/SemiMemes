@@ -3,8 +3,11 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='0.05 pretrain unsupervised 100 epochs prelu', type=str)
-    parser.add_argument('--config_yaml_path', default="config/0.05label.yaml", type=str)
+    parser.add_argument('--experiment', default='0.3 pretrain unsupervised 100 epochs prelu', type=str)
+    parser.add_argument('--config_yaml_path', default="config/0.3label.yaml", type=str)
+    
+    parser.add_argument('--train_labeled_csv', default='data/MAMI_processed/train_labeled_ratio-0.3.csv', type=str)
+    parser.add_argument('--train_unlabeled_csv', default='data/MAMI_processed/train_unlabeled_ratio-0.3.csv', type=str)
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
@@ -36,7 +39,7 @@ def get_args():
                     help="Resume classifier from this checkpoint location")
     parser.add_argument('--num-classes', default=4, type=int,
                     help="Number of Classes in Supervised Setting")
-    parser.add_argument('--bn', action='store_true', default=True,
+    parser.add_argument('--bn', action='store_true', default=False,
                     help="Use Batch Norm in Classifier")
     # ================================= TRAINING ================================
     parser.add_argument('--dryrun', action='store_true', default=False,
@@ -89,9 +92,9 @@ def get_args():
     # parser.add_argument('--train_csv_path', type=str, default="data/splits/random/memotion_train.csv")
     # parser.add_argument('--val_csv_path', type=str, default="data/splits/random/memotion_val.csv")
     # parser.add_argument('--model_type', type=str, default="visualbert", help="visualbert or lxmert or vilt")
-    # parser.add_argument('--use_small_model', type=bool, default=True, help="visualbert or lxmert or vilt")
+    # parser.add_argument('--use_small_model', type=bool, default=False, help="visualbert or lxmert or vilt")
     # MemeMultimodal Loss
-    parser.add_argument('--memeloss', action='store_true', help="Use Meme Multimodal Loss for Unsupervised Training",default=True)
+    parser.add_argument('--memeloss', action='store_true', help="Use Meme Multimodal Loss for Unsupervised Training",default=False)
     parser.add_argument('--w-f2i', type=float, default=0.2, help="Fuse2Image Loss Weight")
     parser.add_argument('--w-f2t', type=float, default=0.2, help="Fuse2Text Loss Weight")
     parser.add_argument('--w-f2f', type=float, default=0.6, help="Fuse2Fuse Loss Weight")
@@ -100,18 +103,18 @@ def get_args():
     parser.add_argument('--use-bert-embedding',action='store_true',default=False)
     parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
     parser.add_argument("--use-eman", type = bool, default=False,help='')
-    parser.add_argument("--use-clip", action='store_true', default=True,help='')
+    parser.add_argument("--use-clip", action='store_true', default=False,help='')
     parser.add_argument("--use-open-clip", type = bool, default=False,help='')
     parser.add_argument("--clip-model", type = str, default='vit14',help='')
     parser.add_argument("--clip-pretrained", type = str, default='frozen_laion5b_s13b_b90k',help='')
     parser.add_argument("--use-lars-optimizer",action='store_true', default=False,help='')
     parser.add_argument("--use-adjust-lr", action='store_true', default=False,help='')
-    parser.add_argument("--use-step-lr",action='store_true', default=True,help='')
+    parser.add_argument("--use-step-lr",action='store_true', default=False,help='')
     parser.add_argument("--use-multi-step-lr", action='store_true', default=False,help='')
     parser.add_argument("--use-linear-scheduler", action='store_true', default=False,help='')
-    parser.add_argument("--use-concat-modalities", action='store_true', default=True,help='')
+    parser.add_argument("--use-concat-modalities", action='store_true', default=False,help='')
     parser.add_argument("--use-deep-weak-attention", action='store_true', default=False,help='')
-    parser.add_argument('--use-drop-out',action='store_true',default=True)
+    parser.add_argument('--use-drop-out',action='store_true',default=False)
     parser.add_argument("--base-lr", type=float, default=0.2,
                         help='Base learning rate, effective learning after warmup is [base-lr] * [batch-size] / 256')
     parser.add_argument('--batchsize', type = int, default = 40,help="train and test batchsize")  
@@ -131,18 +134,17 @@ def get_args():
     parser.add_argument('--use-auto-weight',action='store_true',default=False)
     parser.add_argument("--use-bert-model", action='store_true', default=False,help='')
     parser.add_argument("--pretrain-bert-model", type = str, default='distilbert-base-uncased', help='')
-    # parser.add_argument("--resnet-model", type = str, default='resnet18', help='')
     parser.add_argument("--use_augmentation", action='store_true', default=False,help='')
     parser.add_argument("--multi_scale_fe", action='store_true', default=False,help='')
     parser.add_argument("--img_size", type=int, default=256,help='')
-    parser.add_argument("--dual_stream", action='store_true', default=False, help='')
+    # parser.add_argument("--dual_stream", action='store_true', default=False, help='')
     parser.add_argument("--concat", action='store_true', default=False, help='')
     parser.add_argument("--text_dropout", action='store_true', default=False, help='')
 
-    parser.add_argument("--use_caption", action='store_true', default=False, help='')
+    # parser.add_argument("--use_caption", action='store_true', default=False, help='')
 
-    parser.add_argument("--resnet-model", type = str, default='resnet50', help='')
-    parser.add_argument("--use-augmentation", action='store_true', default=True,help='')
+    parser.add_argument("--resnet-model", type = str, default='resnet18', help='')
+    parser.add_argument("--use-augmentation", action='store_true', default=False,help='')
     parser.add_argument("--use-clip-norm", action='store_true', default=False,help='')
     parser.add_argument("--use-coattention", action='store_true', default=False,help='')
     parser.add_argument("--mlp-expand-dim", default="1028",help='Size and number of layers of the MLP expander head')
@@ -156,11 +158,11 @@ def get_args():
     parser.add_argument("--use-focal-loss", action='store_true', default=False,help='')
     parser.add_argument("--use-act",action='store_true', default=False,help='')
     parser.add_argument("--use-sgd",action='store_true', default=False,help='')
-    parser.add_argument("--use-adam",action='store_true', default=True,help='')
+    parser.add_argument("--use-adam",action='store_true', default=False,help='')
     parser.add_argument("--use-recadam",action='store_true', default=False,help='')
-    parser.add_argument("--use-resample-loss", action='store_true', default=True,help='')
+    parser.add_argument("--use-resample-loss", action='store_true', default=False,help='')
     
-    # parser.add_argument("--use-sigmoid", type = bool, default=True,help='')
+    # parser.add_argument("--use-sigmoid", type = bool, default=False,help='')
     parser.add_argument("--reduction", type = str, default='mean',help='')
     parser.add_argument("--loss-weight", type = float, default=1.0,help='')
     parser.add_argument("--focal", type = bool, default=False,help='')
@@ -175,7 +177,7 @@ def get_args():
     parser.add_argument("--freq-file", type = str, default='data/class_freq.pkl',help='')
     
     parser.add_argument('--consistency', type = str, default='cosine_huber', choices=['cosine_huber', 'mse'])
-    parser.add_argument('--use_div', type = bool, default=True)
+    parser.add_argument('--use_div', type = bool, default=False)
     
     parser.add_argument("--use-sentence-vectorizer", type = bool, default=False,help='')
     ####
@@ -231,7 +233,7 @@ def get_args():
     parser.add_argument('--model_path', type=str, default="uclanlp/visualbert-vqa-coco-pre")
     # parser.add_argument('--learning_rate', type=float, default=5e-5)
     parser.add_argument('--eval_step', type=int, default=100)
-    parser.add_argument('--amp',type=bool,default=True, \
+    parser.add_argument('--amp',type=bool,default=False, \
                 help="automatic mixed precision training")
     parser.add_argument('--output_dir', type=str, default="./tmp")
     parser.add_argument('--checkpoint_step', type=int, default=1000)

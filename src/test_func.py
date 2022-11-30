@@ -59,10 +59,10 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
             token_xx = Variable(token_xx).cuda() if cuda else Variable(token_xx)
             attn_mask_xx = Variable(attn_mask_xx).cuda() if cuda else Variable(attn_mask_xx)
 
-        if args.use_caption:
-            supervise_clip_ids_caption = sup_text['caption_clip_tokens']
-            supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
-            supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
+        # if args.use_caption:
+        #     supervise_clip_ids_caption = sup_text['caption_clip_tokens']
+        #     supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
+        #     supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
 
         y = sup_label.numpy()
 
@@ -115,8 +115,8 @@ def test_multilabel(args, model, testdataset, batchsize = 32, cuda = False):
             #     feature_hidden = img_attention * imghidden + text_attention * texthidden + caption_attention * supervise_caption_hidden
             
             modalities = [imghidden, texthidden]
-            if args.use_caption:
-                modalities.append(supervise_caption_hidden)
+            # if args.use_caption:
+            #     modalities.append(supervise_caption_hidden)
             
             if args.use_deep_weak_attention:
                 feature_hidden, modal_att_w = deep_weak_attention(model.Attentionmodel, modalities, cuda)            

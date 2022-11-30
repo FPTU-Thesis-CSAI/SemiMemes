@@ -26,6 +26,7 @@ class AutoEncoder(nn.Module):
 
     def forward(self, x):
         encoded = self.encoder(x)
+        # encoded = encoded / encoded.norm(dim=1, keepdim=True)
         decoded = self.decoder(encoded)
         return decoded
     
@@ -65,6 +66,12 @@ class ModelCombineAE(nn.Module):
 
         image_feature = self.img_dropout(self.relu(image_feature))
         text_feature = self.text_dropout(self.relu(text_feature))
+        
+        # img_encoded = self.img_encoded_dropout(img_encoded / img_encoded.norm(dim=1, keepdim=True))
+        # text_encoded = self.text_encoded_dropout(text_encoded / text_encoded.norm(dim=1, keepdim=True))
+        
+        # image_feature = self.img_dropout(image_feature / image_feature.norm(dim=1, keepdim=True))
+        # text_feature = self.text_dropout(text_feature / text_feature.norm(dim=1, keepdim=True))
 
         batch_feature = torch.cat((image_feature, text_feature, img_encoded, text_encoded), dim=1)
 

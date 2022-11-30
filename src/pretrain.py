@@ -20,7 +20,7 @@ def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1, p
 
     for epoch in range(pretrain_epochs):
         model.train()
-        epoch_loss = 0  
+        epoch_loss = 0
         for ii, (image_feature, text_feature) in tqdm(enumerate(train_loader), total = len(train_loader)):
             image_feature = image_feature.float()
             text_feature = text_feature.float()

@@ -44,8 +44,11 @@ class TextfeatureNet(nn.Module):
 
     def forward(self, x=None, bert_emb=None,input_ids=None,attn_mask=None,clip_input_ids=None):
         if self.args.use_clip:
+            # if not self.args.clip_feature_extracted:
             with torch.no_grad():
                 feats = self.clip_model.encode_text(clip_input_ids)
+            # else:
+            #     feats = clip_input_ids
             x = self.linear(feats)
             if self.args.use_drop_out:
                 feats = self.relu(feats)
@@ -167,6 +170,7 @@ class ImgNet(nn.Module):
 
     def forward(self, x):
         if self.args.use_clip:
+            # if not self.args.clip_feature_extracted:
             with torch.no_grad():
                 x = self.clip_model.encode_image(x)
             x = self.fc1(x)
