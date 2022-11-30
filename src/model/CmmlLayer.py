@@ -125,8 +125,13 @@ def make_predict_layers(cfg):
     layers.append(nn.Linear(cfg[-2], cfg[-1], bias=False))
     return nn.Sequential(*layers)
 
+def off_diagonal(x):
+    n, m = x.shape
+    assert n == m
+    return x.flatten()[:-1].view(n - 1, n + 1)[:, 1:].flatten()
+
 def Projector(mlp_expand_dim, embedding):
-    mlp_spec = f"{embedding}-{mlp_expand_dim}"
+    mlp_spec = f"{embedding}-{mlp_expand_dim}-{mlp_expand_dim}-{mlp_expand_dim}"
     layers = []
     f = list(map(int, mlp_spec.split("-")))
     for i in range(len(f) - 2):
@@ -135,6 +140,33 @@ def Projector(mlp_expand_dim, embedding):
         layers.append(nn.ReLU(True))
     layers.append(nn.Linear(f[-2], f[-1], bias=False))
     return nn.Sequential(*layers)
+
+class VICReg(nn.Module):
+    def __init__(self, args):
+        super().__init__()
+        self.args = args
+        self.num_features = int(args.mlp_expand_dim.split("-")[-1])
+        self.projector = Projector(args.mlp_expand_dim, args.output_backbone_dim)
+
+    def forward(self, x):
+        x = self.projector(x)
+
+        # x = torch.cat(FullGatherLayer.apply(x), dim=0)
+        # y = torch.cat(FullGatherLayer.apply(y), dim=0)
+        x = x - x.mean(dim=0)
+
+        std_x = torch.sqrt(x.var(dim=0) + 0.0001)
+        std_loss = torch.mean(F.relu(1 - std_x)) / 2 
+
+        cov_x = (x.T @ x) / (self.args.batchsize - 1)
+        cov_loss = off_diagonal(cov_x).pow_(2).sum().div(self.num_features) 
+
+        loss = [
+            self.args.std_coeff * std_loss,
+            self.args.cov_coeff * cov_loss
+            ]   
+        return loss
+
 
 class CmmlModel(nn.Module):
     def __init__(self,args,clip_model=None,cdim=None,image_encoder=None,text_encoder=None):

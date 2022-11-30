@@ -3,7 +3,7 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', default='0.05integration_concat_vcreg', type=str,help="Optional Name of Experiment (used by tensorboard)")
+    parser.add_argument('--experiment', default='multitask', type=str,help="Optional Name of Experiment (used by tensorboard)")
 
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
@@ -157,8 +157,8 @@ def get_args():
     parser.add_argument("--reweight-func", type = str, default='rebalance',help='')
     parser.add_argument("--freq-file", type = str, default='/home/fptu/viet/SSLMemes/data/class_freq.pkl',help='')
     
-    parser.add_argument('--input_file_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/val.csv")
-    parser.add_argument('--input_img_dir_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/images/val")
+    parser.add_argument('--input_file_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/train_unlabeled_ratio-0.3.csv")
+    parser.add_argument('--input_img_dir_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/images/train")
     parser.add_argument('--output_dir_clip_extractor', type=str, default="/home/fptu/viet/SSLMemes/data/MAMI_processed/clip_features")
     parser.add_argument('--pretrain-auto-encoder', type=bool, default=True)
 

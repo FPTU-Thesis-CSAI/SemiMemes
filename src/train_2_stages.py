@@ -71,10 +71,9 @@ def finetune_supervised(args,model, dataset,
         criterion = AsymmetricLoss(gamma_neg=4, gamma_pos=0, clip=0.05, disable_torch_grad_focal_loss=True)
     elif args.use_resample_loss:
         print("==============use resample loss===============")
-        criterion = ResampleLoss(args)
-    
-    print(criterion)
-        
+        criterion2 = ResampleLoss(args)
+        criterion1 = torch.nn.BCELoss()
+            
     sigmoid = torch.nn.Sigmoid()
 
     for epoch in range(1, supervise_epochs + 1):
@@ -117,15 +116,14 @@ def finetune_supervised(args,model, dataset,
                 text_feature = text_feature.cuda()
                 label = label.cuda()
 
-            supervise_predict = model(image_feature, text_feature)    
+            supervise_predictA,supervise_predictB = model(image_feature, text_feature)    
             
-            if  args.use_bce_loss:
-                supervise_predict = sigmoid(supervise_predict)               
-                sigmoid_already = True
-            elif args.use_asymmetric_loss or args.use_resample_loss:
-                sigmoid_already = False
-            
-            totalloss = criterion(supervise_predict, label)
+            # if  args.use_bce_loss:
+            #     supervise_predict = sigmoid(supervise_predict)               
+            #     sigmoid_already = True
+            # elif args.use_asymmetric_loss or args.use_resample_loss:
+            #     sigmoid_already = False
+            totalloss = criterion2(supervise_predictB, label[:,1:])+criterion1(sigmoid(supervise_predictA),label[:,0].unsqueeze(-1))     
 
             supervise_loss = totalloss
 
@@ -149,10 +147,7 @@ def finetune_supervised(args,model, dataset,
 
 
         #===================== Multilabel =================#
-        (f1_macro_multi_total, f1_weighted_multi_total, auc_pm1,
-            total_predict, truth, 
-            humour,sarcasm,offensive,motivational,
-            humour_truth,sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel_finetune(args,model, dataset['val'], batchsize = batchsize, cuda = cuda)
+        (f1_macro_multi_total_B, f1_weighted_multi_total_B,f1_macro_A,auc_pm1) = test_multilabel_finetune(args,model, dataset['val'], batchsize = batchsize, cuda = cuda)
         
         total_step = num_steps
         epoch_supervise_loss_train = epoch_supervise_loss_train/total_step
@@ -175,49 +170,48 @@ def finetune_supervised(args,model, dataset,
         wandb.log({"epoch_supervise_loss_train":epoch_supervise_loss_train})
 
         wandb.log({"learning rate/lr":scheduler.get_last_lr()[0]})
-        wandb.log({"f1_macro_multi_total":f1_macro_multi_total})
+        wandb.log({"Val f1_macro_multi_total B":f1_macro_multi_total_B})
         # wandb.log({"f1_macro_multi_img":f1_macro_multi_img})
         # wandb.log({"f1_macro_multi_text":f1_macro_multi_text})
 
-        wandb.log({"f1_weighted_multi_total":f1_weighted_multi_total})
+        wandb.log({"Val f1_weighted_multi_total_B":f1_weighted_multi_total_B})
+        wandb.log({"Val [F1 macro] Total A":f1_macro_A})
         # wandb.log({"f1_weighted_multi_img":f1_weighted_multi_img})
         # wandb.log({"f1_weighted_multi_text":f1_weighted_multi_text})
                 
         # print(f"[F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
         # print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
 
-        print(f"[F1 Macro multilabel] Total: {f1_macro_multi_total}")
-        print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total}")
+        print(f"[F1 Macro multilabel] Total B: {f1_macro_multi_total_B}")
+        print(f"[F1 weight multilabel] Total B: {f1_weighted_multi_total_B}")
+        print(f"[F1 macro] Total A: {f1_macro_A}")
 
-        total_2 = (total_predict > 0.5).astype('int')
+        # total_2 = (total_predict > 0.5).astype('int')
 
-        get_confusion_matrix(truth[:,0],total_2[:,0])
-        wandb.log({"confusion_matrix_shaming": plt})
-        get_confusion_matrix(truth[:,1],total_2[:,1])
-        wandb.log({"confusion_matrix_stereotype": plt})
-        get_confusion_matrix(truth[:,2],total_2[:,2])
-        wandb.log({"confusion_matrix_objectification": plt})
-        get_confusion_matrix(truth[:,3],total_2[:,3])
-        wandb.log({"confusion_matrix_violence": plt})
+        # get_confusion_matrix(truth[:,0],total_2[:,0])
+        # wandb.log({"confusion_matrix_shaming": plt})
+        # get_confusion_matrix(truth[:,1],total_2[:,1])
+        # wandb.log({"confusion_matrix_stereotype": plt})
+        # get_confusion_matrix(truth[:,2],total_2[:,2])
+        # wandb.log({"confusion_matrix_objectification": plt})
+        # get_confusion_matrix(truth[:,3],total_2[:,3])
+        # wandb.log({"confusion_matrix_violence": plt})
 
-        wandb.log({"histogram/_hist_label_shaming_pred":wandb.Histogram(np_histogram = humour)})
-        wandb.log({"histogram/_hist_label_stereotype_pred":wandb.Histogram(np_histogram = sarcasm)})
-        wandb.log({"histogram/_hist_label_objectification_pred":wandb.Histogram(np_histogram = offensive)})
-        wandb.log({"histogram/_hist_label_violence_pred":wandb.Histogram(np_histogram = motivational)})
+        # wandb.log({"histogram/_hist_label_shaming_pred":wandb.Histogram(np_histogram = humour)})
+        # wandb.log({"histogram/_hist_label_stereotype_pred":wandb.Histogram(np_histogram = sarcasm)})
+        # wandb.log({"histogram/_hist_label_objectification_pred":wandb.Histogram(np_histogram = offensive)})
+        # wandb.log({"histogram/_hist_label_violence_pred":wandb.Histogram(np_histogram = motivational)})
 
-        wandb.log({"histogram/_hist_label_shaming_truth":wandb.Histogram(np_histogram = humour_truth)})
-        wandb.log({"histogram/_hist_label_stereotype_truth":wandb.Histogram(np_histogram = sarcasm_truth)})
-        wandb.log({"histogram/_hist_label_objectification_truth":wandb.Histogram(np_histogram = offensive_truth)})
-        wandb.log({"histogram/_hist_label_violence_truth":wandb.Histogram(np_histogram = motivational_truth)})
+        # wandb.log({"histogram/_hist_label_shaming_truth":wandb.Histogram(np_histogram = humour_truth)})
+        # wandb.log({"histogram/_hist_label_stereotype_truth":wandb.Histogram(np_histogram = sarcasm_truth)})
+        # wandb.log({"histogram/_hist_label_objectification_truth":wandb.Histogram(np_histogram = offensive_truth)})
+        # wandb.log({"histogram/_hist_label_violence_truth":wandb.Histogram(np_histogram = motivational_truth)})
 
         # print('rocauc_pm:    ', auc_pm1,'\t', auc_pm2,'\t', auc_pm3)
-        print('rocauc_pm:    ', auc_pm1)
+        # print('rocauc_pm:    ', auc_pm1)
 
         # if not args.use_one_head: 
-        (f1_macro_multi_total, f1_weighted_multi_total, auc_pm1,
-            total_predict, truth, 
-            humour,sarcasm,offensive,motivational,
-            humour_truth,sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel_finetune(args,model, dataset['test'], batchsize = batchsize, cuda = cuda)
+        (f1_macro_multi_total_B, f1_weighted_multi_total_B,f1_macro_A,auc_pm1) = test_multilabel_finetune(args,model, dataset['test'], batchsize = batchsize, cuda = cuda)
         # else:
         #     (f1_macro_multi_total,f1_weighted_multi_total,auc_pm1,
         #     total_predict, truth, humour,sarcasm,offensive,motivational,humour_truth,
@@ -225,12 +219,13 @@ def finetune_supervised(args,model, dataset,
         #     None,None, model.Imgmodel,
         #     model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
 
-        wandb.log({"f1_macro_multi_total_test":f1_macro_multi_total})
+        wandb.log({"Test f1_macro_multi_total B":f1_macro_multi_total_B})
         # if not args.use_one_head:
         # wandb.log({"f1_macro_multi_img_test":f1_macro_multi_img})
         # wandb.log({"f1_macro_multi_text_test":f1_macro_multi_text})
 
-        wandb.log({"f1_weighted_multi_total_test":f1_weighted_multi_total})
+        wandb.log({"Test f1_weighted_multi_total_B":f1_weighted_multi_total_B})
+        wandb.log({"Test [F1 macro] Total A":f1_macro_A})
         # if not args.use_one_head:
         # wandb.log({"f1_weighted_multi_img_test":f1_weighted_multi_img})
         # wandb.log({"f1_weighted_multi_text_test":f1_weighted_multi_text})
@@ -320,14 +315,14 @@ if __name__ == '__main__':
     # if args.dual_stream:
     #     model = CmmlModel_v2(args)
     
-    label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+    label_cols = ['misogynous','shaming', 'stereotype', 'objectification', 'violence']
     
-    train_supervise_path = 'data/MAMI_processed/train_labeled_ratio-0.05.csv'
-    train_supervise_image_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.05/image_feature.txt'
-    train_supervise_text_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.05/text_feature.txt'
+    train_supervise_path = 'data/MAMI_processed/train_labeled_ratio-0.3.csv'
+    train_supervise_image_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.3/image_feature.txt'
+    train_supervise_text_feature_path = 'data/MAMI_processed/clip_features/train_labeled_ratio-0.3/text_feature.txt'
     
-    unsupervise_image_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.05/image_feature.txt'
-    unsupervise_text_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.05/text_feature.txt'
+    unsupervise_image_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.3/image_feature.txt'
+    unsupervise_text_feature_path = 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.3/text_feature.txt'
     
     # feature_stats = compute_feature_stats(unsupervise_image_feature_path, unsupervise_text_feature_path)
     
@@ -363,11 +358,11 @@ if __name__ == '__main__':
                                                 )
 
     if args.use_resample_loss:
-        args.freq_file = dump_freq_data(train_supervise_path, label_cols)
+        args.freq_file = dump_freq_data(train_supervise_path, label_cols[1:])
 
+    image_ae = AutoEncoder(encode_image=True)
+    text_ae = AutoEncoder(encode_text=True)
     if args.pretrain_auto_encoder:
-        image_ae = AutoEncoder(args,encode_image=True)
-        text_ae = AutoEncoder(args,encode_text=True)
         if cuda:
             image_ae.cuda()
             text_ae.cuda()
@@ -384,9 +379,9 @@ if __name__ == '__main__':
         print(test_loss)
         # wandb.log({"test_loss text ae": test_loss})     
         
-    else:
-        image_ae = ...
-        text_ae = ...
+    # else:
+        # image_ae = ...
+        # text_ae = ...
         
     
     model = ModelCombineAE(image_encoder=image_ae.encoder, text_encoder=text_ae.encoder)

@@ -132,7 +132,7 @@ class ImageText(Dataset):
 def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, train_unlabeled_csv, 
                                                 val_img_dir, val_csv, batch_size, image_size, inbatch_label_ratio=None, debug=False,input_resolution=None):
     # args.use_augmentation = False
-    label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+    label_cols = ['misogynous']
 
     if args.use_clip:
         image_size = input_resolution
