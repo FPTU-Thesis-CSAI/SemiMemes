@@ -115,5 +115,5 @@ models/*
 !data/features/visualgenome/
 data/features/visualgenome/*
 !data/features/visualgenome/objects_vocab.txt
-
+multimodal-simclr/*
 !tmp/.gitkeep

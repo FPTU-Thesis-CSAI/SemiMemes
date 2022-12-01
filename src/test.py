@@ -180,12 +180,10 @@ def test_multilabel_finetune(args, model, testdataset, batchsize = 32, cuda = Fa
 
     print('----------------- Test data:------------')
     
-    total_predictA = []
-    total_predictB = []
+    total_predict = []
     img_predict = []
     text_predict = []
-    truthA = []
-    truthB = []
+    truth = []
     sigmoid = torch.nn.Sigmoid()
     # data_loader = DataLoader(dataset = testdataset, batch_size = batchsize, shuffle = False)
     # for batch_index, (x, y) in enumerate(data_loader, 1):
@@ -197,8 +195,8 @@ def test_multilabel_finetune(args, model, testdataset, batchsize = 32, cuda = Fa
         # sup_label = torch.stack([1-sup_label, sup_label], axis=-1)
 
         y = sup_label.numpy()
-        yA = sup_label[:,0]
-        yB = sup_label[:,1:]
+        # yA = sup_label[:,0]
+        # yB = sup_label[:,1:]
         
         image_feature = sup_img.float()
         text_feature = sup_text.float()
@@ -208,47 +206,47 @@ def test_multilabel_finetune(args, model, testdataset, batchsize = 32, cuda = Fa
             text_feature = text_feature.cuda()
         
         with torch.no_grad():
-            predA,predB = model(image_feature, text_feature)
-            predictA = sigmoid(predA)
-            predictB = sigmoid(predB)
+            pred = model(image_feature, text_feature)
+            predict = sigmoid(pred)
+            # predictB = sigmoid(predB)
             
-        predictA = predictA.cpu().data.numpy()
-        predictB = predictB.cpu().data.numpy()
-        total_predictA.append(predictA)
-        total_predictB.append(predictB)
-        truthA.append(yA.detach().cpu().numpy())
-        truthB.append(yB)
+        predict = predict.cpu().data.numpy()
+        # predictB = predictB.cpu().data.numpy()
+        total_predict.append(predict)
+        # total_predictB.append(predictB)
+        # truthA.append(yA.detach().cpu().numpy())
+        truth.append(y)
 
-    total_predictA = np.array(total_predictA)
-    truthA = np.array(truthA)
+    # total_predictA = np.array(total_predictA)
+    # truthA = np.array(truthA)
 
-    temp = total_predictB[0]
-    for i in range(1, len(total_predictB)):
-        temp = np.vstack((temp, total_predictB[i]))
-    total_predictB = temp
+    temp = total_predict[0]
+    for i in range(1, len(total_predict)):
+        temp = np.vstack((temp, total_predict[i]))
+    total_predict = temp
 
-    temp = truthB[0]
-    for i in range(1, len(truthB)):
-        temp = np.vstack((temp, truthB[i]))
-    truthB = temp
+    temp = truth[0]
+    for i in range(1, len(truth)):
+        temp = np.vstack((temp, truth[i]))
+    truth = temp
 
     # temp = total_predictA[0]
     # for i in range(1, len(total_predictA)):
     #     temp = np.vstack((temp, total_predictA[i]))
     # total_predictA = temp
-    total_predictA = total_predictA.reshape(-1)
-    truthA = truthA.reshape(-1)
+    # total_predictA = total_predictA.reshape(-1)
+    # truthA = truthA.reshape(-1)
     # temp = truthA[0]
     # for i in range(1, len(truthA)):
     #     temp = np.vstack((temp, truthA[i]))
     # truthA = temp
 
-    macro_f1 = F1Score(num_classes=2, average='macro')
-    total_predictA = total_predictA > 0.5
-    f1_macro_total_A = macro_f1(torch.tensor(total_predictA).long(), torch.tensor(truthA).long())
+    # macro_f1 = F1Score(num_classes=2, average='macro')
+    # total_predictA = total_predictA > 0.5
+    # f1_macro_total_A = macro_f1(torch.tensor(total_predictA).long(), torch.tensor(truthA).long())
     # result = {}
 
-    f1_macro_multi_total_B = macro_f1_multilabel(total_predictB, truthB, num_labels=4, threshold = 0.5, reduce = True)
+    f1_macro_multi_total = macro_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5, reduce = True)
 
     # result.update({
     #     'f1_macro_multi_total': f1_macro_multi_total,
@@ -256,7 +254,7 @@ def test_multilabel_finetune(args, model, testdataset, batchsize = 32, cuda = Fa
     #     'f1_macro_multi_text': f1_macro_multi_text
     # })
 
-    f1_weighted_multi_total_B = weighted_f1_multilabel(total_predictB, truthB, num_labels=4, threshold = 0.5)
+    f1_weighted_multi_total = weighted_f1_multilabel(total_predict, truth, num_labels=4, threshold = 0.5)
 
     # result.update({
     #     'f1_weighted_multi_total': f1_weighted_multi_total,
@@ -337,7 +335,7 @@ def test_multilabel_finetune(args, model, testdataset, batchsize = 32, cuda = Fa
     #     'pred': total_predict
     # })
     auc_pm_total = None
-    return (f1_macro_multi_total_B, f1_weighted_multi_total_B,f1_macro_total_A,auc_pm_total)
+    return (f1_macro_multi_total, f1_weighted_multi_total,auc_pm_total)
 
 def test_singlelabel(args,Textfeaturemodel, Imgpredictmodel, Textpredictmodel, Imgmodel, Predictmodel, Attentionmodel, testdataset, batchsize = 32, cuda = False):
     if cuda:

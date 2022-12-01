@@ -30,12 +30,11 @@ def train_auto_encoder(model, train_loader, val_loader, cuda=False, verbose=1, p
                 text_feature = text_feature.cuda()
 
             if model.encode_image:
-                text_feature_pred = model(image_feature)                
+                text_feature_pred  = model(image_feature)                
                 loss = loss_func(text_feature_pred, text_feature)
             elif model.encode_text:
                 image_feature_pred = model(text_feature)                
                 loss = loss_func(image_feature_pred, image_feature)
-            
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
