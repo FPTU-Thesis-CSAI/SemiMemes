@@ -6,4 +6,4 @@ unsupervise_image_feature_path: 'data/MAMI_processed/clip_features/train_unlabel
 unsupervise_text_feature_path: 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.05/text_feature.txt'
 
 finetune_epochs: 50
-step_lr_gamma: 0.92
+step_lr_gamma: 0.93

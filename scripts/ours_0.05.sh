@@ -3,7 +3,6 @@ CUDA_VISIBLE_DEVICES=$1 python src/train_2_stages.py \
     --config_yaml_path 'config/0.05label.yaml' \
     --use-step-lr \
     --batchsize 40  \
-    --epochs 50 \
     --lr-supervise 0.0001 \
     --use-resample-loss \
     --use-adam \
