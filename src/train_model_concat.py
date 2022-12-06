@@ -410,33 +410,33 @@ if __name__ == '__main__':
     #                                                                                len(unsupervised_pretrain_loader)-int(len(unsupervised_pretrain_loader)*0.9)],
     #                                                                               generator=torch.Generator().manual_seed(42))
 
-    if args.pretrain_auto_encoder:
-        image_ae = AutoEncoder(encode_image=True)
-        text_ae = AutoEncoder(encode_text=True)
-        if cuda:
-            image_ae.cuda()
-            text_ae.cuda()
+    # if args.pretrain_auto_encoder:
+    #     image_ae = AutoEncoder(encode_image=True)
+    #     text_ae = AutoEncoder(encode_text=True)
+    #     if cuda:
+    #         image_ae.cuda()
+    #         text_ae.cuda()
         
-        list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=5, pretrain_epochs=100)
-        test_loss = test_auto_encoder(image_ae, test_loader)
-        print()
-        print(test_loss)
-        # wandb.log({"test_loss image ae": test_loss})
+    #     list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=5, pretrain_epochs=100)
+    #     test_loss = test_auto_encoder(image_ae, test_loader)
+    #     print()
+    #     print(test_loss)
+    #     # wandb.log({"test_loss image ae": test_loss})
         
-        list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=5, pretrain_epochs=100)
-        test_loss = test_auto_encoder(text_ae, test_loader)
-        print()
-        print(test_loss)
-        # wandb.log({"test_loss text ae": test_loss})     
+    #     list_train_loss, list_val_loss = train_auto_encoder(text_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=5, pretrain_epochs=100)
+    #     test_loss = test_auto_encoder(text_ae, test_loader)
+    #     print()
+    #     print(test_loss)
+    #     # wandb.log({"test_loss text ae": test_loss})     
         
-    else:
-        image_ae = ...
-        text_ae = ...
+    # else:
+    #     image_ae = ...
+    #     text_ae = ...
         
     
-    model = ModelCombineAE(image_encoder=image_ae.encoder, text_encoder=text_ae.encoder)
+    # model = ModelCombineAE(image_encoder=image_ae.encoder, text_encoder=text_ae.encoder)
     
-    # model = ModelConCat()
+    model = ModelConCat()
 
     if cuda:
         model = model.cuda()

@@ -16,7 +16,7 @@ class AutoEncoder(nn.Module):
 
         self.decoder = torch.nn.Sequential(
             # torch.nn.ReLU(),
-            torch.nn.PReLU(),
+            torch.nn.PReLU(num_parameters=768),
             torch.nn.Linear(self.project_dim, 768),
             # torch.nn.ReLU(),
             # torch.nn.Linear(768, 768),

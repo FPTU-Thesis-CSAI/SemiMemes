@@ -459,6 +459,8 @@ def train(args, config, model, dataset,
         wandb.log({"f1_weighted_multi_img_test":f1_weighted_multi_img})
         wandb.log({"f1_weighted_multi_text_test":f1_weighted_multi_text})
         
+        wandb.log({'ROC-AUC test': auc_pm1})
+        
         # if args.use_one_head:
         #     print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total}")
         #     print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total}")

@@ -8,6 +8,9 @@ def get_args():
     
     parser.add_argument('--train_labeled_csv', default='data/MAMI_processed/train_labeled_ratio-0.3.csv', type=str)
     parser.add_argument('--train_unlabeled_csv', default='data/MAMI_processed/train_unlabeled_ratio-0.3.csv', type=str)
+    
+    # parser.add_argument('--model_concat', action='store_true', default=False,
+    #                 help="Ablation study on model concat of 2 modalities")
 
     parser.add_argument('--no-tqdm', action='store_true', help="Disable tqdm and not pollute nohup out")
     parser.add_argument('-data', metavar='DIR', default='data/memotion_dataset_7k',
