@@ -279,6 +279,15 @@ def finetune_supervised(args, config, model, dataset,
 
         # num_update_steps -= num_steps
         # if num_update_steps <= 0: break
+        
+    torch.save(model.state_dict(), os.path.join(savepath, 'last.pt'))
+    
+    ### save test predict for error analysis and demo
+    
+    savepath_pred = os.path.join('data/MAMI_processed/pred', args.experiment)
+    if not os.path.exists(savepath_pred):
+        os.makedirs(savepath_pred)
+    np.savetxt(os.path.join(savepath_pred, 'test.txt'), total_predict)
     
     return
 
@@ -410,12 +419,15 @@ if __name__ == '__main__':
     #                                                                                len(unsupervised_pretrain_loader)-int(len(unsupervised_pretrain_loader)*0.9)],
     #                                                                               generator=torch.Generator().manual_seed(42))
 
+
+    image_ae = AutoEncoder(encode_image=True)
+    text_ae = AutoEncoder(encode_text=True)
+    if cuda:
+        image_ae.cuda()
+        text_ae.cuda()
+
+
     if args.pretrain_auto_encoder:
-        image_ae = AutoEncoder(encode_image=True)
-        text_ae = AutoEncoder(encode_text=True)
-        if cuda:
-            image_ae.cuda()
-            text_ae.cuda()
         
         list_train_loss, list_val_loss = train_auto_encoder(image_ae, unsupervised_pretrain_loader, val_loader, cuda=cuda, verbose=5, pretrain_epochs=100)
         test_loss = test_auto_encoder(image_ae, test_loader)

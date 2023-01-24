@@ -9,6 +9,8 @@ def get_args():
     parser.add_argument('--train_labeled_csv', default='data/MAMI_processed/train_labeled_ratio-0.3.csv', type=str)
     parser.add_argument('--train_unlabeled_csv', default='data/MAMI_processed/train_unlabeled_ratio-0.3.csv', type=str)
     
+    parser.add_argument('--saved_model_path', default='models/0.3_ours/last.pt', type=str)
+    
     # parser.add_argument('--model_concat', action='store_true', default=False,
     #                 help="Ablation study on model concat of 2 modalities")
 
@@ -106,7 +108,7 @@ def get_args():
     parser.add_argument('--use-bert-embedding',action='store_true',default=False)
     parser.add_argument('--add-block-linear-bert-embed',action='store_true',default=False)
     parser.add_argument("--use-eman", type = bool, default=False,help='')
-    parser.add_argument("--use-clip", action='store_true', default=False,help='')
+    parser.add_argument("--use-clip", action='store_true', default=True,help='')
     parser.add_argument("--use-open-clip", type = bool, default=False,help='')
     parser.add_argument("--clip-model", type = str, default='vit14',help='')
     parser.add_argument("--clip-pretrained", type = str, default='frozen_laion5b_s13b_b90k',help='')
