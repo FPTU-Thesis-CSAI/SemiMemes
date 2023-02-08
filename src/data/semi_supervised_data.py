@@ -169,74 +169,74 @@ class TextTransform():
         return outputs
 
 
-class CaptionTransform():
-    def __init__(self, args, txt_bert_model=None, txt_max_length=128, use_sbert=False,
-                use_countvectorizer=False,vocab_path=None,use_clip=None):
-        # self.vocab_path = vocab_path
-        # self.use_countvectorizer = use_countvectorizer
-        # if self.use_countvectorizer:
-        #     if vocab_path is None:
-        #         self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True)
-        #     else:
-        #         self.vocab = json.load(open(vocab_path))
-        #         self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True, vocabulary=self.vocab)
+# class CaptionTransform():
+#     def __init__(self, args, txt_bert_model=None, txt_max_length=128, use_sbert=False,
+#                 use_countvectorizer=False,vocab_path=None,use_clip=None):
+#         # self.vocab_path = vocab_path
+#         # self.use_countvectorizer = use_countvectorizer
+#         # if self.use_countvectorizer:
+#         #     if vocab_path is None:
+#         #         self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True)
+#         #     else:
+#         #         self.vocab = json.load(open(vocab_path))
+#         #         self.sentence_vectors_extractor = CountVectorizer(max_features=3000, binary=True, vocabulary=self.vocab)
 
-        self.use_sbert = use_sbert
-        if use_sbert:
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+#         self.use_sbert = use_sbert
+#         if use_sbert:
+#             self.model = SentenceTransformer('all-MiniLM-L6-v2')
 
-        self.txt_bert_model = txt_bert_model
-        if not txt_bert_model is None:
-            if txt_bert_model == 'roberta-base':
-                self.tokenizer = RobertaTokenizer.from_pretrained(
-                    "roberta-base")
-            elif txt_bert_model == 'lxmert_tokenizer':
-                self.tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased")
-            else:
-                self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_max_length)
+#         self.txt_bert_model = txt_bert_model
+#         if not txt_bert_model is None:
+#             if txt_bert_model == 'roberta-base':
+#                 self.tokenizer = RobertaTokenizer.from_pretrained(
+#                     "roberta-base")
+#             elif txt_bert_model == 'lxmert_tokenizer':
+#                 self.tokenizer = LxmertTokenizer.from_pretrained("unc-nlp/lxmert-base-uncased")
+#             else:
+#                 self.tokenizer = DistilBertTokenizer.from_pretrained(txt_bert_model, model_max_length=txt_max_length)
         
-        self.use_clip = use_clip
-        self.args = args
-        if args.use_open_clip:
-            self.tokenizer = open_clip.get_tokenizer('xlm-roberta-large-ViT-H-14')
+#         self.use_clip = use_clip
+#         self.args = args
+#         if args.use_open_clip:
+#             self.tokenizer = open_clip.get_tokenizer('xlm-roberta-large-ViT-H-14')
 
-    # def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
-    #     self.sentence_vectors_extractor.fit(texts)
+#     # def precompute_stats(self, texts, path_save_vocab='data/vocab.json'):
+#     #     self.sentence_vectors_extractor.fit(texts)
 
-    #     # save vocabulary
-    #     self.vocab = self.sentence_vectors_extractor.vocabulary_
-    #     self.vocab_path = path_save_vocab
+#     #     # save vocabulary
+#     #     self.vocab = self.sentence_vectors_extractor.vocabulary_
+#     #     self.vocab_path = path_save_vocab
 
-    #     # value from vectorizer is numpy type, convert to int to serialize in json
-    #     json.dump({key: int(value) for (key, value)
-    #               in self.vocab.items()}, open(path_save_vocab, 'w'))
-    #     print(
-    #         f"Compute vocabulary for {len(texts)} sentences. Save to {path_save_vocab}")
+#     #     # value from vectorizer is numpy type, convert to int to serialize in json
+#     #     json.dump({key: int(value) for (key, value)
+#     #               in self.vocab.items()}, open(path_save_vocab, 'w'))
+#     #     print(
+#     #         f"Compute vocabulary for {len(texts)} sentences. Save to {path_save_vocab}")
 
-    def __call__(self, texts):
-        outputs = dict()
-        # if self.use_countvectorizer:
-        #     sentence_vectors = self.sentence_vectors_extractor.transform(texts).toarray()
-        #     outputs['sentence_vectors'] = sentence_vectors
+#     def __call__(self, texts):
+#         outputs = dict()
+#         # if self.use_countvectorizer:
+#         #     sentence_vectors = self.sentence_vectors_extractor.transform(texts).toarray()
+#         #     outputs['sentence_vectors'] = sentence_vectors
 
-        if self.use_sbert:
-            sbert_embedding = self.model.encode(texts)
-            outputs['sbert_embedding'] = sbert_embedding
+#         if self.use_sbert:
+#             sbert_embedding = self.model.encode(texts)
+#             outputs['sbert_embedding'] = sbert_embedding
 
-        if not self.txt_bert_model is None:
-            toks = self.tokenizer(
-                texts, padding='max_length', truncation=True, return_tensors="pt")
-            # output of bert tokenizer is a dictionary
-            outputs.update(toks)
+#         if not self.txt_bert_model is None:
+#             toks = self.tokenizer(
+#                 texts, padding='max_length', truncation=True, return_tensors="pt")
+#             # output of bert tokenizer is a dictionary
+#             outputs.update(toks)
         
-        if self.use_clip:
-            if self.args.use_open_clip:
-                toks = self.tokenizer(texts)
-                outputs["clip_tokens"] = toks
-            else:
-                toks = clip.tokenize(texts,truncate=True)
-                outputs["clip_tokens"] = toks
-        return outputs
+#         if self.use_clip:
+#             if self.args.use_open_clip:
+#                 toks = self.tokenizer(texts)
+#                 outputs["clip_tokens"] = toks
+#             else:
+#                 toks = clip.tokenize(texts,truncate=True)
+#                 outputs["clip_tokens"] = toks
+#         return outputs
 
 class ImageText(Dataset):
     def __init__(self, img_folder, metadata_csv, is_labeled, img_col='file_name', text_col='Text Transcription', label_cols='misogynous', im_transforms=None, txt_transform=None, target_transform=None, second_txt_transform=None):
@@ -309,7 +309,9 @@ class ImageText(Dataset):
 def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, train_unlabeled_csv, 
                                                 val_img_dir, val_csv, batch_size, image_size, inbatch_label_ratio=None, debug=False,input_resolution=None):
     # args.use_augmentation = False
-    label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+    # label_cols = ['shaming', 'stereotype', 'objectification', 'violence']
+    
+    label_cols = args.label_cols
 
     if args.use_clip:
         image_size = input_resolution
@@ -330,7 +332,7 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
     #     use_countvectorizer=args.use_sentence_vectorizer,
     #     use_clip=args.use_clip)
     
-    caption_transform = None
+    # caption_transform = None
     
     # if args.dual_stream:
     #     txt_transforms = TextTransform(
@@ -346,13 +348,13 @@ def create_semi_supervised_dataloaders(args, train_img_dir, train_labeled_csv, t
             train_labeled_csv, train_unlabeled_csv, text_col=args.text_col))
 
     train_sup = ImageText(train_img_dir, metadata_csv=train_labeled_csv, is_labeled=True,
-                        im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
+                        im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     train_unsup = ImageText(train_img_dir, metadata_csv=train_unlabeled_csv, is_labeled=False,
-                            im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
+                            im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     val = ImageText(val_img_dir, metadata_csv=val_csv, is_labeled=True,
-                    im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
+                    im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     # collate_fn_batch = ...
     # dataloader = DataLoader(dataset=data, collate_fn = collate_fn_batch, batch_size=batch_size, num_workers=cpu_count()//2, drop_last=True, shuffle=True)
@@ -395,12 +397,12 @@ def create_semi_supervised_test_dataloaders(args, test_img_dir, test_csv, batch_
     #     use_countvectorizer=args.use_sentence_vectorizer,
     #     use_clip=args.use_clip)
     
-    caption_transform = None
+    # caption_transform = None
         
     target_transforms = None
 
     test = ImageText(test_img_dir, metadata_csv=test_csv, is_labeled=True,
-                    im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols, second_txt_transform=caption_transform)
+                    im_transforms=im_transforms.test_transform, txt_transform=txt_transforms, label_cols=label_cols)
 
     test_loader = DataLoader(dataset=test, batch_size=batch_size,
                             num_workers=cpu_count()*3//4, drop_last=False, shuffle=False)
