@@ -1,0 +1,9 @@
+train_supervise_path: 'data/MAMI_processed/train_labeled_ratio-0.05.csv'
+train_supervise_image_feature_path: 'data/MAMI_processed/clip_features/train_labeled_ratio-0.05/image_feature.txt'
+train_supervise_text_feature_path: 'data/MAMI_processed/clip_features/train_labeled_ratio-0.05/text_feature.txt'
+
+unsupervise_image_feature_path: 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.05/image_feature.txt'
+unsupervise_text_feature_path: 'data/MAMI_processed/clip_features/train_unlabeled_ratio-0.05/text_feature.txt'
+
+finetune_epochs: 50
+step_lr_gamma: 0.93

@@ -26,10 +26,10 @@ def f1_score_sklearn(x,y):
     return f1
 
 def f1_score_pytorch(x,y):
-      metric = MultilabelF1Score(num_labels=4)
-      target = torch.tensor(y)
-      preds = torch.tensor(x)
-      return metric(preds, target)
+    metric = MultilabelF1Score(num_labels=4)
+    target = torch.tensor(y)
+    preds = torch.tensor(x)
+    return metric(preds, target)
 
 def macro_f1_multilabel(preds, target, num_labels=4, threshold = 0.5, reduce = True):
     preds = torch.tensor(preds)
@@ -51,6 +51,28 @@ def macro_f1_multilabel(preds, target, num_labels=4, threshold = 0.5, reduce = T
         return torch.tensor(macro_f1_multilabel).mean().item()
     else:
         return torch.tensor(macro_f1_multilabel).numpy()
+
+def weighted_f1_multilabel(preds, target, num_labels=4, threshold = 0.5):
+    preds = torch.tensor(preds)
+    target = torch.tensor(target)
+
+    preds = (preds > threshold).to(torch.long)
+    target = target.to(torch.long)
+
+    macro_f1 = F1Score(num_classes=2, average='macro')
+
+    results = []
+    total_occurences = 0
+    for i in range(num_labels):
+        preds_label_i = preds[:, i]
+        target_label_i = target[:, i]   
+        f1_score_i = macro_f1(preds_label_i, target_label_i)
+
+        weight = (target_label_i==1).sum()
+        total_occurences += weight
+        results.append(f1_score_i * weight)
+
+    return sum(results) / total_occurences
 
 
 def macro_f1(preds, target, threshold = 0.5):
@@ -81,3 +103,20 @@ def roc_auc_binary(preds, target):
     score = auroc(preds, target)
 
     return score.item()
+    
+def weighted_f1_multilabel(preds, target, num_labels=4, threshold = 0.5):
+    preds = torch.tensor(preds)
+    target = torch.tensor(target)
+    preds = (preds > threshold).to(torch.long)
+    target = target.to(torch.long)
+    macro_f1 = F1Score(num_classes=2, average='macro')
+    results = []
+    total_occurences = 0
+    for i in range(num_labels):
+        preds_label_i = preds[:, i]
+        target_label_i = target[:, i]   
+        f1_score_i = macro_f1(preds_label_i, target_label_i)
+        weight = (target_label_i==1).sum()
+        total_occurences += weight
+        results.append(f1_score_i * weight)
+    return sum(results) / total_occurences

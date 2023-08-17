@@ -1,49 +1,109 @@
 from arguments import get_args 
-import os  
+import os
 import torch 
 from data.dataClass import MemotionDatasetForCmml
 from model.CmmlLayer import CmmlModel
+# from model.eman import EMAN
 import torch.optim as optim 
 from torch.optim.lr_scheduler import StepLR
 from torch.autograd import Variable
 from torch.utils.data import DataLoader 
 import datetime 
-import numpy as np  
-from test import test_multilabel
+import numpy as np
+from test_func import test_multilabel
 from tqdm import tqdm
 from loss import focal_binary_cross_entropy, diversity_measurement, consistency_measurement
+from loss import focal_binary_cross_entropy,zlpr_loss,AsymmetricLoss,ResampleLoss 
 import torch.nn as nn
 import wandb
 import random
 from matplotlib import pyplot as plt
 import torch.nn as nn
-
 from utils.plot_utils import get_confusion_matrix
+from torch.cuda.amp import autocast, GradScaler
+import clip
+import open_clip
+from model.clip_info import clip_nms,clip_dim
 
-# from test import test_singlelabel, test
+from model.utils import LARS,adjust_learning_rate,exclude_bias_and_norm
+from ORG import GB_estimate 
+from copy import deepcopy 
+import gc 
 from data.semi_supervised_data import *
 from utils.npy_save import npy_save_txt
 
+from model.dualstream_net import CmmlModel_v2
+from model.deep_weak_attention import deep_weak_attention
 
-def train(args,model, dataset,
-          supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
-          lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
-          weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
-           imgbatchsize = 32, cuda = False, savepath = ''): 
+import yaml
+
+
+def train(args, config, model, dataset,
+        supervise_epochs = 200, text_supervise_epochs = 50, img_supervise_epochs = 50, 
+        lr_supervise = 0.01, text_lr_supervise = 0.0001, img_lr_supervise = 0.0001,
+        weight_decay = 0, batchsize = 32,lambda1=0.01,lambda2=1, textbatchsize = 32,
+        imgbatchsize = 32, cuda = False, savepath = '',eman=None): 
     
-    # wandb.watch(model, log="all", log_freq=100)
     model.train()
     print("train")
     loss = 0
     cita = 1.003
-
-    optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
-    scheduler = StepLR(optimizer, step_size = 500, gamma = 0.9)  
-    criterion = torch.nn.BCELoss()
-    # criterion = torch.nn.CrossEntropyLoss()
-
+    if args.use_lars_optimizer:
+        print("==============use lars optimizer===============")
+        optimizer = LARS(
+            model.parameters(),
+            lr=0,
+            weight_decay=args.weight_decay,
+            weight_decay_filter=exclude_bias_and_norm,
+            lars_adaptation_filter=exclude_bias_and_norm,
+        )
+    elif args.use_sgd:
+        print("==============use sgd optimizer===============")
+        optimizer = torch.optim.SGD(model.parameters(), lr=lr_supervise, weight_decay=weight_decay)
+    elif args.use_adam:
+        print("==============use adam optimizer===============")
+        optimizer = optim.Adam(model.parameters(), lr = lr_supervise, weight_decay = weight_decay)
+    
+    print(optimizer)
+    
+    if args.use_linear_scheduler:
+        print("==============use linear lr scheduler===============")
+        scheduler = torch.optim.lr_scheduler.LinearLR(optimizer,start_factor=1./3,total_iters=80)
+    elif args.use_step_lr:
+        print("==============use step scheduler===============")
+        scheduler = StepLR(optimizer, step_size = 200, gamma = config.step_lr_gamma) # default step size is 500
+    elif args.use_multi_step_lr:
+        print("==============use multi step scheduler===============")
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [5,10,15],gamma=0.5)
+    print(scheduler)
+    
+    if args.use_bce_loss:
+        print("==============use bce loss===============")
+        criterion = torch.nn.BCELoss()
+    elif args.use_focal_loss:
+        print("==============use focal loss===============")
+        criterion = partial(focal_binary_cross_entropy,args)
+    elif args.use_zlpr_loss:
+        print("==============use zlpr loss===============")
+        criterion = zlpr_loss
+    elif args.use_asymmetric_loss:
+        print("==============use asymmetric loss===============")
+        criterion = AsymmetricLoss(gamma_neg=4, gamma_pos=0, clip=0.05, disable_torch_grad_focal_loss=True)
+    elif args.use_resample_loss:
+        print("==============use resample loss===============")
+        criterion = ResampleLoss(args)
+    
+    print(criterion)
+        
+    sigmoid = torch.nn.Sigmoid()
+    if args.use_org:
+        print("==============use ORG===============")
+        estimate_model = deepcopy(model)
+        modality_weights = GB_estimate(args,estimate_model,supervise_epochs,dataset,optimizer,scheduler,criterion,cuda,sigmoid)
+        del estimate_model
+        gc.collect()
+        print(f"total weight:{modality_weights[0]}, img weight:{modality_weights[1]}, text weight:{modality_weights[2]}")
     for epoch in range(1, supervise_epochs + 1):
-        print('train multimodal data:', epoch)
         epoch_supervise_loss_train = 0
         epoch_div_train = 0 
         epoch_unsupervise_loss_train = 0
@@ -60,10 +120,9 @@ def train(args,model, dataset,
         num_supervise_sample = 0
         num_unsupervise_sample = 0
 
-
         num_steps = min(len(dataset['train_sup']), len(dataset['train_unsup']))
 
-        for batch_index, (supbatch, unsupbatch) in tqdm(enumerate(zip(dataset['train_sup'], dataset['train_unsup']), start=1),
+        for step, (supbatch, unsupbatch) in tqdm(enumerate(zip(dataset['train_sup'], dataset['train_unsup']), start=1),desc=f'epoch {epoch}',
                                                 total=min(len(dataset['train_sup']), len(dataset['train_unsup']))):
             # print(batch_index)
 
@@ -75,13 +134,18 @@ def train(args,model, dataset,
             # sup_label = torch.stack([1-sup_label, sup_label], axis=-1)
             # for single label
 
-            scheduler.step()
             y = sup_label
             '''
             Attention architecture and use bceloss.
             '''
             supervise_img_xx = sup_img
-            supervise_text_xx = sup_text['sentence_vectors']
+            if args.use_sentence_vectorizer:
+                # print("============use sentence bert vectorizer===============")
+                supervise_text_xx = sup_text['sentence_vectors'].float()
+                supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
+            if args.use_bert_embedding:
+                # print("===============use bert embedding================")
+                supervise_bert_xx = sup_text['sbert_embedding']
             label = sup_label
 
             if args.use_bert_embedding:
@@ -89,6 +153,7 @@ def train(args,model, dataset,
                 supervise_bert_xx = Variable(supervise_bert_xx).cuda() if cuda else Variable(supervise_bert_xx)
             
             if args.use_bert_model:
+                # print("===============use bert model================")
                 supervise_input_ids = sup_text['input_ids']
                 supervise_attn_mask = sup_text['attention_mask']
                 supervise_input_ids = supervise_input_ids.long()
@@ -96,88 +161,127 @@ def train(args,model, dataset,
                 supervise_input_ids = Variable(supervise_input_ids).cuda() if cuda else Variable(supervise_input_ids)
                 supervise_attn_mask = Variable(supervise_attn_mask).cuda() if cuda else Variable(supervise_attn_mask)
 
+            if args.use_clip:
+                # print("===============use clip token================")
+                supervise_clip_ids = sup_text['clip_tokens']
+                supervise_clip_ids = Variable(supervise_clip_ids).cuda() if cuda else Variable(supervise_clip_ids)   
+            
             supervise_img_xx = supervise_img_xx.float()
-            supervise_text_xx = supervise_text_xx.float()            
             label = label.float()
             supervise_img_xx = Variable(supervise_img_xx).cuda() if cuda else Variable(supervise_img_xx)  
-            supervise_text_xx = Variable(supervise_text_xx).cuda() if cuda else Variable(supervise_text_xx)  
                 
             label = Variable(label).cuda() if cuda else Variable(label)  
             
+            # if args.use_caption:
+            #     supervise_clip_ids_caption = sup_text['caption_clip_tokens']
+            #     supervise_clip_ids_caption = Variable(supervise_clip_ids_caption).cuda() if cuda else Variable(supervise_clip_ids_caption)
+            #     supervise_caption_hidden = model.Captionfeaturemodel(clip_input_ids=supervise_clip_ids_caption)
+            #     supervise_captionpredict = model.Captionpredictmodel(supervise_caption_hidden)
+            #     captionloss = criterion(supervise_captionpredict, label)
+            
+            # #=========== DEFAULT FORWARD ===========#
             supervise_imghidden = model.Imgmodel(supervise_img_xx)
             if args.use_bert_embedding:
+                # supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
+                supervise_texthidden = model.Textfeaturemodel(x = supervise_bert_xx)
+            if args.use_clip:
+                supervise_texthidden = model.Textfeaturemodel(clip_input_ids = supervise_clip_ids)
+            elif args.use_bert_embedding:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx,bert_emb = supervise_bert_xx)
             elif args.use_bert_model:
                 supervise_texthidden = model.Textfeaturemodel(input_ids = supervise_input_ids,attn_mask = supervise_attn_mask)
             else:
                 supervise_texthidden = model.Textfeaturemodel(x = supervise_text_xx)
             
-            if model.Projectormodel != None:
-                vcreg_loss_supervise = model.Projectormodel(supervise_imghidden,supervise_texthidden)
+            if args.multi_scale_fe:
+                supervise_imghidden, attn_w = model.ImgAttention(query=supervise_texthidden.unsqueeze(1), 
+                                                                key=supervise_imghidden,
+                                                                value=supervise_imghidden)
+                supervise_imghidden = supervise_imghidden.squeeze(1)
+            # #=========== DEFAULT FORWARD ===========#
+            
             supervise_imgpredict = model.Imgpredictmodel(supervise_imghidden)
             supervise_textpredict = model.Textpredictmodel(supervise_texthidden)
             
-            supervise_imgk = model.Attentionmodel(supervise_imghidden)
-            supervise_textk = model.Attentionmodel(supervise_texthidden)
-            modality_attention = []
-            modality_attention.append(supervise_imgk)
-            modality_attention.append(supervise_textk)
-            modality_attention = torch.cat(modality_attention, 1)
-            modality_attention = nn.functional.softmax(modality_attention, dim = 1)
-            img_attention = torch.zeros(1, len(y))
-            img_attention[0] = modality_attention[:,0]
-            img_attention = img_attention.t()
-            text_attention = torch.zeros(1, len(y))
-            text_attention[0] = modality_attention[:,1]
-            text_attention = text_attention.t()
-            if cuda:
-                img_attention = img_attention.cuda()
-                text_attention = text_attention.cuda()
-            supervise_feature_hidden = img_attention * supervise_imghidden + text_attention * supervise_texthidden
-            supervise_predict = model.Predictmodel(supervise_feature_hidden)         
-            if args.use_focal_loss:
-                totalloss = focal_binary_cross_entropy(args,supervise_predict, label)
-                imgloss = focal_binary_cross_entropy(args,supervise_imgpredict, label)
-                textloss = focal_binary_cross_entropy(args,supervise_textpredict, label)
+            modalities = [supervise_imghidden, supervise_texthidden]
+            # if args.use_caption:
+            #     modalities.append(supervise_caption_hidden)
+            
+            if args.use_deep_weak_attention:
+                # print("===============use deep weak attention================")
+                supervise_feature_hidden, modal_att_w = deep_weak_attention(model.Attentionmodel, modalities, cuda)
+                
+            elif args.use_coattention:
+                # print("===============use co-attention================")
+                supervise_feature_hidden = model.FusionCoattention(supervise_imghidden,supervise_texthidden)
+            elif args.use_concat_modalities:
+                # print("===============use concat================")
+                supervise_feature_hidden = torch.cat(tuple(modalities), dim=1)
+                
+            if args.use_vicreg_in_training:
+                # print("===============use vcreg================")
+                vcreg_loss_supervise_img_text = model.ProjectormodelImgText(supervise_imghidden,supervise_texthidden)
+                vcreg_loss_supervise_img_total = model.ProjectormodelImgTotal(supervise_imghidden,supervise_feature_hidden)
+                vcreg_loss_supervise_text_total = model.ProjectormodelTextTotal(supervise_feature_hidden,supervise_texthidden)
+
+            supervise_predict = model.Predictmodel(supervise_feature_hidden)       
+            if args.use_focal_loss or  args.use_bce_loss:
+                supervise_predict = sigmoid(supervise_predict)
+                supervise_textpredict = sigmoid(supervise_textpredict)
+                supervise_imgpredict = sigmoid(supervise_imgpredict)                    
+                sigmoid_already = True
+            elif args.use_zlpr_loss or args.use_asymmetric_loss or args.use_resample_loss:
+                sigmoid_already = False
+            
+            totalloss = criterion(supervise_predict, label)
+            imgloss = criterion(supervise_imgpredict, label)
+            textloss = criterion(supervise_textpredict, label)
+
+            if sigmoid_already:
+                div = nn.CosineSimilarity(dim=1)(supervise_imgpredict, supervise_textpredict).mean(axis=0)
             else:
-                totalloss = criterion(supervise_predict, label)
-                imgloss = criterion(supervise_imgpredict, label)
-                textloss = criterion(supervise_textpredict, label)
+                div = nn.CosineSimilarity(dim=1)(sigmoid(supervise_imgpredict), sigmoid(supervise_textpredict)).mean(axis=0)                
+                
             '''
             Diversity Measure code.
-            '''         
-
-            div = diversity_measurement(supervise_imgpredict, supervise_textpredict)
-
+            '''        
             '''
             Diversity Measure code.
             ''' 
 
-            # if args.use_auto_weight:
-            #     supervise_loss = 1/(2*model.Predictmodel.sigma[0]**2)*imgloss + 1/(2*model.Predictmodel.sigma[1]**2)*textloss \
-            #     + 1/(2*model.Predictmodel.sigma[2]**2)*totalloss + torch.log(model.Predictmodel.sigma).sum()
-            # else:
-            supervise_loss = imgloss + textloss + 2.0*totalloss
-
-            # print('img: ', imgloss.item(), ' text: ', textloss.item(), 'total: ', totalloss.item(), end="\t")
-            # img_loss_arr[batch_index-1] = imgloss.item()
-            # text_loss_arr[batch_index-1] = textloss.item()
-            # total_suploss_arr[batch_index-1] = totalloss.item()
             
+            # if args.use_caption:
+            #     supervise_loss = imgloss + textloss + 3.0*totalloss + captionloss
+            # else:
+            #     supervise_loss = imgloss + textloss + 2.0*totalloss
 
-            # ================== UNSUPERVISE =================== # 
+            if args.use_org:
+                supervise_loss = modality_weights[1]*imgloss + modality_weights[2]*textloss + modality_weights[0]*totalloss
+            else:
+                supervise_loss = imgloss + textloss + 2.0*totalloss
+                
+                # if args.use_caption:
+                #     supervise_loss = imgloss + textloss + 2.5*totalloss
+
+            if args.use_vicreg_in_training:
+                supervise_loss += sum(vcreg_loss_supervise_img_text)+sum(vcreg_loss_supervise_img_total)+sum(vcreg_loss_supervise_text_total)
 
             epoch_img_loss_train += imgloss.item()
             epoch_text_loss_train += textloss.item() 
             epoch_total_loss_train += totalloss.item()
+            #=======================================#
 
+            # ================== UNSUPERVISE =================== # 
 
             unsupervise_img_xx = unsup_img
-            unsupervise_text_xx = unsup_text['sentence_vectors']
+            if args.use_sentence_vectorizer:
+                unsupervise_text_xx = unsup_text['sentence_vectors'].float()
+                unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
 
             if args.use_bert_embedding:
                 unsupervise_bert_xx = unsup_text['sbert_embedding']
                 unsupervise_bert_xx = Variable(unsupervise_bert_xx).cuda() if cuda else Variable(unsupervise_bert_xx)
+            
             if args.use_bert_model:
                 unsupervise_token_xx = unsup_text['input_ids']
                 unsupervise_attn_mask_xx = unsup_text['attention_mask']
@@ -185,22 +289,38 @@ def train(args,model, dataset,
                 unsupervise_attn_mask_xx = unsupervise_attn_mask_xx.long()
                 unsupervise_token_xx = Variable(unsupervise_token_xx).cuda() if cuda else Variable(unsupervise_token_xx) 
                 unsupervise_attn_mask_xx = Variable(unsupervise_attn_mask_xx).cuda() if cuda else Variable(unsupervise_attn_mask_xx) 
+                
+            if args.use_clip:
+                unsupervise_clip_ids = unsup_text['clip_tokens']
+                unsupervise_clip_ids = Variable(unsupervise_clip_ids).cuda() if cuda else Variable(unsupervise_clip_ids)    
 
             unsupervise_img_xx = unsupervise_img_xx.float()
-            unsupervise_text_xx = unsupervise_text_xx.float()
             unsupervise_img_xx = Variable(unsupervise_img_xx).cuda() if cuda else Variable(unsupervise_img_xx)     
-            unsupervise_text_xx = Variable(unsupervise_text_xx).cuda() if cuda else Variable(unsupervise_text_xx) 
 
+            # #=========== DEFAULT FORWARD ===========#
             unsupervise_imghidden = model.Imgmodel(unsupervise_img_xx)
             if args.use_bert_embedding:
+                # unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
+                unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_bert_xx)
+            if args.use_clip:
+                unsupervise_texthidden = model.Textfeaturemodel(clip_input_ids = unsupervise_clip_ids)
+            elif args.use_bert_embedding:
                 unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx,bert_emb = unsupervise_bert_xx)
             elif args.use_bert_model:
                 unsupervise_texthidden = model.Textfeaturemodel(input_ids = unsupervise_token_xx,bert_emb = unsupervise_attn_mask_xx)
             else:
                 unsupervise_texthidden = model.Textfeaturemodel(x = unsupervise_text_xx)
 
-            if model.Projectormodel != None:
-                vcreg_loss_unsupervise = model.Projectormodel(unsupervise_imghidden,unsupervise_texthidden)
+            if args.multi_scale_fe:
+                unsupervise_imghidden, attn_w = model.ImgAttention(query=unsupervise_texthidden.unsqueeze(1), 
+                                                                    key=unsupervise_imghidden,
+                                                                    value=unsupervise_imghidden)
+                unsupervise_imghidden = unsupervise_imghidden.squeeze(1)
+            # #=========== DEFAULT FORWARD ===========#
+
+            if args.use_vicreg_in_training:
+                # print("===============use vcreg in unsupervised data================")
+                vcreg_loss_unsupervise_img_text = model.ProjectormodelImgText(unsupervise_imghidden,unsupervise_texthidden)
 
             unsupervise_imgpredict = model.Imgpredictmodel(unsupervise_imghidden)
             unsupervise_textpredict = model.Textpredictmodel(unsupervise_texthidden)
@@ -208,68 +328,57 @@ def train(args,model, dataset,
             '''
             Robust Consistency Measure code.
             '''
-   
-            unsupervise_loss = consistency_measurement(unsupervise_imgpredict, unsupervise_textpredict, cita=cita)
+            if args.consistency == 'cosine_huber':
+                unsupervise_loss = consistency_measurement(sigmoid(unsupervise_imgpredict), sigmoid(unsupervise_textpredict), cita=cita)
+            elif args.consistency == 'mse':
+                unsupervise_loss = torch.nn.MSELoss()(sigmoid(unsupervise_imgpredict), sigmoid(unsupervise_textpredict))
             '''
             Robust Consistency Measure code.
             '''
 
-            # print("unsup loss: ", unsupervise_loss.item())
-
-            if model.Projectormodel != None:
-                total_loss = supervise_loss + 0.01* div +  unsupervise_loss + sum(vcreg_loss_unsupervise) + sum(vcreg_loss_supervise)
-                if args.use_sim_loss:
-                    epoch_v_supervise_loss_train += vcreg_loss_supervise[0].item()
-                    epoch_c_supervise_loss_train += vcreg_loss_supervise[2].item()
-                    epoch_v_unsupervise_loss_train += vcreg_loss_unsupervise[0].item()
-                    epoch_c_unsupervise_loss_train += vcreg_loss_unsupervise[2].item()
-                    epoch_i_supervise_loss_train += vcreg_loss_unsupervise[1].item()
-                    epoch_i_unsupervise_loss_train += vcreg_loss_supervise[1].item()     
-                else:
-                    epoch_v_supervise_loss_train += vcreg_loss_supervise[0].item()
-                    epoch_c_supervise_loss_train += vcreg_loss_supervise[1].item()
-                    epoch_v_unsupervise_loss_train += vcreg_loss_unsupervise[0].item()
-                    epoch_c_unsupervise_loss_train += vcreg_loss_unsupervise[1].item()
-            else:
+            if args.use_div:
                 total_loss = supervise_loss + 0.01* div +  unsupervise_loss
+            else:
+                total_loss = supervise_loss + unsupervise_loss
+            
+            if args.use_vicreg_in_training:
+                total_loss += sum(vcreg_loss_unsupervise_img_text)
+            
             epoch_supervise_loss_train += supervise_loss.item()
             epoch_div_train += div.item() 
             epoch_unsupervise_loss_train += unsupervise_loss.item()
 
             # ================== UNSUPERVISE =================== #
             
-            # total_loss = supervise_loss # FOR DEBUG ONLY
-            # print("total loss: ", total_loss.item())
-            # total_final_loss_arr[batch_index-1] = total_loss.item()
-
             loss += total_loss.item()
+            
+            # ============= optimize ==============#
+            
             optimizer.zero_grad()
             total_loss.backward()
+            if args.use_clip_norm:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
-        
-        if epoch % 10 == 0:
-            filename = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')
-            torch.save(model.Imgmodel, os.path.join(savepath, filename +'img.pkl'))
-            torch.save(model.Textfeaturemodel, os.path.join(savepath, filename + 'Textfeaturemodel.pkl'))
-            torch.save(model.Imgpredictmodel, os.path.join(savepath, filename + 'Imgpredictmodel.pkl'))
-            torch.save(model.Textpredictmodel, os.path.join(savepath, filename + 'Textpredictmodel.pkl'))
-            torch.save(model.Attentionmodel, os.path.join(savepath, filename +'attention.pkl'))
-        
+            
+            # optimizer.zero_grad()
+            # totalloss.backward()
+            # if args.use_clip_norm:
+            #     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            # optimizer.step()
+
+            scheduler.step()
+
+
+        if args.use_multi_step_lr or args.use_linear_scheduler:
+            scheduler.step()
 
         #===================== Multilabel =================#
-        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, total_predict, truth, f1_skl1,
-        f1_skl2, f1_skl3, f1_pm1, f1_pm2, f1_pm3,
-        auc_pm1,auc_pm2,auc_pm3, acc1, acc2, acc3, 
-        coverage1, coverage2, coverage3, example_auc1,
-        example_auc2, example_auc3, macro_auc1, macro_auc2,
-        macro_auc3, micro_auc1, micro_auc2, micro_auc3,
-        ranking_loss1, ranking_loss2, ranking_loss3,
-        humour,sarcasm,offensive,motivational,humour_truth,
-        sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
-        model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
-        model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
-        
-        # total_step = len(data_loader)
+        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
+        f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
+        auc_pm1,auc_pm2,auc_pm3,
+        total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
+        sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model, dataset['val'], batchsize = batchsize, cuda = cuda)
+
         total_step = num_steps
         epoch_supervise_loss_train = epoch_supervise_loss_train/total_step
         epoch_div_train = epoch_div_train/total_step
@@ -278,43 +387,15 @@ def train(args,model, dataset,
         epoch_text_loss_train = epoch_text_loss_train/total_step 
         epoch_total_loss_train = epoch_total_loss_train/total_step
 
-        # wandb.log({"train_loss/epoch_supervise_loss_train":epoch_supervise_loss_train})
-        # wandb.log({"train_loss/epoch_div_train":epoch_div_train})
-        # wandb.log({"train_loss/epoch_unsupervise_loss_train":epoch_unsupervise_loss_train})
-        # wandb.log({"train_loss/epoch_img_loss_train":epoch_img_loss_train})
-        # wandb.log({"train_loss/epoch_text_loss_train":epoch_text_loss_train})
-        # wandb.log({"train_loss/epoch_total_loss_train":epoch_total_loss_train})
 
-        if model.Projectormodel != None:
-            epoch_v_supervise_loss_train = epoch_v_supervise_loss_train/total_step
-            epoch_c_supervise_loss_train = epoch_c_supervise_loss_train/total_step
-            epoch_v_unsupervise_loss_train = epoch_v_unsupervise_loss_train/total_step
-            epoch_c_unsupervise_loss_train = epoch_c_unsupervise_loss_train/total_step
-            wandb.log({"train_loss/epoch_v_supervise_loss_train":epoch_v_supervise_loss_train})
-            wandb.log({"train_loss/epoch_c_supervise_loss_train":epoch_c_supervise_loss_train})
-            wandb.log({"train_loss/epoch_v_unsupervise_loss_train":epoch_v_unsupervise_loss_train})
-            wandb.log({"train_loss/epoch_c_unsupervise_loss_train":epoch_c_unsupervise_loss_train})
-            if args.use_sim_loss:
-                epoch_i_supervise_loss_train = epoch_i_supervise_loss_train/total_step
-                epoch_i_unsupervise_loss_train = epoch_i_unsupervise_loss_train/total_step
-                wandb.log({"train_loss/epoch_i_supervise_loss_train":epoch_i_supervise_loss_train})
-                wandb.log({"train_loss/epoch_i_unsupervise_loss_train":epoch_i_unsupervise_loss_train})
-
+        print("epoch_total_loss_train:",epoch_total_loss_train)
         print("epoch_img_loss_train",epoch_img_loss_train,
-        "\t epoch_text_loss_train:",epoch_text_loss_train,
-        "\t epoch_total_loss_train:",epoch_total_loss_train)
+            "\t epoch_text_loss_train:",epoch_text_loss_train,
+            "\t epoch_total_loss_train:",epoch_total_loss_train)
         
         print("epoch_supervise_loss_train:",epoch_supervise_loss_train,
         '\t epoch_div_train:',epoch_div_train,'\t epoch_unsupervise_loss_train',epoch_unsupervise_loss_train)
-        if model.Projectormodel != None:
-            print("epoch_v_supervise_loss_train:",epoch_v_supervise_loss_train,
-            "\t epoch_c_supervise_loss_train:",epoch_c_supervise_loss_train)
-
-            print("epoch_v_unsupervise_loss_train:",epoch_v_unsupervise_loss_train,
-            "\t epoch_c_unsupervise_loss_train:",epoch_c_unsupervise_loss_train)
-            if args.use_sim_loss:
-                print("epoch_i_supervise_loss_train:",epoch_i_supervise_loss_train,
-                "\t epoch_i_unsupervise_loss_train:",epoch_i_unsupervise_loss_train)
+                
         print("f1_macro_multi_1:",f1_macro_multi_total,
         "\t f1_macro_multi_2",f1_macro_multi_img,
         "\t f1_macro_multi_3:",f1_macro_multi_text)
@@ -323,34 +404,17 @@ def train(args,model, dataset,
         wandb.log({"f1_macro_multi_total":f1_macro_multi_total})
         wandb.log({"f1_macro_multi_img":f1_macro_multi_img})
         wandb.log({"f1_macro_multi_text":f1_macro_multi_text})
-        
+
+        wandb.log({"f1_weighted_multi_total":f1_weighted_multi_total})
+        wandb.log({"f1_weighted_multi_img":f1_weighted_multi_img})
+        wandb.log({"f1_weighted_multi_text":f1_weighted_multi_text})
+                
         print(f"[F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
+        print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
 
-        # wandb.log({"f1_skl_all":f1_skl1})
-        # wandb.log({"f1_skl_image":f1_skl2})
-        # wandb.log({"f1_skl_text":f1_skl3})
-
-        # wandb.log({"f1_pytorch_all":f1_pm1})
-        # wandb.log({"f1_pytorch_image":f1_pm2})
-        # wandb.log({"f1_pytorch_text":f1_pm3})
-
-        # wandb.log({"Prediction": total_predict })
-        # wandb.log({"Ground_truth": truth })
-
-
-        # wandb.log({"roc": wandb.plot.roc_curve(truth[:,0], np.expand_dims(total_predict[:,0], axis=-1 ))})
-        # wandb.log({"roc": wandb.plot.roc_curve(truth[:,1], np.expand_dims(total_predict[:,1], axis=-1 ) )})
-        # wandb.log({"roc": wandb.plot.roc_curve(truth[:,2], np.expand_dims(total_predict[:,2], axis=-1 ) )})
-        # wandb.log({"roc": wandb.plot.roc_curve(truth[:,3], np.expand_dims(total_predict[:,3], axis=-1 ) )})
-
-        # wandb.log({f"roc/epoch{epoch}/_roc_humour": wandb.plot.roc_curve(truth[:,0], np.stack([ 1-total_predict[:,0], total_predict[:,0] ], axis=1)  ) })
-        # wandb.log({f"roc/epoch{epoch}/_roc_sarcasm": wandb.plot.roc_curve( truth[:,1], np.stack([ 1-total_predict[:,1], total_predict[:,1] ], axis=1) ) })
-        # wandb.log({f"roc/epoch{epoch}/_roc_offensive": wandb.plot.roc_curve(truth[:,2], np.stack([ 1-total_predict[:,2], total_predict[:,2] ], axis=1) ) })
-        # wandb.log({f"roc/epoch{epoch}/_roc_motivational": wandb.plot.roc_curve(truth[:,3], np.stack([ 1-total_predict[:,3], total_predict[:,3] ], axis=1) ) })
 
         total_2 = (total_predict > 0.5).astype('int')
 
-        # ['shaming', 'stereotype', 'objectification', 'violence']
         get_confusion_matrix(truth[:,0],total_2[:,0])
         wandb.log({"confusion_matrix_shaming": plt})
         get_confusion_matrix(truth[:,1],total_2[:,1])
@@ -359,27 +423,6 @@ def train(args,model, dataset,
         wandb.log({"confusion_matrix_objectification": plt})
         get_confusion_matrix(truth[:,3],total_2[:,3])
         wandb.log({"confusion_matrix_violence": plt})
-
-        
-
-        # wandb.log({"conf_mat_shaming": wandb.Image(confusion_matrix(truth[:,0],total_2[:,0]))})
-        # wandb.log({"conf_mat_stereotype": wandb.Image(confusion_matrix(truth[:,1],total_2[:,1]))})
-        # wandb.log({"conf_mat_objectification": wandb.Image(confusion_matrix(truth[:,2],total_2[:,2]))})
-        # wandb.log({"conf_mat_violence": wandb.Image(confusion_matrix(truth[:,3],total_2[:,3]))})
-
-        # total_2 = a > 0.5
-        # Visualize single plot
-
-
-        # wandb.log({f"conf_mat/epoch{epoch}/_confmat_humour": wandb.plot.confusion_matrix( y_true = truth[:,0], preds = total_2[:,0], class_names=["not humour", "humour"] )})
-        # wandb.log({f"conf_mat/epoch{epoch}/_confmat_sarcasm": wandb.plot.confusion_matrix( y_true = truth[:,1], preds = total_2[:,1], class_names=["not sarcasm", "sarcasm"] )})
-        # wandb.log({f"conf_mat/epoch{epoch}/_confmat_offensive": wandb.plot.confusion_matrix( y_true = truth[:,2], preds = total_2[:,2], class_names=["not offensive", "offensive"] )})
-        # wandb.log({f"conf_mat/epoch{epoch}/_confmat_motivational": wandb.plot.confusion_matrix( y_true = truth[:,3], preds = total_2[:,3], class_names=["not motivational", "motivational"] )})
-
-        # , labels = ["humour"]
-        # , labels = ["sarcasm"]
-        # , labels = ["offensive"]
-        # , labels = ["motivational"]
 
         wandb.log({"histogram/_hist_label_shaming_pred":wandb.Histogram(np_histogram = humour)})
         wandb.log({"histogram/_hist_label_stereotype_pred":wandb.Histogram(np_histogram = sarcasm)})
@@ -391,97 +434,39 @@ def train(args,model, dataset,
         wandb.log({"histogram/_hist_label_objectification_truth":wandb.Histogram(np_histogram = offensive_truth)})
         wandb.log({"histogram/_hist_label_violence_truth":wandb.Histogram(np_histogram = motivational_truth)})
 
-
-        # print('f1_skl:    ', f1_skl1,'\t', f1_skl2,'\t', f1_skl3)
-        # print('f1_pm:    ', f1_pm1,'\t', f1_pm2,'\t', f1_pm3)
-        # print('coverage:    ', coverage1,'\t', coverage2,'\t', coverage3)
         print('rocauc_pm:    ', auc_pm1,'\t', auc_pm2,'\t', auc_pm3)
-        # print('example_auc: ',  example_auc1,'\t', example_auc2,'\t', example_auc3)
-        # print('macro_auc:   ',  macro_auc1,'\t', macro_auc2,'\t', macro_auc3)
-        # print('micro_auc:   ',  micro_auc1,'\t', micro_auc2,'\t', micro_auc3)
-        # print('ranking_loss:',  ranking_loss1,'\t', ranking_loss2,'\t', ranking_loss3)
-        # print()
 
-        #=================== Single label =====================#
-        # macro_fbatch_size=args.batchsize, image_size=2561_all,macro_f1_image,macro_f1_text, macro_roc_auc1, macro_roc_auc2, macro_roc_auc3, total_predict, truth, misogynous, misogynous_truth = test_singlelabel(args, model.Textfeaturemodel, model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel, model.Predictmodel, model.Attentionmodel, dataset['val'], batchsize = batchsize, cuda = cuda)
-        
-        # #print("------Epoch : ", epoch, "------" )
-        # #log_train().info(f'\n --------Epoch :{epoch}--------------')
-        # #print("-------------- Total ---------------------- Image -------------------- Text----")
-        # #log_train().info(f'-------------- Total ---------------------- Image -------------------- Text----')
-        # # print('Acc:         ', acc1,'\t', acc2,'\t', acc3)
-        # # log_train().info(f'\n[logger] Acc = \n{acc1},{acc2},{acc3}'
-        # #                                 f'\n{"-" * 100}')
-        # # log_train().info(f'\n Acc:      {acc1}      {acc2}    {acc3}')
-        # # log_train().info(f'\n coverage:      {coverage1}      {coverage2}    {coverage3}')
-        # # log_train().info(f'\n example_auc:      {example_auc1}      {example_auc2}    {example_auc3}')
-        # # log_train().info(f'\n macro_auc:      {macro_auc1}      {macro_auc2}    {macro_auc3}')
-        # # log_train().info(f'\n micro_auc:      {micro_auc1}      {micro_auc2}    {micro_auc3}')
-        # # log_train().info(f'\n ranking_loss:      {ranking_loss1}      {ranking_loss2}    {ranking_loss3}')
-        # # log_train().info(f'\n --------Loss :{loss}--------------')
-
-        # # wandb.log({"f1_skl_all":f1_skl1})
-        # # wandb.log({"f1_skl_image":f1_skl2})
-        # # wandb.log({"f1_skl_text":f1_skl3})
-
-        # wandb.log({"macro_roc_auc_single":macro_roc_auc1})
-        # wandb.log({"macro_roc_auc_image_single":macro_roc_auc2})
-        # wandb.log({"macro_roc_auc_text_single":macro_roc_auc3})
-
-        # # wandb.log({"Prediction": total_predict })
-        # # wandb.log({"Ground_truth": truth })
-        
-
-        # # wandb.log({f"roc/epoch{epoch}/_roc_misogynous": wandb.plot.roc_curve(truth[:,0], np.stack([ 1-total_predict[:,0], total_predict[:,0] ], axis=1)  ) })
-
-
-        # total_2 = total_predict > 0.5
-        # # wandb.log({f"conf_mat/epoch{epoch}/_confmat_misogynous": wandb.plot.confusion_matrix( y_true = truth[:,0], preds = total_2[:,0], class_names=["not misogynous", "misogynous"] )})
-        # # softmax
-        # wandb.log({f"conf_mat/epoch{epoch}/_confmat_misogynous": wandb.plot.confusion_matrix( y_true = truth[:,1], preds = total_2[:,1], class_names=["not misogynous", "misogynous"] )})
-
-        # # wandb.log({"histogram/_hist_label_humour_pred":wandb.Histogram(np_histogram = humour)})
-        # # wandb.log({"histogram/_hist_label_sarcasm_pred":wandb.Histogram(np_histogram = sarcasm)})
-        # # wandb.log({"histogram/_hist_label_offensive_pred":wandb.Histogram(np_histogram = offensive)})
-        # # wandb.log({"histogram/_hist_label_motivational_pred":wandb.Histogram(np_histogram = motivational)})
-
-        # # wandb.log({"histogram/_hist_label_humour_truth":wandb.Histogram(np_histogram = humour_truth)})
-        # # wandb.log({"histogram/_hist_label_sarcasm_truth":wandb.Histogram(np_histogram = sarcasm_truth)})
-        # # wandb.log({"histogram/_hist_label_offensive_truth":wandb.Histogram(np_histogram = offensive_truth)})
-        # # wandb.log({"histogram/_hist_label_motivational_truth":wandb.Histogram(np_histogram = motivational_truth)})
-
-        # wandb.log({"macro_f1_all":macro_f1_all})
-        # wandb.log({"macro_f1_image":macro_f1_image})
-        # wandb.log({"macro_f1_text":macro_f1_text})
-
-        # print('f1_macro:    ', macro_f1_all,'\t', macro_f1_image,'\t', macro_f1_text)
-        # # print('f1_pm:    ', f1_pm1,'\t', f1_pm2,'\t', f1_pm3)
-        # # print('coverage:    ', coverage1,'\t', coverage2,'\t', coverage3)
-        # # print('auc_pm:    ', auc_pm1,'\t', auc_pm2,'\t', auc_pm3)
-        # # print('example_auc: ',  example_auc1,'\t', example_auc2,'\t', example_auc3)
-        # # print('macro_auc:   ',  macro_auc1,'\t', macro_auc2,'\t', macro_auc3)
-        # # print('micro_auc:   ',  micro_auc1,'\t', micro_auc2,'\t', micro_auc3)
-        # # print('ranking_loss:',  ranking_loss1,'\t', ranking_loss2,'\t', ranking_loss3)
-        # print()
-        # #np.save(savepath + filename + "superviseacc.npy", [acc1, acc2, acc3])
-
-        # ============================= TEST ======================= #
-        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text, total_predict, truth, f1_skl1,
-        f1_skl2, f1_skl3, f1_pm1, f1_pm2, f1_pm3,
-        auc_pm1,auc_pm2,auc_pm3, acc1, acc2, acc3, 
-        coverage1, coverage2, coverage3, example_auc1,
-        example_auc2, example_auc3, macro_auc1, macro_auc2,
-        macro_auc3, micro_auc1, micro_auc2, micro_auc3,
-        ranking_loss1, ranking_loss2, ranking_loss3,
-        humour,sarcasm,offensive,motivational,humour_truth,
-        sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
-        model.Imgpredictmodel, model.Textpredictmodel, model.Imgmodel,
-        model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
+        # if not args.use_one_head: 
+        (f1_macro_multi_total, f1_macro_multi_img, f1_macro_multi_text,
+        f1_weighted_multi_total,f1_weighted_multi_img,f1_weighted_multi_text,
+        auc_pm1,auc_pm2,auc_pm3,
+        total_predict, truth,humour,sarcasm,offensive,motivational,humour_truth,
+        sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model, dataset['test'], batchsize = batchsize, cuda = cuda)
+        # else:
+        #     (f1_macro_multi_total,f1_weighted_multi_total,auc_pm1,
+        #     total_predict, truth, humour,sarcasm,offensive,motivational,humour_truth,
+        #     sarcasm_truth,offensive_truth,motivational_truth) = test_multilabel(args,model.Textfeaturemodel,
+        #     None,None, model.Imgmodel,
+        #     model.Predictmodel, model.Attentionmodel, dataset['test'], batchsize = batchsize, cuda = cuda)
 
         wandb.log({"f1_macro_multi_total_test":f1_macro_multi_total})
+        # if not args.use_one_head:
         wandb.log({"f1_macro_multi_img_test":f1_macro_multi_img})
         wandb.log({"f1_macro_multi_text_test":f1_macro_multi_text})
 
+        wandb.log({"f1_weighted_multi_total_test":f1_weighted_multi_total})
+        # if not args.use_one_head:
+        wandb.log({"f1_weighted_multi_img_test":f1_weighted_multi_img})
+        wandb.log({"f1_weighted_multi_text_test":f1_weighted_multi_text})
+        
+        wandb.log({'ROC-AUC test': auc_pm1})
+        
+        # if args.use_one_head:
+        #     print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total}")
+        #     print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total}")
+        # else:
+        #     print(f"Test [F1 Macro multilabel] Total: {f1_macro_multi_total} Image {f1_macro_multi_img} Text {f1_macro_multi_text}")
+        #     print(f"[F1 weight multilabel] Total: {f1_weighted_multi_total} Image {f1_weighted_multi_img} Text {f1_weighted_multi_text}")
 
     return 
 
@@ -498,13 +483,19 @@ if __name__ == '__main__':
     random.seed(seed)
 
     args = get_args()
+    config = yaml.safe_load(open(args.config_yaml_path))
 
-    wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
-    # wandb.init(project="meme_experiments", entity="meme-analysts")
+
+    wandb.login(key = 'd87822d5fa951a22676b0985f891c9021b875ae3')
+    # wandb.init(project="meme_experiments", entity="meme-analysts", mode="disabled")
+    wandb.init(project="meme_experiments", entity="meme-analysts")
     # wandb.init()
 
     wandb.run.name = args.experiment
     print(f"Experiement: {wandb.run.name}")
+    
+    wandb.config.update(config)
+    config = wandb.config
 
     if args.use_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
@@ -512,34 +503,37 @@ if __name__ == '__main__':
     else:
         cuda = False
 
-    # dataset = MemotionDatasetForCmml(args,args.imgfilenamerecord, 
-    #                     args.imgfilenamerecord_unlabel, 
-    #                     args.imgfilename, args.textfilename, 
-    #                     args.textfilename_unlabel, 
-    #                     args.labelfilename, 
-    #                     args.labelfilename_unlabel, 
-    #                     args.imgfilenamerecord_val, 
-    #                     args.imgfilename_val, 
-    #                     args.textfilename_val, 
-    #                     args.labelfilename_val,
-    #                     args.sbertemb,
-    #                     args.sbertemb_unlabel,
-    #                     args.sbertemb_val,
-    #                     train = True, 
-    #                     supervise = True)
+    input_resolution = None
+    clip_model = None
+    cdim = None
+    if args.use_clip:
+        print("==============use clip model===============")
+        if args.use_open_clip:
+            clip_model, _, _ = open_clip.create_model_and_transforms(args.clip_model,pretrained=args.clip_pretrained)
+            input_resolution = clip_model.visual.image_size[0]
+        else:
+            clip_model, _ = clip.load(clip_nms[args.clip_model],jit=False)
+            clip_model = clip_model.float()
+            input_resolution = clip_model.visual.input_resolution
+        
+        cdim = clip_dim[args.clip_model]
+        clip_model.eval()
 
-    train_supervised_loader, train_unsupervised_loader, val_loader = create_semi_supervised_dataloaders(args, 
-                                            train_img_dir='data/MAMI_processed/images/train',
-                                            train_labeled_csv='data/MAMI_processed/train_labeled_ratio-0.3.csv',
-                                            train_unlabeled_csv='data/MAMI_processed/train_unlabeled_ratio-0.3.csv',
-                                            val_img_dir = 'data/MAMI_processed/images/val',
-                                            val_csv='data/MAMI_processed/val.csv',
-                                            batch_size=args.batchsize, image_size=256)
+    train_supervised_loader, train_unsupervised_loader, val_loader  \
+        = create_semi_supervised_dataloaders(args,
+        train_img_dir='data/MAMI_processed/images/train',
+        train_labeled_csv=args.train_labeled_csv,
+        train_unlabeled_csv=args.train_unlabeled_csv,
+        val_img_dir = 'data/MAMI_processed/images/val',
+        val_csv='data/MAMI_processed/val.csv',
+        batch_size=args.batchsize, image_size=256,input_resolution=input_resolution)
     
     test_loader = create_semi_supervised_test_dataloaders(args,
                                                         test_img_dir='data/MAMI_processed/images/test',
                                                         test_csv='data/MAMI_processed/test.csv',
-                                                        batch_size=args.batchsize, image_size=256)
+                                                        batch_size=args.batchsize, 
+                                                        image_size=256,
+                                                        input_resolution=input_resolution)
 
     dataset = {'train_sup': train_supervised_loader,
                 'train_unsup': train_unsupervised_loader,
@@ -547,7 +541,8 @@ if __name__ == '__main__':
                 'test': test_loader}
 
 
-    model = CmmlModel(args)
+    # model = CmmlModel(args)
+    model = CmmlModel(args,clip_model = clip_model,cdim = cdim)
 
     if cuda:
         model = model.cuda()
@@ -557,18 +552,17 @@ if __name__ == '__main__':
         os.mkdir(args.savepath)
     if not os.path.exists(savepath_folder):
         os.mkdir(savepath_folder)
-
-    train_supervise_loss = train(args,model, dataset,supervise_epochs = args.epochs,
-                                    text_supervise_epochs = args.text_supervise_epochs, 
-                                    img_supervise_epochs = args.img_supervise_epochs,
-                                    lr_supervise = args.lr_supervise, 
-                                    text_lr_supervise = args.text_lr_supervise, 
-                                    img_lr_supervise = args.img_lr_supervise,
-                                    weight_decay = args.weight_decay, 
-                                    batchsize = args.batchsize,
-                                    textbatchsize = args.textbatchsize,
-                                    imgbatchsize = args.imgbatchsize,
-                                    cuda = cuda, savepath = savepath_folder,
-                                    lambda1=args.lambda1,lambda2=args.lambda2)
-
+    print(args)
+    train_supervise_loss = train(args, config, model, dataset,supervise_epochs = args.epochs,
+                                        text_supervise_epochs = args.text_supervise_epochs, 
+                                        img_supervise_epochs = args.img_supervise_epochs,
+                                        lr_supervise = args.lr_supervise, 
+                                        text_lr_supervise = args.text_lr_supervise, 
+                                        img_lr_supervise = args.img_lr_supervise,
+                                        weight_decay = args.weight_decay, 
+                                        batchsize = args.batchsize,
+                                        textbatchsize = args.textbatchsize,
+                                        imgbatchsize = args.imgbatchsize,
+                                        cuda = cuda, savepath = savepath_folder,
+                                        lambda1=args.lambda1,lambda2=args.lambda2)
 

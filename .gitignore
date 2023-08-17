@@ -108,6 +108,7 @@ tmp/*
 build/
 src.egg-info/
 
+multimodal-misogyny-detection-mami-2022/*
 models/*
 !/models/README.md
 !models/*/README.md
