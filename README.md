@@ -8,7 +8,7 @@ The prevalence of memes on social media has created the need to sentiment analyz
 
 # Algorithm Overview 
 
-![SemiMemes](overallAchitecture.png)
+![SemiMemes](Overview.png)
 
 # How to train?
 
