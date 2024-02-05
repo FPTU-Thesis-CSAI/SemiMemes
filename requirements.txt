@@ -106,3 +106,5 @@ sklearn
 nlpaug
 
 sentence-transformers
+
+torch==1.6
