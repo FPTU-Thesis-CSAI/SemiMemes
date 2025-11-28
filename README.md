@@ -1,6 +1,6 @@
 # SSLMemes
 Multi-modal Semi-supervised Learning for Sentiment Analysis of Internet Memes
-[[Paper]] (https://arxiv.org/abs/2304.00020)
+[[Paper]] (https://link.springer.com/chapter/10.1007/978-3-031-41456-5_43)
 
 # Abstract
 
@@ -49,12 +49,12 @@ Hate-CLIPper (cross)    | 1.5B | 0.6652 | 0.6973 | 0.6827 | 0.7196 | 0.7030 | 0.
 # How to cite?
 
 ```
-@misc{tung2023semimemes,
-      title={SemiMemes: A Semi-supervised Learning Approach for Multimodal Memes Analysis}, 
-      author={Pham Thai Hoang Tung and Nguyen Tan Viet and Ngo Tien Anh and Phan Duy Hung},
-      year={2023},
-      eprint={2304.00020},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@inproceedings{tung2023semimemes,
+  title={Semimemes: A semi-supervised learning approach for multimodal memes analysis},
+  author={Tung, Pham Thai Hoang and Viet, Nguyen Tan and Anh, Ngo Tien and Hung, Phan Duy},
+  booktitle={International Conference on Computational Collective Intelligence},
+  pages={565--577},
+  year={2023},
+  organization={Springer}
 }
 ```
