@@ -4,7 +4,7 @@ Multi-modal Semi-supervised Learning for Sentiment Analysis of Internet Memes
 
 # Abstract
 
-The prevalence of memes on social media has created the need to sentiment analyze their underlying meanings for censoring harmful content. Meme censoring systems by machine learning raise the need for a semi-supervised learning solution to take advantage of the large number of unlabeled memes available on the internet and make the annotation process less challenging. Moreover, the approach needs to utilize multimodal data as memes' meanings usually come from both images and texts. This research proposes a multimodal semi-supervised learning approach that outperforms other multimodal semi-supervised learning and supervised learning state-of-the-art models on two datasets, the Multimedia Automatic Misogyny Identification and Hateful Memes dataset. Building on the insights gained from Contrastive Language-Image Pre-training, which is an effective multimodal learning technique, this research introduces SemiMemes, a novel training method that combines auto-encoder and classification task to make use of the resourceful unlabeled data.
+The prevalence of memes on social media has created the need to sentiment analyze their underlying meanings for censoring harmful content. Meme censoring systems by machine learning raise the need for a semi-supervised learning solution to take advantage of the large number of unlabeled memes available on the internet and make the annotation process less challenging. Moreover, the approach needs to utilize multimodal data as memes' meanings usually come from both images and texts. This research proposes a multimodal semi-supervised learning approach that outperforms other multimodal semi-supervised learning and supervised learning state-of-the-art models on two datasets, the Multimedia Automatic Misogyny Identification and Hateful Memes dataset. Building on the insights gained from Contrastive Language-Image Pre-training, which is an effective multimodal learning technique, this research introduces SemiMemes, a novel training method that combines an auto-encoder and a classification task to make use of the resourceful unlabeled data.
 
 # Algorithm Overview 
 
@@ -12,7 +12,7 @@ The prevalence of memes on social media has created the need to sentiment analyz
 
 # How to train?
 
-Install pytorch version compatible with your cuda version (https://pytorch.org/get-started/previous-versions/)
+Install PyTorch version compatible with your CUDA version (https://pytorch.org/get-started/previous-versions/)
 
 Install dependencies 
 
@@ -20,11 +20,10 @@ Install dependencies
 $ pip install -r requirements.txt 
 ```
 
-To train the main model. We need to run the pretraiing stage and then fintune it.
+To train the main model, we need to run both the pre-training stage and fine-tuning stage.
 
 ```bash
 $ cd src
-$ python pretrain.py
 $ python train_2_stages.py
 ```
 
